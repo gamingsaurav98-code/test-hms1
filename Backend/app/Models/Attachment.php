@@ -17,7 +17,14 @@ class Attachment extends Model
         'block_id',
         'complain_id',
         'shareholder_id',
-        
+        'supplier_id',
+        'notice_id',
+        'income_id',
+        'room_id',
+        'salary_id',
+        'salary_payment_id',
+        'user_id',
+        'floor_id',
     ];
 
     public function user()

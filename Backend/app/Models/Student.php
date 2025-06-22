@@ -48,5 +48,7 @@ class Student extends Model
         'student_image',
         'student_citizenship_image',
         'registration_form_image',
+        'is_active',
+        'is_existing_student',
         ];
 }

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('income_type');
             $table->string('amount');
             $table->date('income_date');
-            $table->foreignId('student_id')->constrained();
+            $table->foreignId('student_id');
             $table->string('income_attachment')->nullable(); // e.g., file path or URL
             $table->string('title');
             $table->string('description')->nullable();

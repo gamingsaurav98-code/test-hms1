@@ -11,10 +11,8 @@ class Notice extends Model
         'description',
         'notice_attachment', // e.g., file path or URL
         'schedule_time',
-        'block_id',
-        'room_id',
-        'floor_id',
         'status', // e.g., active, inactive
+        'target_type',
         'notice_type', // e.g., general, urgent, event
         'student_id',
         'staff_id',

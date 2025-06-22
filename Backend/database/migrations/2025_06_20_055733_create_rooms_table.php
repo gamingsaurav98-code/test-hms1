@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('rooms', function (Blueprint $table) {
             $table->id();
+            $table->string('room_name')->unique();
             $table->foreignId('block_id');
             $table->string('room_id')->unique();
             $table->integer('capacity');
             $table->enum('status', ['available', 'occupied', 'maintenance'])->default('available');
-            $table->string('room_type'); // e.g., single, double, suite
+            $table->string('room_type'); // e.g., single, double, triple, four-bed
             $table->integer('floor_number');
             $table->string('room_attachment')->nullable(); // e.g., image or document attachment
             $table->timestamps();

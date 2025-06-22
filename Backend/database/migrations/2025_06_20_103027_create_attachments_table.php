@@ -16,6 +16,21 @@ return new class extends Migration
             $table->string('name');
             $table->string('path');
             $table->string('type');
+            $table->foreignId('student_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('staff_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('expense_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('inquiry_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('block_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('complain_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('shareholder_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('supplier_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('notice_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('income_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('room_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('salary_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('salary_payment_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('floor_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
