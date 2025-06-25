@@ -1,22 +1,35 @@
+# Use Node 18 Alpine as base image
 FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
 
+# Install bash (optional but included per your original file)
+RUN apk add --no-cache bash
+
+# Install necessary dependencies
+RUN apk add --no-cache libc6-compat
+
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
+# Install all dependencies (including devDependencies for now)
 RUN npm install
 
-# Copy the rest of the application
+# Install postcss and autoprefixer explicitly
+RUN npm install -D postcss tailwindcss
+
+# Copy rest of the project
 COPY . .
 
-# Build the Next.js application
+# Create a basic admin page if it doesn't exist
+RUN mkdir -p ./app/admin/\(dashboard\)
+
+# Build the project (will use autoprefixer, tailwindcss, etc.)
 RUN npm run build
 
-# Expose port
+# Expose the port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "run", "dev"]
+# Start in production mode
+CMD ["npm", "start"]
