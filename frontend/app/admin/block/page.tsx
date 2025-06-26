@@ -14,6 +14,15 @@ export default function BlockList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{show: boolean, blockId: string | null}>({
+    show: false,
+    blockId: null
+  });
+  const [alert, setAlert] = useState<{show: boolean, message: string, type: 'success' | 'error'}>({
+    show: false,
+    message: '',
+    type: 'success'
+  });
 
   // Fetch blocks from API
   useEffect(() => {
@@ -64,32 +73,56 @@ export default function BlockList() {
   };
 
   const handleDeleteBlock = async (blockId: string) => {
-    if (window.confirm('Are you sure you want to delete this block? This action cannot be undone.')) {
-      try {
-        setIsDeleting(blockId);
-        await blockApi.deleteBlock(blockId);
-        
-        // Remove from local state
-        const updatedBlocks = blocks.filter(block => block.id !== blockId);
-        setBlocks(updatedBlocks);
-        setFilteredBlocks(updatedBlocks.filter(block =>
-          !searchQuery.trim() ||
-          block.block_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          block.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          block.manager_name.toLowerCase().includes(searchQuery.toLowerCase())
-        ));
-        
-      } catch (error) {
-        console.error('Error deleting block:', error);
-        if (error instanceof ApiError) {
-          alert(`Failed to delete block: ${error.message}`);
-        } else {
-          alert('Failed to delete block. Please try again.');
-        }
-      } finally {
-        setIsDeleting(null);
+    setDeleteModal({show: true, blockId});
+  };
+
+  const confirmDelete = async () => {
+    const blockId = deleteModal.blockId;
+    if (!blockId) return;
+
+    try {
+      setIsDeleting(blockId);
+      setDeleteModal({show: false, blockId: null});
+      setAlert({show: true, message: 'Deleting block...', type: 'success'});
+      
+      await blockApi.deleteBlock(blockId);
+      
+      // Remove from local state
+      const updatedBlocks = blocks.filter(block => block.id !== blockId);
+      setBlocks(updatedBlocks);
+      setFilteredBlocks(updatedBlocks.filter(block =>
+        !searchQuery.trim() ||
+        block.block_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        block.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        block.manager_name.toLowerCase().includes(searchQuery.toLowerCase())
+      ));
+      
+      setAlert({show: true, message: 'Block deleted successfully!', type: 'success'});
+      
+      // Hide alert after 3 seconds
+      setTimeout(() => {
+        setAlert({show: false, message: '', type: 'success'});
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error deleting block:', error);
+      if (error instanceof ApiError) {
+        setAlert({show: true, message: `Failed to delete block: ${error.message}`, type: 'error'});
+      } else {
+        setAlert({show: true, message: 'Failed to delete block. Please try again.', type: 'error'});
       }
+      
+      // Hide error alert after 5 seconds
+      setTimeout(() => {
+        setAlert({show: false, message: '', type: 'success'});
+      }, 5000);
+    } finally {
+      setIsDeleting(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModal({show: false, blockId: null});
   };
 
   if (isLoading) {
@@ -126,6 +159,83 @@ export default function BlockList() {
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
+      {/* Delete Confirmation Modal */}
+      {deleteModal.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-gray-900">Delete Block</h3>
+              </div>
+            </div>
+            <div className="mb-6">
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete this block? This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex space-x-3 justify-end">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alert Notification */}
+      {alert.show && (
+        <div className={`fixed top-4 right-4 z-50 max-w-sm w-full ${
+          alert.type === 'success' ? 'bg-green-100 border-green-500 text-green-700' : 'bg-red-100 border-red-500 text-red-700'
+        } border-l-4 p-4 rounded-lg shadow-lg`}>
+          <div className="flex">
+            <div className="flex-shrink-0">
+              {alert.type === 'success' ? (
+                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium">{alert.message}</p>
+            </div>
+            <div className="ml-auto pl-3">
+              <div className="-mx-1.5 -my-1.5">
+                <button
+                  onClick={() => setAlert({show: false, message: '', type: 'success'})}
+                  className={`inline-flex rounded-md p-1.5 ${
+                    alert.type === 'success' ? 'text-green-500 hover:bg-green-200' : 'text-red-500 hover:bg-red-200'
+                  } focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                    alert.type === 'success' ? 'focus:ring-green-600' : 'focus:ring-red-600'
+                  }`}
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Minimal Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
