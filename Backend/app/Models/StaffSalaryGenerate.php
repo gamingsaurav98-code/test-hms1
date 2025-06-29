@@ -12,7 +12,7 @@ class StaffSalaryGenerate extends Model
         'year',
         'month',
         'payment_date',
-        'payment_type',
         'remark',
+        'payment_type_id',
     ];
 }

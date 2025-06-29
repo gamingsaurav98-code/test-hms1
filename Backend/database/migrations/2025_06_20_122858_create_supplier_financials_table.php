@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('initial_balance')->nullable();
             $table->string('amount'); // Amount can be stored as a string to accommodate various formats (e.g., '1000.00', '1,000.00')
             $table->date('payment_date');
-            $table->string('payment_type'); // e.g., 'cash', 'bank_transfer', 'cheque'
+            $table->foreignId('payment_type_id')->nullable();
             $table->text('remark')->nullable(); // Additional notes or remarks
             $table->timestamps();
         });

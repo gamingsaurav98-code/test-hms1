@@ -11,7 +11,7 @@ class StudentIncome extends Model
         'amount',
         'income_type_id',
         'payment_date',
-        'payment_type',
         'remark',
+        'payment_type_id',
     ];
 }

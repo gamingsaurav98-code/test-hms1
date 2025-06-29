@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignID('shareholder_id');
             $table->string('amount');
             $table->date('payment_date');
-            $table->string('payment_type'); // e.g., 'cash', 'bank_transfer', 'cheque'
+            $table->foreignId('payment_type_id')->nullable();
             $table->text('remark')->nullable(); // Additional notes or remarks
             $table->timestamps();
         });

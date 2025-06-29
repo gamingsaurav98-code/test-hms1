@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('amount');
             $table->string('expense_date');
             $table->string('expense_attachment')->nullable();
-            $table->string('payment_method')->nullable();
+            $table->foreignId('payment_type_id')->nullable();
             $table->string('title');
             $table->string('description')->nullable();
             $table->foreignId('student_id')->nullable();

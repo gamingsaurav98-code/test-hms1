@@ -15,7 +15,7 @@ class StudentFinancial extends Model
         'initial_balance_after_registration',
         'balance_type', // "due" or "advance"
         'payment_date',
-        'payment_type',
         'remark',
+        'payment_type_id',
     ];
 }

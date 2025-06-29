@@ -10,7 +10,7 @@ class ShareHolderFinance extends Model
         'shareholder_id',
         'amount',
         'payment_date',
-        'payment_type',
         'remark',
+        'payment_type_id',
     ];
 }

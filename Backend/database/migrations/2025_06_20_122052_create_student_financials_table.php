@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('initial_balance_after_registration')->nullable();
             $table->string('balance_type')->nullable();
             $table->date('payment_date');
-            $table->string('payment_type'); // e.g., 'salary', 'bonus', 'deduction'
+            $table->foreignId('payment_type_id')->nullable();
             $table->text('remark')->nullable(); // Additional notes or remarks
             $table->timestamps();
         });

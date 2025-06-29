@@ -10,7 +10,7 @@ class SupplierFinancial extends Model
         'supplier_id',
         'initial_balance',
         'payment_date',
-        'payment_type',
         'remark',
+        'payment_type_id',
     ];
 }

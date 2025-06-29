@@ -10,7 +10,7 @@ class StaffFinancial extends Model
         'staff_id',
         'amount',
         'payment_date',
-        'payment_type',
         'remark',
+        'payment_type_id',
     ];
 }

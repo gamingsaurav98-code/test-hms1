@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('supplier_id');
             $table->date('payment_date');
-            $table->string('payment_type');
+            $table->foreignId('payment_type_id')->nullable();
             $table->string('description')->nullable();
             $table->string('amount');
             $table->timestamps();
