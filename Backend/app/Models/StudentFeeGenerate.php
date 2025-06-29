@@ -1,16 +1,18 @@
-hp
+<?php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Salary extends Model
+class StudentFeeGenerate extends Model
 {
     protected $fillable = [
-        'staff_id',
+        'student_id',
+        'fee_type',
         'amount',
-        'month',
         'year',
-        'status',
+        'month',
     ];
+
+    
 }

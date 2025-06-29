@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('salaries', function (Blueprint $table) {
+        Schema::create('staff_salary_generates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('staff_id');
-            $table->string('amount');
-            $table->string('month');
+            $table->string('salary_amount');
             $table->year('year');
-            $table->string('status')->nullable();
+            $table->string('month');
+            $table->date('payment_date')->nullable();
+            $table->string('payment_type')->nullable();
+            $table->text('remark')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('salaries');
+        Schema::dropIfExists('staff_salary_generates');
     }
 };

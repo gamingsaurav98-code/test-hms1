@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('salaries', function (Blueprint $table) {
+        Schema::create('student_fee_generates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('staff_id');
+            $table->foreignId('student_id');
+            $table->string('fee_type');
             $table->string('amount');
-            $table->string('month');
             $table->year('year');
-            $table->string('status')->nullable();
+            $table->string('month');
             $table->timestamps();
         });
     }
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('salaries');
+        Schema::dropIfExists('student_fee_generates');
     }
 };

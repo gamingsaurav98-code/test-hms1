@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('staff_check_in_check_outs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('staff_id');
-            $table->timestamp('checkin_time');
-            $table->timestamp('checkout_time');
+            $table->datetime('requested_checkin_time')->nullable();
+            $table->datetime('requested_checkout_time')->nullable();
+            $table->timestamp('checkin_time')->nullable();
+            $table->timestamp('checkout_time')->nullable();
             $table->date('date');
             $table->foreignId('block_id');
             $table->text('remarks')->nullable();

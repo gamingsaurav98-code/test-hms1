@@ -15,6 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id');
             $table->string('amount');
+            $table->string('monthly_fee')->nullable();
+            $table->boolean('is_existing_student')->default(false);
+            $table->string('previous_balance')->nullable();
+            $table->string('initial_balance_after_registration')->nullable();
+            $table->string('balance_type')->nullable();
             $table->date('payment_date');
             $table->string('payment_type'); // e.g., 'salary', 'bonus', 'deduction'
             $table->text('remark')->nullable(); // Additional notes or remarks

@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class SupplierFinancial extends Model
+class SupplierPayment extends Model
 {
     protected $fillable = [
         'supplier_id',
-        'initial_balance',
         'payment_date',
         'payment_type',
-        'remark',
+        'description',
+        'amount',
     ];
+
 }

@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('salaries', function (Blueprint $table) {
+        Schema::create('staff_checkout_financials', function (Blueprint $table) {
             $table->id();
             $table->foreignId('staff_id');
-            $table->string('amount');
-            $table->string('month');
-            $table->year('year');
-            $table->string('status')->nullable();
+            $table->foreignId('checkout_id');
+            $table->string('checkout_duration')->nullable();
+            $table->string('deducted_amount')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('salaries');
+        Schema::dropIfExists('staff_checkout_financials');
     }
 };

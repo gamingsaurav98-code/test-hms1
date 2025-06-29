@@ -15,11 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id');
             $table->foreignId('block_id');
-            $table->datetime('requested_checkin_time');
-            $table->datetime('requested_checkout_time');
+            $table->datetime('requested_checkin_time')->nullable();
+            $table->datetime('requested_checkout_time')->nullable();
             $table->date('date');
-            $table->timestamp('checkin_time');
-            $table->timestamp('checkout_time');
+            $table->timestamp('checkin_time')->nullable();
+            $table->timestamp('checkout_time')->nullable();
+            $table->string('checkout_duration')->nullable();
             $table->enum('status', ['checked_in', 'checked_out'])->default('checked_in');
             $table->text('remarks')->nullable();
             $table->timestamps();

@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('salaries', function (Blueprint $table) {
+        Schema::create('student_checkout_rules', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('staff_id');
-            $table->string('amount');
-            $table->string('month');
-            $table->year('year');
-            $table->string('status')->nullable();
+            $table->foreignId('student_id');
+            $table->boolean('is_active')->default(true);
+            $table->integer('active_after_days')->nullable();
+            $table->integer('percentage')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('salaries');
+        Schema::dropIfExists('student_checkout_rules');
     }
 };

@@ -4,16 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class StudentFinancial extends Model
+class StudentIncome extends Model
 {
     protected $fillable = [
         'student_id',
         'amount',
-        'monthly_fee',
-        'is_existing_student',
-        'previous_balance',
-        'initial_balance_after_registration',
-        'balance_type', // "due" or "advance"
+        'income_type_id',
         'payment_date',
         'payment_type',
         'remark',

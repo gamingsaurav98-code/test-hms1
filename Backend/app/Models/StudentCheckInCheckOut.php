@@ -12,8 +12,8 @@ class StudentCheckInCheckOut extends Model
         'requested_checkout_time',
         'checkin_time',
         'checkout_time',
+        'checkout_duration',
         'date',
-        'block_id',
         'remarks',
         'status',
     ];
