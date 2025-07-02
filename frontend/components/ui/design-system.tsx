@@ -1,57 +1,56 @@
 "use client"
 
 import React, { useState, useRef } from "react"
+import { getImageUrl } from "../../lib/utils"
+
+// Define type for icon components
+type IconProps = {
+  className?: string;
+  size?: number | string;
+  color?: string;
+  [key: string]: any;
+};
+
 // Try-catch for importing lucide-react
-let LucideIcons: any = {}
+let LucideIcons: any = {};
 try {
   // Dynamic import to check if module is available
-  LucideIcons = require("lucide-react")
+  LucideIcons = require("lucide-react");
 } catch (error) {
-  console.warn("lucide-react not found, using fallback icons")
-  // Fallback icons as React components
-  LucideIcons = {
-    Upload: (props: any) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <polyline points="17 8 12 3 7 8" />
-        <line x1="12" y1="3" x2="12" y2="15" />
-      </svg>
-    ),
-    X: (props: any) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-      </svg>
-    ),
-    AlertCircle: (props: any) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
-    ),
-    Search: (props: any) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <circle cx="11" cy="11" r="8" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-      </svg>
-    ),
-    Check: (props: any) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-    ),
-    Eye: (props: any) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-        <circle cx="12" cy="12" r="3" />
-      </svg>
-    )
-  }
+  console.warn("lucide-react not found, using fallback icons");
+  // We'll create fallback icons below
 }
 
-// Extract the icons we need
-const { Upload, X, AlertCircle, Search, Check, Eye } = LucideIcons
+// Create individual icon components with fallbacks
+const Upload: React.FC<IconProps> = (props) => {
+  if (LucideIcons.Upload) return <LucideIcons.Upload {...props} />;
+  return <span className={`inline-block ${props.className || ''}`}>⬆</span>;
+};
+
+const X: React.FC<IconProps> = (props) => {
+  if (LucideIcons.X) return <LucideIcons.X {...props} />;
+  return <span className={`inline-block ${props.className || ''}`}>✕</span>;
+};
+
+const AlertCircle: React.FC<IconProps> = (props) => {
+  if (LucideIcons.AlertCircle) return <LucideIcons.AlertCircle {...props} />;
+  return <span className={`inline-block ${props.className || ''}`}>⚠</span>;
+};
+
+const Search: React.FC<IconProps> = (props) => {
+  if (LucideIcons.Search) return <LucideIcons.Search {...props} />;
+  return <span className={`inline-block ${props.className || ''}`}>🔍</span>;
+};
+
+const Check: React.FC<IconProps> = (props) => {
+  if (LucideIcons.Check) return <LucideIcons.Check {...props} />;
+  return <span className={`inline-block ${props.className || ''}`}>✓</span>;
+};
+
+const Eye: React.FC<IconProps> = (props) => {
+  if (LucideIcons.Eye) return <LucideIcons.Eye {...props} />;
+  return <span className={`inline-block ${props.className || ''}`}>👁</span>;
+};
 
 // ===============================
 // BUTTON COMPONENTS
@@ -481,6 +480,759 @@ export function ImageUpload({
         )}
       </div>
 
+      {error && (
+        <div className="flex items-center mt-1.5 text-xs text-red-600">
+          <AlertCircle className="h-3.5 w-3.5 mr-2" />
+          {error}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ===============================
+// MULTIPLE IMAGE UPLOAD COMPONENT
+// ===============================
+
+interface MultipleImageUploadProps {
+  images: File[]
+  existingImages?: { id: number; image: string; is_primary: boolean }[]
+  onAddImages: (files: File[]) => void
+  onRemoveImage: (index: number) => void
+  onRemoveExistingImage?: (id: number) => void
+  error?: string
+  label?: string
+  // Modal handlers passed from parent
+  onImageClick: (imageUrl: string, alt: string) => void
+}
+
+export function MultipleImageUpload({ 
+  images, 
+  existingImages = [],
+  onAddImages, 
+  onRemoveImage, 
+  onRemoveExistingImage,
+  error, 
+  label = "Additional Images",
+  onImageClick
+}: MultipleImageUploadProps) {
+  const [dragActive, setDragActive] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files)
+      onAddImages(fileArray)
+      
+      // Reset the input so the same file can be selected again if needed
+      e.target.value = ''
+    }
+  }
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true)
+    } else if (e.type === "dragleave") {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files).filter(file => file.type.startsWith("image/"))
+      if (fileArray.length > 0) {
+        onAddImages(fileArray)
+      }
+    }
+  }
+
+  const handleUploadAreaClick = (e: React.MouseEvent) => {
+    // Only trigger file input if clicking on the upload area, not the images
+    if ((e.target as HTMLElement).closest('.image-preview')) {
+      return // Don't trigger file input when clicking on images
+    }
+    fileInputRef.current?.click()
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-semibold text-neutral-900">
+        {label}
+      </label>
+      
+      <div
+        className={`relative border-2 border-dashed rounded-lg p-8 transition-all duration-200 ${
+          dragActive
+            ? "border-neutral-300 bg-neutral-50/50"
+            : error
+              ? "border-red-300 bg-red-50/50"
+              : "border-neutral-200/60 hover:border-neutral-300"
+        }`}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        onClick={handleUploadAreaClick}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          multiple
+          className="hidden"
+        />
+
+        {/* Images preview grid */}
+        <div className="space-y-4">
+          {(existingImages.length > 0 || images.length > 0) && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4">
+              {/* Existing images */}
+              {existingImages.map((img) => (
+                <div key={`existing-${img.id}`} className="image-preview relative group">
+                  <div className="aspect-square w-full rounded-lg overflow-hidden border border-neutral-200/60 relative">
+                    <img 
+                      src={`${process.env.NEXT_PUBLIC_STORAGE_URL || '/storage'}/${img.image}`} 
+                      alt={`Product image ${img.id}`}
+                      className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                      onClick={() => onImageClick(`${process.env.NEXT_PUBLIC_STORAGE_URL || '/storage'}/${img.image}`, `Product image ${img.id}`)}
+                    />
+                    {img.is_primary && (
+                      <div className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
+                        Primary
+                      </div>
+                    )}
+                    {!img.is_primary && onRemoveExistingImage && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onRemoveExistingImage(img.id)
+                        }}
+                        className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-500 rounded-full text-white flex items-center justify-center hover:bg-red-600 transition-all duration-200 shadow-sm"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    <div className="absolute inset-0 rounded-lg bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center pointer-events-none">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <Eye className="h-5 w-5 text-white drop-shadow-lg" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* New images */}
+              {images.map((file, index) => (
+                <div key={`new-${index}`} className="image-preview relative group">
+                  <div className="aspect-square w-full rounded-lg overflow-hidden border border-amber-300 relative">
+                    <img 
+                      src={URL.createObjectURL(file)} 
+                      alt={`New image ${index + 1}`}
+                      className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                      onClick={() => onImageClick(URL.createObjectURL(file), `New image ${index + 1}`)}
+                    />
+                    
+                    {/* New badge */}
+                    <div className="absolute top-2 left-2">
+                      <div className="bg-amber-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                        New
+                      </div>
+                    </div>
+
+                    {/* Remove button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onRemoveImage(index)
+                      }}
+                      className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-500 rounded-full text-white flex items-center justify-center hover:bg-red-600 transition-all duration-200 shadow-sm"
+                      title="Remove new image"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                    
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 rounded-lg bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center pointer-events-none">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <Eye className="h-5 w-5 text-white drop-shadow-lg" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Add more images tile */}
+              <div 
+                className="aspect-square w-full rounded-lg border-2 border-dashed border-neutral-200/60 flex flex-col items-center justify-center cursor-pointer hover:border-neutral-300 transition-all duration-200"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-6 w-6 text-neutral-400 mb-2" />
+                <span className="text-xs text-neutral-500 text-center px-2">Add more</span>
+              </div>
+            </div>
+          )}
+
+          {existingImages.length === 0 && images.length === 0 && (
+            <div className="space-y-3 cursor-pointer">
+              <div className="mx-auto w-12 h-12 bg-neutral-100 rounded-lg border border-neutral-200/60 flex items-center justify-center">
+                <Upload className="h-6 w-6 text-neutral-400" />
+              </div>
+              <div>
+                <p className="text-sm text-neutral-600 font-medium">
+                  Drop images here or <span className="font-semibold underline">browse files</span>
+                </p>
+                <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, GIF up to 10MB each</p>
+              </div>
+            </div>
+          )}
+
+          {/* Legend */}
+          {(existingImages.length > 0 || images.length > 0) && (
+            <div className="flex flex-wrap gap-4 text-xs text-neutral-600 pt-2 border-t border-neutral-100">
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                <span>Current</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-amber-600 rounded-full"></div>
+                <span>New</span>
+              </div>
+              
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                <span>Primary image</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div className="flex items-center mt-1.5 text-xs text-red-600">
+          <AlertCircle className="h-3.5 w-3.5 mr-2" />
+          {error}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ===============================
+// MULTIPLE IMAGE UPLOAD EDIT COMPONENT
+// ===============================
+
+interface MultipleImageUploadEditProps {
+  images: File[]
+  existingImages?: { id: number; image: string; is_primary: boolean }[]
+  removedImageIds?: number[]
+  onAddImages: (files: File[]) => void
+  onRemoveImage: (index: number) => void
+  onRemoveExistingImage?: (id: number) => void
+  error?: string
+  label?: string
+  // Modal handlers passed from parent
+  onImageClick: (imageUrl: string, alt: string) => void
+}
+
+export function MultipleImageUploadEdit({ 
+  images, 
+  existingImages = [],
+  removedImageIds = [],
+  onAddImages, 
+  onRemoveImage, 
+  onRemoveExistingImage,
+  error, 
+  label = "Additional Images",
+  onImageClick
+}: MultipleImageUploadEditProps) {
+  const [dragActive, setDragActive] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files)
+      onAddImages(fileArray)
+      
+      // Reset the input so the same file can be selected again if needed
+      e.target.value = ''
+    }
+  }
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true)
+    } else if (e.type === "dragleave") {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files).filter(file => file.type.startsWith("image/"))
+      if (fileArray.length > 0) {
+        onAddImages(fileArray)
+      }
+    }
+  }
+
+  const handleUploadAreaClick = (e: React.MouseEvent) => {
+    // Only trigger file input if clicking on the upload area, not the images
+    if ((e.target as HTMLElement).closest('.image-preview')) {
+      return // Don't trigger file input when clicking on images
+    }
+    fileInputRef.current?.click()
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-semibold text-neutral-900">
+        {label}
+      </label>
+      
+      <div
+        className={`relative border-2 border-dashed rounded-lg p-8 transition-all duration-200 ${
+          dragActive
+            ? "border-neutral-300 bg-neutral-50/50"
+            : error
+              ? "border-red-300 bg-red-50/50"
+              : "border-neutral-200/60 hover:border-neutral-300"
+        }`}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        onClick={handleUploadAreaClick}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          multiple
+          className="hidden"
+        />
+
+        {/* Images preview grid */}
+        <div className="space-y-4">
+          {(existingImages.length > 0 || images.length > 0) && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4">
+              {/* Existing images */}
+              {existingImages.map((img) => (
+                <div key={`existing-${img.id}`} className="image-preview relative group">
+                  <div className="aspect-square w-full rounded-lg overflow-hidden border border-neutral-200/60 relative transition-all duration-200 hover:border-neutral-300">
+                    <img 
+                      src={getImageUrl(img.image)} 
+                      alt={`Product image ${img.id}`}
+                      className="w-full h-full object-cover cursor-pointer transition-transform duration-200 hover:scale-105"
+                      onClick={() => onImageClick(getImageUrl(img.image), `Product image ${img.id}`)}
+                    />
+                    
+                    {/* Remove button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (onRemoveExistingImage) {
+                          onRemoveExistingImage(img.id)
+                        }
+                      }}
+                      className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full text-white flex items-center justify-center hover:bg-red-600 transition-all duration-200 shadow-lg opacity-0 group-hover:opacity-100"
+                      title="Remove image"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                    
+                    {/* Current badge */}
+                    <div className="absolute bottom-2 left-2">
+                      <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                        Current
+                      </div>
+                    </div>
+
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 rounded-lg bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center pointer-events-none">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <Eye className="h-5 w-5 text-white drop-shadow-lg" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* New images */}
+              {images.map((file, index) => (
+                <div key={`new-${index}`} className="image-preview relative group">
+                  <div className="aspect-square w-full rounded-lg overflow-hidden border border-amber-300 relative">
+                    <img 
+                      src={URL.createObjectURL(file)} 
+                      alt={`New image ${index + 1}`}
+                      className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                      onClick={() => onImageClick(URL.createObjectURL(file), `New image ${index + 1}`)}
+                    />
+                    
+                    {/* New badge */}
+                    <div className="absolute top-2 left-2">
+                      <div className="bg-amber-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                        New
+                      </div>
+                    </div>
+
+                    {/* Remove button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onRemoveImage(index)
+                      }}
+                      className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-500 rounded-full text-white flex items-center justify-center hover:bg-red-600 transition-all duration-200 shadow-sm"
+                      title="Remove new image"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                    
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 rounded-lg bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center pointer-events-none">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <Eye className="h-5 w-5 text-white drop-shadow-lg" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Add more images tile */}
+              <div 
+                className="aspect-square w-full rounded-lg border-2 border-dashed border-neutral-200/60 flex flex-col items-center justify-center cursor-pointer hover:border-neutral-300 transition-all duration-200"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-6 w-6 text-neutral-400 mb-2" />
+                <span className="text-xs text-neutral-500 text-center px-2">Add more</span>
+              </div>
+            </div>
+          )}
+
+          {existingImages.length === 0 && images.length === 0 && (
+            <div className="space-y-3 cursor-pointer">
+              <div className="mx-auto w-12 h-12 bg-neutral-100 rounded-lg border border-neutral-200/60 flex items-center justify-center">
+                <Upload className="h-6 w-6 text-neutral-400" />
+              </div>
+              <div>
+                <p className="text-sm text-neutral-600 font-medium">
+                  Drop images here or <span className="font-semibold underline">browse files</span>
+                </p>
+                <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, GIF up to 10MB each</p>
+              </div>
+            </div>
+          )}
+
+          {/* Legend */}
+          {(existingImages.length > 0 || images.length > 0) && (
+            <div className="flex flex-wrap gap-4 text-xs text-neutral-600 pt-2 border-t border-neutral-100">
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                <span>Current</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-amber-600 rounded-full"></div>
+                <span>New</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div className="flex items-center mt-1.5 text-xs text-red-600">
+          <AlertCircle className="h-3.5 w-3.5 mr-2" />
+          {error}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ===============================
+// MULTI SELECT COMPONENT
+// ===============================
+
+interface Option {
+  id: number | string
+  label: string
+  value: any
+}
+
+interface MultiSelectProps {
+  label: string
+  options: Option[]
+  selectedOptions: Option[]
+  onChange: (options: Option[]) => void
+  placeholder?: string
+  error?: string
+  required?: boolean
+  maxHeight?: number
+  disabled?: boolean
+}
+
+export function MultiSelect({
+  label,
+  options,
+  selectedOptions,
+  onChange,
+  placeholder = "Search and select options...",
+  error,
+  required = false,
+  maxHeight = 200,
+  disabled = false
+}: MultiSelectProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Handle click outside to close dropdown
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  // Reset search query when options or selected options change
+  React.useEffect(() => {
+    setSearchQuery('')
+  }, [options.length, selectedOptions.length])
+
+  // Filter options based on search query - memoized to prevent unnecessary recalculations
+  const filteredOptions = React.useMemo(() => {
+    return options.filter(
+      (option) => option.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [options, searchQuery]);
+
+  // Handle option selection
+  const handleOptionSelect = React.useCallback((option: Option) => {
+    const isSelected = selectedOptions.some((item) => item.id === option.id)
+    
+    if (isSelected) {
+      onChange(selectedOptions.filter((item) => item.id !== option.id))
+    } else {
+      onChange([...selectedOptions, option])
+    }
+  }, [selectedOptions, onChange]);
+
+  // Handle option removal (from the tag)
+  const handleRemoveOption = React.useCallback((optionId: number | string, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent dropdown from opening
+    onChange(selectedOptions.filter((item) => item.id !== optionId))
+  }, [selectedOptions, onChange]);
+
+  // Handle key down events for accessibility
+  const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && isOpen && filteredOptions.length > 0) {
+      handleOptionSelect(filteredOptions[0])
+      e.preventDefault()
+    } else if (e.key === "Escape") {
+      setIsOpen(false)
+    } else if (e.key === "ArrowDown" && isOpen) {
+      const list = containerRef.current?.querySelector("ul")
+      const firstItem = list?.querySelector("li button") as HTMLButtonElement
+      if (firstItem) {
+        firstItem.focus()
+        e.preventDefault()
+      }
+    }
+  }, [isOpen, filteredOptions, handleOptionSelect]);
+
+  // Focus the input when dropdown opens
+  React.useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [isOpen])
+
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-semibold text-neutral-900">
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      
+      <div ref={containerRef} className="relative">
+        {/* Main container that displays selected options and input */}
+        <div
+          className={`
+            flex flex-wrap items-center gap-1.5 p-2 min-h-[56px] w-full border rounded-lg 
+            transition-all duration-200 cursor-text
+            ${disabled ? 'bg-neutral-50 cursor-not-allowed' : 'bg-white'} 
+            ${error ? 'border-red-300' : 'border-neutral-200/60 focus-within:border-neutral-400'} 
+            ${isOpen ? 'border-neutral-400 ring-1 ring-neutral-100' : ''}
+          `}
+          onClick={() => {
+            if (!disabled) {
+              setIsOpen(true)
+              inputRef.current?.focus()
+            }
+          }}
+        >
+          {/* Selected options as chips/tags */}
+          {selectedOptions.map((option) => (
+            <div
+              key={option.id}
+              className="
+                flex items-center rounded bg-neutral-100 px-2 py-1
+                text-xs text-neutral-700 space-x-1 group
+                border border-neutral-200/60
+              "
+            >
+              <span className="max-w-[120px] truncate font-medium">{option.label}</span>
+              {!disabled && (
+                <button 
+                  type="button"
+                  className="p-0.5 text-neutral-500 hover:text-neutral-700 rounded-full focus:outline-none focus:ring-1 focus:ring-neutral-400"
+                  onClick={(e) => handleRemoveOption(option.id, e)}
+                  tabIndex={-1}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          ))}
+          
+          {/* Search input */}
+          <input
+            ref={inputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => !disabled && setIsOpen(true)}
+            placeholder={selectedOptions.length === 0 ? placeholder : ""}
+            className="
+              flex-grow p-1 text-sm text-neutral-700 bg-transparent 
+              border-none focus:outline-none focus:ring-0 min-w-[40px] disabled:cursor-not-allowed
+            "
+            disabled={disabled}
+          />
+        </div>
+        
+        {/* Dropdown container */}
+        {isOpen && !disabled && (
+          <div className="absolute z-10 mt-1 w-full bg-white rounded-lg shadow-lg border border-neutral-200 overflow-hidden">
+            {/* Search icon and counter */}
+            <div className="flex items-center px-3 py-2 border-b border-neutral-100">
+              <Search className="h-4 w-4 text-neutral-400 mr-2" />
+              {searchQuery && (
+                <span className="text-xs text-neutral-500">
+                  {filteredOptions.length} {filteredOptions.length === 1 ? "result" : "results"}
+                </span>
+              )}
+            </div>
+            
+            {/* Options list */}
+            <div className="overflow-y-auto" style={{ maxHeight: `${maxHeight}px` }}>
+              {filteredOptions.length > 0 ? (
+                <ul className="py-1">
+                  {filteredOptions.map((option) => {
+                    const isSelected = selectedOptions.some((item) => item.id === option.id)
+                    return (
+                      <li key={option.id}>
+                        <button
+                          type="button"
+                          className={`
+                            flex items-center w-full px-3 py-2 text-sm text-left 
+                            hover:bg-neutral-50 focus:bg-neutral-50 focus:outline-none
+                            ${isSelected ? "text-neutral-900 font-medium" : "text-neutral-700"}
+                          `}
+                          onClick={() => handleOptionSelect(option)}
+                        >
+                          <span className="flex-grow truncate">{option.label}</span>
+                          {isSelected && <Check className="h-4 w-4 text-green-600 ml-2 flex-shrink-0" />}
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              ) : (
+                <div className="px-3 py-4 text-center text-sm text-neutral-500">
+                  {searchQuery ? "No results found" : "No options available"}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Error message */}
+      {error && (
+        <div className="flex items-center mt-1.5 text-xs text-red-600">
+          <AlertCircle className="h-3.5 w-3.5 mr-2" />
+          {error}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ===============================
+// CHECKBOX COMPONENT
+// ===============================
+
+interface CheckboxProps {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+  description?: string
+  error?: string
+  disabled?: boolean
+}
+
+export function Checkbox({ 
+  label, 
+  checked, 
+  onChange, 
+  description, 
+  error, 
+  disabled = false 
+}: CheckboxProps) {
+  return (
+    <div className="space-y-1.5">
+      <label className={`flex items-start space-x-3 cursor-pointer ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}>
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          disabled={disabled}
+          className="h-5 w-5 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-500 focus:ring-2 focus:ring-offset-0 transition-all duration-200 disabled:cursor-not-allowed"
+        />
+        <div className="flex-1 min-w-0">
+          <span className="text-sm font-medium text-neutral-900">{label}</span>
+          {description && (
+            <p className="text-xs text-neutral-500 mt-0.5">{description}</p>
+          )}
+        </div>
+      </label>
       {error && (
         <div className="flex items-center mt-1.5 text-xs text-red-600">
           <AlertCircle className="h-3.5 w-3.5 mr-2" />
