@@ -14,6 +14,7 @@ use App\Models\Attachment;
 class Block extends Model
 {
     protected $fillable = [
+        'hostel_id',
         'block_name',
         'location',
         'manager_name',

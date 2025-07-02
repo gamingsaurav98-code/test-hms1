@@ -59,6 +59,7 @@ class Student extends Model
         'verified_on',
         'student_id',
         'room_id',
+        'hostel_id',
         'student_image',
         'student_citizenship_image',
         'registration_form_image',
