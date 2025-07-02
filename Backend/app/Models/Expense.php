@@ -13,7 +13,6 @@ class Expense extends Model
         'expense_date',
         'title',
         'description',
-        'student_id',
         'staff_id',
         'supplier_id',
         'expense_attachment',
@@ -21,4 +20,22 @@ class Expense extends Model
         'paid_amount',
         'due_amount',
     ];
+
+    public function expenseCategory()
+    {
+        return $this->belongsTo('App\Models\ExpenseCategory', 'expense_category_id');
+    }
+    
+    public function staff()
+    {
+        return $this->belongsTo('App\Models\Staff', 'staff_id');
+    }
+    public function supplier()
+    {
+        return $this->belongsTo('App\Models\Supplier', 'supplier_id');
+    }
+    public function paymentType()
+    {
+        return $this->belongsTo('App\Models\PaymentType', 'payment_type_id');
+    }
 }

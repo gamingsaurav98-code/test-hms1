@@ -17,7 +17,7 @@ COPY package*.json ./
 RUN npm install
 
 # Install postcss and autoprefixer explicitly
-RUN npm install -D postcss tailwindcss
+RUN npm install -D postcss tailwindcss lucide-react
 
 # Copy rest of the project
 COPY . .

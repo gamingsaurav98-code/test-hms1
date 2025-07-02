@@ -15,5 +15,8 @@ class Purchase extends Model
         'purchase_date',
         'total_amount',
     ];
-   
+    public function expense()
+    {
+        return $this->belongsTo('App\Models\Expense', 'expense_id');
+    }
 }

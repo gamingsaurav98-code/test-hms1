@@ -12,4 +12,12 @@ class StaffCheckoutFinancial extends Model
         'checkout_duration',
         'deducted_amount'
     ];
+    public function staff()
+    {
+        return $this->belongsTo('App\Models\Staff', 'staff_id');
+    }
+    public function checkout()
+    {
+        return $this->belongsTo('App\Models\StaffCheckInCheckOut', 'checkout_id');
+    }
 }

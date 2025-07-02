@@ -3,6 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
+use App\Models\Room;
+use App\Models\Payment;
+use App\Models\StudentCheckInCheckOut;
+use App\Models\StudentFinancial;
+use App\Models\StudentCheckoutFinancial;
+use App\Models\StudentCheckoutRule;
 
 class Student extends Model
 {
@@ -51,4 +58,36 @@ class Student extends Model
         'is_active',
         'is_existing_student',
         ];
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    public function room()
+    {
+        return $this->belongsTo(Room::class);
+    }
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+    public function checkInCheckOuts()
+    {
+        return $this->hasMany('App\Models\StudentCheckInCheckOut', 'student_id');
+    }
+    public function studentFinancials()
+    {
+        return $this->hasMany('App\Models\StudentFinancial', 'student_id');
+    }
+    public function studentCheckoutFinancials()
+    {
+        return $this->hasMany('App\Models\StudentCheckoutFinancial', 'student_id');
+    }
+    public function studentSalaryGenerates()
+    {
+        return $this->hasMany('App\Models\StudentSalaryGenerate', 'student_id');
+    }
+    public function studentCheckoutRules()
+    {
+        return $this->hasMany('App\Models\StudentCheckoutRule', 'student_id');
+    }
 }

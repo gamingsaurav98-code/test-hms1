@@ -12,4 +12,16 @@ class StudentCheckoutRule extends Model
         'active_after_days',
         'percentage',
     ];
+    public function student()
+    {
+        return $this->belongsTo('App\Models\Student', 'student_id');
+    }
+    public function studentCheckoutFinancials()
+    {
+        return $this->hasMany('App\Models\StudentCheckoutFinancial', 'checkout_rule_id');
+    }
+    public function studentCheckInCheckOuts()
+    {
+        return $this->hasMany('App\Models\StudentCheckInCheckOut', 'checkout_rule_id');
+    }
 }

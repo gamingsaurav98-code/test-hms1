@@ -13,6 +13,14 @@ class StudentFeeGenerate extends Model
         'year',
         'month',
     ];
-
+    public function student()
+    {
+        return $this->belongsTo('App\Models\Student', 'student_id');
+    }
+    public function feeType()
+    {
+        return $this->belongsTo('App\Models\FeeType', 'fee_type');
+    }
     
+
 }

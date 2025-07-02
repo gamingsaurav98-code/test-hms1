@@ -17,4 +17,12 @@ class StudentCheckInCheckOut extends Model
         'remarks',
         'status',
     ];
+    public function student()
+    {
+        return $this->belongsTo('App\Models\Student', 'student_id');
+    }
+    public function block()
+    {
+        return $this->belongsTo('App\Models\Block', 'block_id');
+    }
 }

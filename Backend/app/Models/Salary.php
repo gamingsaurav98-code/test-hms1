@@ -1,4 +1,4 @@
-hp
+<?php
 
 namespace App\Models;
 
@@ -13,4 +13,9 @@ class Salary extends Model
         'year',
         'status',
     ];
+
+    public function staff()
+    {
+        return $this->belongsTo(Staff::class);
+    }
 }

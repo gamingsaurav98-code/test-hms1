@@ -18,4 +18,16 @@ class StudentFinancial extends Model
         'remark',
         'payment_type_id',
     ];
+    public function student()
+    {
+        return $this->belongsTo('App\Models\Student', 'student_id');
+    }
+    public function paymentType()
+    {
+        return $this->belongsTo('App\Models\PaymentType', 'payment_type_id');
+    }
+    public function studentFeeGenerates()
+    {
+        return $this->hasMany('App\Models\StudentFeeGenerate', 'student_id');
+    }
 }

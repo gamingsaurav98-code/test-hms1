@@ -11,4 +11,13 @@ class IncomeType extends Model
         'amount',
         'student_id',
     ];
+    public function student()
+    {
+        return $this->belongsTo('App\Models\Student', 'student_id');
+    }
+    public function income()
+    {
+        return $this->hasMany('App\Models\Income', 'income_type_id');
+    }
+    
 }

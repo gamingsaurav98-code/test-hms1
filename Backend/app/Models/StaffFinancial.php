@@ -13,4 +13,8 @@ class StaffFinancial extends Model
         'remark',
         'payment_type_id',
     ];
+    public function staff()
+    {
+        return $this->belongsTo('App\Models\Staff', 'staff_id');
+    }
 }

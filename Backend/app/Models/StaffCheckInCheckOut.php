@@ -17,4 +17,12 @@ class StaffCheckInCheckOut extends Model
         'remarks',
         'status',
     ];
+    public function staff()
+    {
+        return $this->belongsTo('App\Models\Staff', 'staff_id');
+    }
+    public function block()
+    {
+        return $this->belongsTo('App\Models\Block', 'block_id');
+    }
 }

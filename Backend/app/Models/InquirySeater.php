@@ -11,4 +11,20 @@ class InquirySeater extends Model
         'inquiry_id',
         'capacity'
     ];
+    public function inquiry()
+    {
+        return $this->belongsTo('App\Models\Inquiry', 'inquiry_id');
+    }
+    public function room()
+    {
+        return $this->belongsTo('App\Models\Room', 'room_id');
+    }
+    public function seater()
+    {
+        return $this->hasMany('App\Models\Seater', 'inquiry_seater_id');
+    }
+    public function block()
+    {
+        return $this->belongsTo('App\Models\Block', 'block_id');
+    }
 }

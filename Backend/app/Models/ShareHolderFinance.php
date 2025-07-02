@@ -13,4 +13,14 @@ class ShareHolderFinance extends Model
         'remark',
         'payment_type_id',
     ];
+    
+    public function shareHolder()
+    {
+        return $this->belongsTo(ShareHolder::class, 'shareholder_id');
+    }
+
+    public function paymentType()
+    {
+        return $this->belongsTo(PaymentType::class);
+    }
 }

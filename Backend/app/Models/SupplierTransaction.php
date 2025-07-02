@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Supplier;
+use App\Models\PaymentType;
 
 class SupplierTransaction extends Model
 {
@@ -12,4 +14,12 @@ class SupplierTransaction extends Model
         'description',
         'payment_status',
     ];
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+    public function paymentType()
+    {
+        return $this->belongsTo(PaymentType::class);
+    }
 }

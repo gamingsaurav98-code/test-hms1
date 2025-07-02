@@ -17,4 +17,24 @@ class Notice extends Model
         'student_id',
         'staff_id',
     ];
+    public function student()
+    {
+        return $this->belongsTo('App\Models\Student', 'student_id');
+    }
+    public function staff()
+    {
+        return $this->belongsTo('App\Models\Staff', 'staff_id');
+    }
+    public function target()
+    {
+        return $this->belongsTo('App\Models\Target', 'target_type');
+    }
+    public function noticeType()
+    {
+        return $this->belongsTo('App\Models\NoticeType', 'notice_type');
+    }
+    public function noticeAttachment()
+    {
+        return $this->hasOne('App\Models\NoticeAttachment', 'notice_id');
+    }
 }

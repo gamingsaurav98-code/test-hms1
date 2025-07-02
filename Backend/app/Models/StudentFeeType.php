@@ -11,6 +11,12 @@ class StudentFeeType extends Model
         'amount',
         'is_active'
     ];
-    
-   
+    public function studentFeeGenerates()
+    {
+        return $this->hasMany('App\Models\StudentFeeGenerate', 'fee_type');
+    }
+    public function studentFeeTypes()
+    {
+        return $this->hasMany('App\Models\StudentFeeType', 'fee_type');
+    }
 }

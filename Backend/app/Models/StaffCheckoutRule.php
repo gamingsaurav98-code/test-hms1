@@ -12,4 +12,24 @@ class StaffCheckoutRule extends Model
         'active_after_days',
         'percentage',
     ];
+    public function staff()
+    {
+        return $this->belongsTo('App\Models\Staff', 'staff_id');
+    }
+    public function staffCheckoutFinancials()
+    {
+        return $this->hasMany('App\Models\StaffCheckoutFinancial', 'checkout_rule_id');
+    }
+    public function staffCheckInCheckOuts()
+    {
+        return $this->hasMany('App\Models\StaffCheckInCheckOut', 'checkout_rule_id');
+    }
+    public function staffCheckoutRuleLogs()
+    {
+        return $this->hasMany('App\Models\StaffCheckoutRuleLog', 'checkout_rule_id');
+    }
+    public function staffCheckoutRuleFinancials()
+    {
+        return $this->hasMany('App\Models\StaffCheckoutRuleFinancial', 'checkout_rule_id');
+    }
 }

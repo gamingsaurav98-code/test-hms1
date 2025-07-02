@@ -13,4 +13,12 @@ class SalaryPayment extends Model
         'remark',
         'payment_type_id',
     ];
+    public function staff()
+    {
+        return $this->belongsTo(Staff::class);
+    }
+    public function paymentType()
+    {
+        return $this->belongsTo(PaymentType::class);
+    }
 }

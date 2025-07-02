@@ -10,6 +10,9 @@ class ExpenseCategory extends Model
         'name',
         'description',
     ];
-
     
+    public function expenses()
+    {
+        return $this->hasMany('App\Models\Expense', 'expense_category_id');
+    }
 }

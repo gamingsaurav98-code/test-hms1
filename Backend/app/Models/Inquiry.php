@@ -14,4 +14,8 @@ class Inquiry extends Model
         'seater',
         'description',
     ];
+    public function block()
+    {
+        return $this->belongsTo('App\Models\Block', 'block_id');
+    }
 }

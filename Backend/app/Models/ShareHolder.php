@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Share;
+use App\Models\ShareTransaction;
+use App\Models\ShareHolderFinance;
 
 class ShareHolder extends Model
 {
@@ -21,4 +24,16 @@ class ShareHolder extends Model
         'remark',
         'is_active',
     ];
+    public function shares()
+    {
+        return $this->hasMany(Share::class, 'shareholder_id');
+    }
+    public function shareTransactions()
+    {
+        return $this->hasMany(ShareTransaction::class, 'shareholder_id');
+    }
+    public function finances()
+    {
+        return $this->hasMany(ShareHolderFinance::class, 'shareholder_id');
+    }
 }

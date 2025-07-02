@@ -12,4 +12,12 @@ class StudentCheckoutFinancial extends Model
         'checkout_duration',
         'deducted_amount'
     ];
+    public function student()
+    {
+        return $this->belongsTo('App\Models\Student', 'student_id');
+    }
+    public function checkout()
+    {
+        return $this->belongsTo('App\Models\StudentCheckInCheckOut', 'checkout_id');
+    }
 }

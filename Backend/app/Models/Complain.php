@@ -14,4 +14,15 @@ class Complain extends Model
         'description',
         'status',
     ];
+
+    public function student()
+    
+    {
+        return $this->belongsTo('App\Models\Student', 'student_id');
+    }
+
+    public function staff()
+    {
+        return $this->belongsTo('App\Models\Staff', 'staff_id');
+    }
 }

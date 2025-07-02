@@ -15,4 +15,9 @@ class Income extends Model
         'student_id',
         'income_attachment', // e.g., file path or URL
     ];
+    public function student()
+    {
+        return $this->belongsTo('App\Models\Student', 'student_id');
+    }
+    
 }
