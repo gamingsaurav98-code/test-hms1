@@ -3,6 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Block;
+use App\Models\Expense;
+use App\Models\Student;
+use App\Models\Staff;
+use App\Models\Complain;
+use App\Models\ExpenseCategory;
+use App\Models\PaymentType;
+use App\Models\Supplier;
+use App\Models\Room;
 
 class Hostel extends Model
 {
@@ -18,53 +27,51 @@ class Hostel extends Model
         'pan_number',
     ];
 
-    public function floors()
-    {
-        return $this->hasMany('App\Models\Floor', 'hostel_id');
-    }
+    // Floor relationship removed as requested
+    
     public function blocks()
     {
-        return $this->hasMany('App\Models\Block', 'hostel_id');
+        return $this->hasMany(Block::class);
     }
+    
     public function expenses()
     {
-        return $this->hasMany('App\Models\Expense', 'hostel_id');
+        return $this->hasMany(Expense::class);
     }
+    
     public function students()
     {
-        return $this->hasMany('App\Models\Student', 'hostel_id');
+        return $this->hasMany(Student::class);
     }
+    
     public function staff()
     {
-        return $this->hasMany('App\Models\Staff', 'hostel_id');
+        return $this->hasMany(Staff::class);
     }
+    
     public function complaints()
     {
-        return $this->hasMany('App\Models\Complain', 'hostel_id');
+        return $this->hasMany(Complain::class);
     }
+    
     public function expenseCategories()
     {
-        return $this->hasMany('App\Models\ExpenseCategory', 'hostel_id');
+        return $this->hasMany(ExpenseCategory::class);
     }
-    public function payments()
-    {
-        return $this->hasMany('App\Models\Payment', 'hostel_id');
-    }
+    
     public function paymentTypes()
     {
-        return $this->hasMany('App\Models\PaymentType', 'hostel_id');
+        return $this->hasMany(PaymentType::class);
     }
+    
     public function suppliers()
     {
-        return $this->hasMany('App\Models\Supplier', 'hostel_id');
+        return $this->hasMany(Supplier::class);
     }
+    
     public function rooms()
     {
-        return $this->hasMany('App\Models\Room', 'hostel_id');
-    }
-    public function roomTypes()
-    {
-        return $this->hasMany('App\Models\RoomType', 'hostel_id');
+        return $this->hasMany(Room::class);
     }
     
 }

@@ -4,23 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Student;
-use App\Models\Income;
 
-class IncomeType extends Model
+class StudentAmenities extends Model
 {
-    protected $fillable =[
-        'title',
-        'amount',
+    protected $fillable = [
         'student_id',
+        'name',
+        'description',
     ];
+    
     public function student()
     {
         return $this->belongsTo(Student::class);
     }
-    
-    public function incomes()
-    {
-        return $this->hasMany(Income::class);
-    }
-    
 }

@@ -3,6 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Hostel;
+use App\Models\Student;
+use App\Models\Staff;
+use App\Models\Attachment;
 
 class Complain extends Model
 {
@@ -15,14 +19,23 @@ class Complain extends Model
         'status',
     ];
 
-    public function student()
-    
+    public function hostel()
     {
-        return $this->belongsTo('App\Models\Student', 'student_id');
+        return $this->belongsTo(Hostel::class);
+    }
+    
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
     }
 
     public function staff()
     {
-        return $this->belongsTo('App\Models\Staff', 'staff_id');
+        return $this->belongsTo(Staff::class);
+    }
+    
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class);
     }
 }

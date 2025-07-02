@@ -3,9 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Share;
-use App\Models\ShareTransaction;
 use App\Models\ShareHolderFinance;
+use App\Models\Attachment;
 
 class ShareHolder extends Model
 {
@@ -24,16 +23,17 @@ class ShareHolder extends Model
         'remark',
         'is_active',
     ];
-    public function shares()
-    {
-        return $this->hasMany(Share::class, 'shareholder_id');
-    }
-    public function shareTransactions()
-    {
-        return $this->hasMany(ShareTransaction::class, 'shareholder_id');
-    }
+    // Share relationship removed as requested - ShareHolder includes share data
+    
+    // ShareTransaction relationship removed - ShareHolderFinance handles this
+    
     public function finances()
     {
-        return $this->hasMany(ShareHolderFinance::class, 'shareholder_id');
+        return $this->hasMany(ShareHolderFinance::class);
+    }
+    
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class, 'shareholder_id');
     }
 }

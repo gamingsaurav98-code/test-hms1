@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Room;
+use App\Models\Inquiry;
+use App\Models\Block;
 
 class InquirySeater extends Model
 {
@@ -11,20 +14,20 @@ class InquirySeater extends Model
         'inquiry_id',
         'capacity'
     ];
-    public function inquiry()
-    {
-        return $this->belongsTo('App\Models\Inquiry', 'inquiry_id');
-    }
     public function room()
     {
-        return $this->belongsTo('App\Models\Room', 'room_id');
+        return $this->belongsTo(Room::class);
     }
-    public function seater()
+    
+    public function inquiry()
     {
-        return $this->hasMany('App\Models\Seater', 'inquiry_seater_id');
+        return $this->belongsTo(Inquiry::class);
     }
+    
     public function block()
     {
-        return $this->belongsTo('App\Models\Block', 'block_id');
+        return $this->belongsTo(Block::class);
     }
+    
+    // Seater relationship removed as requested - capacity field is used instead
 }

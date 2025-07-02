@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Payment;
+use App\Models\Hostel;
 use App\Models\SupplierFinancial;
+use App\Models\SupplierPayment;
 use App\Models\SupplierTransaction;
 use App\Models\Expense;
+use App\Models\Attachment;
 
 class Supplier extends Model
 {
@@ -18,13 +20,21 @@ class Supplier extends Model
         'description',
         'pan_number',
     ];
-    public function payments()
+    public function hostel()
     {
-        return $this->hasMany(Payment::class);
+        return $this->belongsTo(Hostel::class);
     }
+    
+    // Payment relationship removed as requested
+    
     public function financials()
     {
         return $this->hasMany(SupplierFinancial::class);
+    }
+
+    public function supplierPayments()
+    {
+        return $this->hasMany(SupplierPayment::class);
     }
 
     public function transactions()
@@ -35,5 +45,10 @@ class Supplier extends Model
     public function expenses()
     {
         return $this->hasMany(Expense::class);
+    }
+    
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class);
     }
 }

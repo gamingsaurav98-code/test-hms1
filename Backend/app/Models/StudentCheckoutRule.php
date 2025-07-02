@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Student;
+use App\Models\StudentCheckoutFinancial;
+use App\Models\StudentCheckInCheckOut;
 
 class StudentCheckoutRule extends Model
 {
@@ -14,14 +17,16 @@ class StudentCheckoutRule extends Model
     ];
     public function student()
     {
-        return $this->belongsTo('App\Models\Student', 'student_id');
+        return $this->belongsTo(Student::class);
     }
-    public function studentCheckoutFinancials()
+    
+    public function checkoutFinancials()
     {
-        return $this->hasMany('App\Models\StudentCheckoutFinancial', 'checkout_rule_id');
+        return $this->hasMany(StudentCheckoutFinancial::class, 'checkout_rule_id');
     }
-    public function studentCheckInCheckOuts()
+    
+    public function checkInCheckOuts()
     {
-        return $this->hasMany('App\Models\StudentCheckInCheckOut', 'checkout_rule_id');
+        return $this->hasMany(StudentCheckInCheckOut::class, 'checkout_rule_id');
     }
 }

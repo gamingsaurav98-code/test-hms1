@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Supplier;
+use App\Models\PaymentType;
 
 class SupplierFinancial extends Model
 {

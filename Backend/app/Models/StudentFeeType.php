@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\StudentFeeGenerate;
 
 class StudentFeeType extends Model
 {
@@ -11,12 +12,12 @@ class StudentFeeType extends Model
         'amount',
         'is_active'
     ];
+    
     public function studentFeeGenerates()
     {
-        return $this->hasMany('App\Models\StudentFeeGenerate', 'fee_type');
+        return $this->hasMany(StudentFeeGenerate::class, 'fee_type');
     }
-    public function studentFeeTypes()
-    {
-        return $this->hasMany('App\Models\StudentFeeType', 'fee_type');
-    }
+    
+    // Removed self-referencing relationship as it's unusual
+    // for a model to have a relationship with itself unless it's hierarchical
 }

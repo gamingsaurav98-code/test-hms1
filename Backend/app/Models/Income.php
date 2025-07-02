@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Student;
+use App\Models\IncomeType;
 
 class Income extends Model
 {
@@ -17,7 +19,12 @@ class Income extends Model
     ];
     public function student()
     {
-        return $this->belongsTo('App\Models\Student', 'student_id');
+        return $this->belongsTo(Student::class);
+    }
+    
+    public function incomeType()
+    {
+        return $this->belongsTo(IncomeType::class);
     }
     
 }

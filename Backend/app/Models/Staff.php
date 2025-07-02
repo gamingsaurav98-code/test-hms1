@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
+use App\Models\Hostel;
 use App\Models\Salary;
 use App\Models\SalaryPayment;
 use App\Models\StaffCheckInCheckOut;
@@ -14,6 +15,7 @@ use App\Models\StaffCheckoutRule;
 use App\Models\Notice;
 use App\Models\Expense;
 use App\Models\Complain;
+use App\Models\Attachment;
 
 class Staff extends Model
 {
@@ -60,44 +62,64 @@ class Staff extends Model
     {
         return $this->belongsTo(User::class);
     }
+    
+    public function hostel()
+    {
+        return $this->belongsTo(Hostel::class);
+    }
+    
     public function salaries()
     {
-        return $this->hasMany('App\Models\Salary', 'staff_id');
+        return $this->hasMany(Salary::class);
     }
+    
     public function salaryPayments()
     {
-        return $this->hasMany('App\Models\SalaryPayment', 'staff_id');
+        return $this->hasMany(SalaryPayment::class);
     }
+    
     public function checkInCheckOuts()
     {
         return $this->hasMany(StaffCheckInCheckOut::class);
     }
+    
     public function financials()
     {
         return $this->hasMany(StaffFinancial::class);
     }
+    
     public function salaryGenerates()
     {
         return $this->hasMany(StaffSalaryGenerate::class);
     }
+    
     public function checkoutFinancials()
     {
         return $this->hasMany(StaffCheckoutFinancial::class);
     }
+    
     public function checkoutRules()
     {
         return $this->hasMany(StaffCheckoutRule::class);
     }
+    
     public function notices()
     {
         return $this->hasMany(Notice::class);
     }
+    
     public function expenses()
     {
         return $this->hasMany(Expense::class);
     }
+    
     public function complains()
     {
         return $this->hasMany(Complain::class);
+    }
+    
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class);
     }
 }

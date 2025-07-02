@@ -3,6 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Hostel;
+use App\Models\ExpenseCategory;
+use App\Models\Student;
+use App\Models\Staff;
+use App\Models\Supplier;
+use App\Models\PaymentType;
+use App\Models\Purchase;
+use App\Models\Attachment;
 
 class Expense extends Model
 {
@@ -21,21 +29,43 @@ class Expense extends Model
         'due_amount',
     ];
 
+    public function hostel()
+    {
+        return $this->belongsTo(Hostel::class);
+    }
+
     public function expenseCategory()
     {
-        return $this->belongsTo('App\Models\ExpenseCategory', 'expense_category_id');
+        return $this->belongsTo(ExpenseCategory::class);
+    }
+    
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
     }
     
     public function staff()
     {
-        return $this->belongsTo('App\Models\Staff', 'staff_id');
+        return $this->belongsTo(Staff::class);
     }
+    
     public function supplier()
     {
-        return $this->belongsTo('App\Models\Supplier', 'supplier_id');
+        return $this->belongsTo(Supplier::class);
     }
+    
     public function paymentType()
     {
-        return $this->belongsTo('App\Models\PaymentType', 'payment_type_id');
+        return $this->belongsTo(PaymentType::class);
+    }
+    
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class);
+    }
+    
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class);
     }
 }

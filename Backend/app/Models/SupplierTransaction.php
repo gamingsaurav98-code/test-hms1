@@ -13,11 +13,13 @@ class SupplierTransaction extends Model
         'amount',
         'description',
         'payment_status',
+        'payment_type_id',
     ];
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
     }
+    
     public function paymentType()
     {
         return $this->belongsTo(PaymentType::class);

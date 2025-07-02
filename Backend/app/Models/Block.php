@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Room;
-use App\Models\Floor;
+use App\Models\Hostel;
 use App\Models\StaffCheckInCheckOut;
+use App\Models\StudentCheckInCheckOut;
 use App\Models\Inquiry;
 use App\Models\InquirySeater;
+use App\Models\Attachment;
 
 class Block extends Model
 {
@@ -19,19 +21,27 @@ class Block extends Model
         'remarks',
         'block_attachment',
     ];
+
+    public function hostel()
+    {
+        return $this->belongsTo(Hostel::class);
+    }
+    
     public function rooms()
     {
         return $this->hasMany(Room::class);
     }
     
-    public function floors()
-    {
-        return $this->hasMany(Floor::class);
-    }
+    // Floor relationship removed as requested
     
     public function staffCheckInCheckOuts()
     {
         return $this->hasMany(StaffCheckInCheckOut::class);
+    }
+    
+    public function studentCheckInCheckOuts()
+    {
+        return $this->hasMany(StudentCheckInCheckOut::class);
     }
     
     public function inquiries()
@@ -42,5 +52,10 @@ class Block extends Model
     public function inquirySeaters()
     {
         return $this->hasMany(InquirySeater::class);
+    }
+    
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class);
     }
 }

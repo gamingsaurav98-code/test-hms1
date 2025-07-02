@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Staff;
+use App\Models\PaymentType;
 
 class StaffSalaryGenerate extends Model
 {
@@ -15,9 +17,14 @@ class StaffSalaryGenerate extends Model
         'remark',
         'payment_type_id',
     ];
+    
     public function staff()
     {
-        return $this->belongsTo('App\Models\Staff', 'staff_id');
+        return $this->belongsTo(Staff::class);
     }
     
+    public function paymentType()
+    {
+        return $this->belongsTo(PaymentType::class);
+    }
 }

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Hostel;
+use App\Models\Expense;
 
 class ExpenseCategory extends Model
 {
@@ -11,8 +13,13 @@ class ExpenseCategory extends Model
         'description',
     ];
     
+    public function hostel()
+    {
+        return $this->belongsTo(Hostel::class);
+    }
+    
     public function expenses()
     {
-        return $this->hasMany('App\Models\Expense', 'expense_category_id');
+        return $this->hasMany(Expense::class);
     }
 }

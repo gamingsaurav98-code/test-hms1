@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Student;
+use App\Models\StudentFeeType;
+use App\Models\StudentFinancial;
 
 class StudentFeeGenerate extends Model
 {
@@ -13,14 +16,20 @@ class StudentFeeGenerate extends Model
         'year',
         'month',
     ];
+    
     public function student()
     {
-        return $this->belongsTo('App\Models\Student', 'student_id');
-    }
-    public function feeType()
-    {
-        return $this->belongsTo('App\Models\FeeType', 'fee_type');
+        return $this->belongsTo(Student::class);
     }
     
+    public function feeType()
+    {
+        return $this->belongsTo(StudentFeeType::class, 'fee_type');
+    }
+    
+    public function studentFinancial()
+    {
+        return $this->belongsTo(StudentFinancial::class, 'student_id', 'student_id');
+    }
 
 }

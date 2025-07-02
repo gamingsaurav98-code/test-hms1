@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Expense;
 
 class Purchase extends Model
 {
@@ -17,6 +18,6 @@ class Purchase extends Model
     ];
     public function expense()
     {
-        return $this->belongsTo('App\Models\Expense', 'expense_id');
+        return $this->belongsTo(Expense::class);
     }
 }

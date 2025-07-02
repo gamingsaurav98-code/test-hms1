@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Student;
+use App\Models\Staff;
+use App\Models\Attachment;
 
 class Notice extends Model
 {
@@ -19,22 +22,17 @@ class Notice extends Model
     ];
     public function student()
     {
-        return $this->belongsTo('App\Models\Student', 'student_id');
+        return $this->belongsTo(Student::class);
     }
+    
     public function staff()
     {
-        return $this->belongsTo('App\Models\Staff', 'staff_id');
+        return $this->belongsTo(Staff::class);
     }
-    public function target()
+    
+    public function attachments()
     {
-        return $this->belongsTo('App\Models\Target', 'target_type');
+        return $this->hasMany(Attachment::class);
     }
-    public function noticeType()
-    {
-        return $this->belongsTo('App\Models\NoticeType', 'notice_type');
-    }
-    public function noticeAttachment()
-    {
-        return $this->hasOne('App\Models\NoticeAttachment', 'notice_id');
-    }
+    
 }

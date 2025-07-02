@@ -3,6 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Hostel;
+use App\Models\StudentFinancial;
+use App\Models\StaffFinancial;
+use App\Models\SalaryPayment;
+use App\Models\ShareHolderFinance;
+use App\Models\Expense;
+use App\Models\SupplierFinancial;
+use App\Models\SupplierPayment;
+use App\Models\StaffSalaryGenerate;
 
 class PaymentType extends Model
 {
@@ -11,10 +20,12 @@ class PaymentType extends Model
         'description',
         'is_active'
     ];
-    public function payments()
+    public function hostel()
     {
-        return $this->hasMany('App\Models\Payment', 'payment_type_id');
+        return $this->belongsTo(Hostel::class);
     }
+    
+    // Payment relationship removed as requested
 
     public function studentFinancials()
     {

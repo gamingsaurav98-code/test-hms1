@@ -3,6 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Staff;
+use App\Models\Block;
+use App\Models\StaffCheckoutRule;
+use App\Models\StaffCheckoutFinancial;
 
 class StaffCheckInCheckOut extends Model
 {
@@ -16,13 +20,26 @@ class StaffCheckInCheckOut extends Model
         'block_id',
         'remarks',
         'status',
+        'checkout_rule_id',
+        'checkout_duration'
     ];
     public function staff()
     {
-        return $this->belongsTo('App\Models\Staff', 'staff_id');
+        return $this->belongsTo(Staff::class);
     }
+    
     public function block()
     {
-        return $this->belongsTo('App\Models\Block', 'block_id');
+        return $this->belongsTo(Block::class);
+    }
+    
+    public function checkoutRule()
+    {
+        return $this->belongsTo(StaffCheckoutRule::class);
+    }
+    
+    public function checkoutFinancials()
+    {
+        return $this->hasMany(StaffCheckoutFinancial::class, 'checkout_id');
     }
 }

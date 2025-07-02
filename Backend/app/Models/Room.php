@@ -3,6 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Hostel;
+use App\Models\Block;
+use App\Models\Student;
+use App\Models\InquirySeater;
+use App\Models\Attachment;
 
 class Room extends Model
 {
@@ -15,20 +20,32 @@ class Room extends Model
         'floor_number',
         'room_attachment',
     ];
+    public function hostel()
+    {
+        return $this->belongsTo(Hostel::class);
+    }
+    
     public function block()
     {
-        return $this->belongsTo('App\Models\Block', 'block_id');
+        return $this->belongsTo(Block::class);
     }
-    public function inquiries()
+    
+    // Floor relationship removed as requested
+    
+    public function students()
     {
-        return $this->hasMany('App\Models\Inquiry', 'room_id');
+        return $this->hasMany(Student::class);
     }
+    
     public function inquirySeaters()
     {
-        return $this->hasMany('App\Models\InquirySeater', 'room_id');
+        return $this->hasMany(InquirySeater::class);
     }
-    public function seater()
+    
+    // Seater relationship removed as requested - capacity field is used instead
+    
+    public function attachments()
     {
-        return $this->hasMany('App\Models\Seater', 'room_id');
+        return $this->hasMany(Attachment::class);
     }
 }

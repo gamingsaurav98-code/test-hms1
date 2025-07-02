@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Staff;
+use App\Models\Attachment;
 
 class Salary extends Model
 {
@@ -17,5 +19,10 @@ class Salary extends Model
     public function staff()
     {
         return $this->belongsTo(Staff::class);
+    }
+    
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class);
     }
 }
