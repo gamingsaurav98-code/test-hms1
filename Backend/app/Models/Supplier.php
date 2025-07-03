@@ -13,6 +13,7 @@ use App\Models\Attachment;
 class Supplier extends Model
 {
     protected $fillable = [
+        'hostel_id',
         'name',
         'email',
         'contact_number',

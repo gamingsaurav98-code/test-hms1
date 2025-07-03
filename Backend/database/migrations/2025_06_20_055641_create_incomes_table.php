@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('incomes', function (Blueprint $table) {
             $table->id();
-            $table->string('income_type');
+            $table->foreignId('income_type_id');
             $table->string('amount');
             $table->date('income_date');
             $table->foreignId('student_id');

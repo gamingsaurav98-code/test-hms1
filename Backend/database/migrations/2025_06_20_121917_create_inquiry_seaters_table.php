@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('room_id');
             $table->foreignId('inquiry_id');
+            $table->foreignId('block_id');
             $table->integer('capacity')->default(0);
             $table->timestamps();
         });

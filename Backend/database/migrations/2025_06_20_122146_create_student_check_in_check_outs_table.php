@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id');
             $table->foreignId('block_id');
+            $table->foreignId('checkout_rule_id')->nullable();
             $table->datetime('requested_checkin_time')->nullable();
             $table->datetime('requested_checkout_time')->nullable();
             $table->date('date');

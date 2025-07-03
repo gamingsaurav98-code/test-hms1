@@ -15,12 +15,14 @@ use App\Models\Attachment;
 class Expense extends Model
 {
     protected $fillable = [
+        'hostel_id',
         'expense_category_id',
         'expense_type',
         'amount',
         'expense_date',
         'title',
         'description',
+        'student_id',
         'staff_id',
         'supplier_id',
         'expense_attachment',

@@ -20,8 +20,10 @@ return new class extends Migration
             $table->timestamp('checkout_time')->nullable();
             $table->date('date');
             $table->foreignId('block_id');
+            $table->foreignId('checkout_rule_id')->nullable();
             $table->text('remarks')->nullable();
             $table->enum('status', ['present', 'absent', 'leave'])->default('present');
+            $table->string('checkout_duration')->nullable();
             $table->timestamps();
         });
     }

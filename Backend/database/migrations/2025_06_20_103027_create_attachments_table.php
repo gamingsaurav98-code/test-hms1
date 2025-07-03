@@ -30,7 +30,6 @@ return new class extends Migration
             $table->foreignId('salary_id')->nullable();
             $table->foreignId('salary_payment_id')->nullable();
             $table->foreignId('user_id')->nullable();
-            $table->foreignId('floor_id')->nullable();
             $table->timestamps();
         });
     }

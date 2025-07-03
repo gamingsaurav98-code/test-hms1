@@ -9,7 +9,7 @@ use App\Models\IncomeType;
 class Income extends Model
 {
     protected $fillable = [
-        'income_type',
+        'income_type_id',
         'amount',
         'income_date',
         'title',

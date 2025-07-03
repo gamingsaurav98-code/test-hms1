@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('amount');
             $table->string('description')->nullable();
             $table->string('payment_status')->nullable();
+            $table->foreignId('payment_type_id')->nullable();
             $table->timestamps();
         });
     }
