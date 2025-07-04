@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { blockApi, Block, ApiError } from '@/lib/api';
+import { Button, ConfirmModal, TableSkeleton, ImageModal } from '@/components/ui';
 
 export default function BlockDetail() {
   const router = useRouter();
@@ -55,11 +56,13 @@ export default function BlockDetail() {
     });
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this block? This action cannot be undone.')) {
-      return;
-    }
+  const [deleteModal, setDeleteModal] = useState<boolean>(false);
 
+  const handleDeleteClick = () => {
+    setDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
     try {
       setIsDeleting(true);
       await blockApi.deleteBlock(blockId);
@@ -75,16 +78,18 @@ export default function BlockDetail() {
       }
     } finally {
       setIsDeleting(false);
+      setDeleteModal(false);
     }
   };
 
   if (isLoading) {
     return (
       <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#235999]"></div>
-          <span className="ml-2 text-gray-600">Loading block details...</span>
+        <div className="mb-6">
+          <h1 className="text-xl font-medium text-gray-900">Block Details</h1>
+          <p className="text-sm text-gray-500 mt-1">Loading block details...</p>
         </div>
+        <TableSkeleton />
       </div>
     );
   }
@@ -100,19 +105,21 @@ export default function BlockDetail() {
             <p className="text-red-800">{error}</p>
           </div>
           <div className="mt-3 space-x-2">
-            <button
+            <Button
               onClick={() => window.location.reload()}
-              className="bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded text-sm"
+              variant="secondary"
+              size="sm"
             >
               Retry
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => router.push('/admin/block')}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm"
+              variant="ghost"
+              size="sm"
             >
               Back to Blocks
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={async () => {
                 try {
                   const response = await blockApi.getBlocks();
@@ -122,10 +129,11 @@ export default function BlockDetail() {
                   alert('Could not fetch available blocks');
                 }
               }}
-              className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm"
+              variant="secondary"
+              size="sm"
             >
               Show Available IDs
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -150,6 +158,19 @@ export default function BlockDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-4">
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        show={deleteModal}
+        title="Delete Block"
+        message="Are you sure you want to delete this block? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteModal(false)}
+        isLoading={isDeleting}
+        variant="danger"
+      />
+
       <div className="w-full">
         {/* Header */}
         <div className="mb-6">
@@ -158,26 +179,20 @@ export default function BlockDetail() {
               <h1 className="text-2xl font-semibold text-gray-900">{block.block_name}</h1>
             </div>
             <div className="flex space-x-2">
-              <button
+              <Button
                 onClick={() => router.push(`/admin/block/${block.id}/edit`)}
-                className="px-3 py-2 text-sm bg-[#235999] hover:bg-[#1e4d87] text-white rounded-lg transition-colors"
+                variant="primary"
               >
                 Edit Block
-              </button>
-              <button
-                onClick={handleDelete}
+              </Button>
+              <Button
+                onClick={handleDeleteClick}
                 disabled={isDeleting}
-                className="px-3 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center space-x-1"
+                variant="danger"
+                loading={isDeleting}
               >
-                {isDeleting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
-                    <span>Deleting...</span>
-                  </>
-                ) : (
-                  <span>Delete</span>
-                )}
-              </button>
+                {isDeleting ? "Deleting..." : "Delete"}
+              </Button>
             </div>
           </div>
         </div>

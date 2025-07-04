@@ -3,6 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { blockApi, Block, ApiError } from '@/lib/api';
+import { 
+  Button, 
+  SearchBar, 
+  ConfirmModal, 
+  SuccessToast, 
+  TableSkeleton 
+} from '@/components/ui';
 
 export default function BlockList() {
   const router = useRouter();
@@ -128,10 +135,11 @@ export default function BlockList() {
   if (isLoading) {
     return (
       <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#235999]"></div>
-          <span className="ml-2 text-gray-600">Loading blocks...</span>
+        <div className="mb-6">
+          <h1 className="text-xl font-medium text-gray-900">Blocks</h1>
+          <p className="text-sm text-gray-500 mt-1">Loading blocks...</p>
         </div>
+        <TableSkeleton />
       </div>
     );
   }
@@ -160,58 +168,34 @@ export default function BlockList() {
   return (
     <div className="p-4 max-w-7xl mx-auto">
       {/* Delete Confirmation Modal */}
-      {deleteModal.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center mb-4">
-              <div className="flex-shrink-0">
-                <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-lg font-medium text-gray-900">Delete Block</h3>
-              </div>
-            </div>
-            <div className="mb-6">
-              <p className="text-sm text-gray-600">
-                Are you sure you want to delete this block? This action cannot be undone.
-              </p>
-            </div>
-            <div className="flex space-x-3 justify-end">
-              <button
-                onClick={cancelDelete}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        show={deleteModal.show}
+        title="Delete Block"
+        message="Are you sure you want to delete this block? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        isLoading={isDeleting !== null}
+        variant="danger"
+      />
 
       {/* Alert Notification */}
-      {alert.show && (
-        <div className={`fixed top-4 right-4 z-50 max-w-sm w-full ${
-          alert.type === 'success' ? 'bg-green-100 border-green-500 text-green-700' : 'bg-red-100 border-red-500 text-red-700'
-        } border-l-4 p-4 rounded-lg shadow-lg`}>
+      {alert.type === 'success' && alert.show && (
+        <SuccessToast
+          show={alert.show}
+          message={alert.message}
+          progress={100}
+          onClose={() => setAlert({show: false, message: '', type: 'success'})}
+        />
+      )}
+      {alert.type === 'error' && alert.show && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm w-full bg-red-100 border-red-500 text-red-700 border-l-4 p-4 rounded-lg shadow-lg">
           <div className="flex">
             <div className="flex-shrink-0">
-              {alert.type === 'success' ? (
-                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              )}
+              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium">{alert.message}</p>
@@ -220,11 +204,7 @@ export default function BlockList() {
               <div className="-mx-1.5 -my-1.5">
                 <button
                   onClick={() => setAlert({show: false, message: '', type: 'success'})}
-                  className={`inline-flex rounded-md p-1.5 ${
-                    alert.type === 'success' ? 'text-green-500 hover:bg-green-200' : 'text-red-500 hover:bg-red-200'
-                  } focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                    alert.type === 'success' ? 'focus:ring-green-600' : 'focus:ring-red-600'
-                  }`}
+                  className="inline-flex rounded-md p-1.5 text-red-500 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -242,31 +222,24 @@ export default function BlockList() {
           <h1 className="text-xl font-medium text-gray-900">Blocks</h1>
           <p className="text-sm text-gray-500 mt-1">{blocks.length} total blocks</p>
         </div>
-        <button
+        <Button
           onClick={() => router.push('/admin/block/create')}
-          className="bg-[#235999] hover:bg-[#1e4d87] text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>Add Block</span>
-        </button>
+          </svg>}
+          className="bg-[#235999] hover:bg-[#1e4d87]"
+        >
+          Add Block
+        </Button>
       </div>
 
       {/* Compact Search */}
       <div className="mb-4">
-        <div className="relative max-w-sm">
-          <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search blocks..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#235999] focus:border-transparent"
-          />
-        </div>
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search blocks..."
+        />
       </div>
 
       {/* Clean List View */}
@@ -284,12 +257,12 @@ export default function BlockList() {
             {searchQuery ? 'Try a different search term' : 'Create your first block to get started'}
           </p>
           {!searchQuery && (
-            <button
+            <Button
               onClick={() => router.push('/admin/block/create')}
-              className="bg-[#235999] hover:bg-[#1e4d87] text-white px-4 py-2 rounded-lg text-sm transition-colors"
+              className="bg-[#235999] hover:bg-[#1e4d87]"
             >
               Create Block
-            </button>
+            </Button>
           )}
         </div>
       ) : (
@@ -350,39 +323,41 @@ export default function BlockList() {
                   {/* Actions */}
                   <div className="col-span-1">
                     <div className="flex space-x-1">
-                      <button
+                      <Button
                         onClick={() => router.push(`/admin/block/${block.id}`)}
-                        className="p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors"
+                        variant="secondary"
+                        size="sm"
                         title="View Block"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => router.push(`/admin/block/${block.id}/edit`)}
-                        className="p-1.5 bg-[#235999] hover:bg-[#1e4d87] text-white rounded transition-colors"
-                        title="Edit Block"
+                        </svg>}
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
+                        <span className="sr-only">View</span>
+                      </Button>                        <Button
+                          onClick={() => router.push(`/admin/block/${block.id}/edit`)}
+                          variant="primary"
+                          size="sm"
+                          title="Edit Block"
+                          icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>}
+                        >
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                      <Button
                         onClick={() => handleDeleteBlock(block.id)}
                         disabled={isDeleting === block.id}
-                        className="p-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors disabled:opacity-50"
+                        variant="danger"
+                        size="sm"
                         title="Delete Block"
+                        loading={isDeleting === block.id}
+                        icon={!isDeleting && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>}
                       >
-                        {isDeleting === block.id ? (
-                          <div className="animate-spin rounded-full h-3.5 w-3.5 border border-red-700 border-t-transparent"></div>
-                        ) : (
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        )}
-                      </button>
+                        <span className="sr-only">Delete</span>
+                      </Button>
                     </div>
                   </div>
                 </div>

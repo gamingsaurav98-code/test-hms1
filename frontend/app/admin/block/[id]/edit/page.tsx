@@ -3,6 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { blockApi, BlockFormData, Block, ApiError } from '@/lib/api';
+import { 
+  Button, 
+  FormField, 
+  SubmitButton, 
+  CancelButton, 
+  SingleImageUploadEdit,
+  TableSkeleton 
+} from '@/components/ui';
 
 export default function EditBlock() {
   const router = useRouter();
@@ -227,10 +235,11 @@ export default function EditBlock() {
   if (isLoading) {
     return (
       <div className="p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#235999]"></div>
-          <span className="ml-2 text-gray-600">Loading block data...</span>
+        <div className="mb-6">
+          <h1 className="text-xl font-medium text-gray-900">Edit Block</h1>
+          <p className="text-sm text-gray-500 mt-1">Loading block data...</p>
         </div>
+        <TableSkeleton />
       </div>
     );
   }
@@ -277,94 +286,59 @@ export default function EditBlock() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               
               {/* Block Name */}
-              <div className="space-y-1">
-                <label htmlFor="block_name" className="block text-sm font-medium text-gray-900">
-                  Block Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="block_name"
-                  name="block_name"
-                  value={formData.block_name}
-                  onChange={handleInputChange}
-                  className={`w-full px-2 py-1.5 text-sm border rounded-md focus:ring-1 focus:ring-[#235999] focus:border-[#235999] ${
-                    errors.block_name ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter block name"
-                />
-                {errors.block_name && <p className="text-xs text-red-600">{errors.block_name}</p>}
-              </div>
+              <FormField
+                name="block_name"
+                label="Block Name"
+                required
+                value={formData.block_name}
+                onChange={handleInputChange}
+                error={errors.block_name}
+                placeholder="Enter block name"
+              />
 
               {/* Location */}
-              <div className="space-y-1">
-                <label htmlFor="location" className="block text-sm font-medium text-gray-900">
-                  Location <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  className={`w-full px-2 py-1.5 text-sm border rounded-md focus:ring-1 focus:ring-[#235999] focus:border-[#235999] ${
-                    errors.location ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter location"
-                />
-                {errors.location && <p className="text-xs text-red-600">{errors.location}</p>}
-              </div>
+              <FormField
+                name="location"
+                label="Location"
+                required
+                value={formData.location}
+                onChange={handleInputChange}
+                error={errors.location}
+                placeholder="Enter location"
+              />
 
               {/* Manager Name */}
-              <div className="space-y-1">
-                <label htmlFor="manager_name" className="block text-sm font-medium text-gray-900">
-                  Manager Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="manager_name"
-                  name="manager_name"
-                  value={formData.manager_name}
-                  onChange={handleInputChange}
-                  className={`w-full px-2 py-1.5 text-sm border rounded-md focus:ring-1 focus:ring-[#235999] focus:border-[#235999] ${
-                    errors.manager_name ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter manager name"
-                />
-                {errors.manager_name && <p className="text-xs text-red-600">{errors.manager_name}</p>}
-              </div>
+              <FormField
+                name="manager_name"
+                label="Manager Name"
+                required
+                value={formData.manager_name}
+                onChange={handleInputChange}
+                error={errors.manager_name}
+                placeholder="Enter manager name"
+              />
 
               {/* Manager Contact */}
-              <div className="space-y-1">
-                <label htmlFor="manager_contact" className="block text-sm font-medium text-gray-900">
-                  Manager Contact <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  id="manager_contact"
-                  name="manager_contact"
-                  value={formData.manager_contact}
-                  onChange={handleInputChange}
-                  className={`w-full px-2 py-1.5 text-sm border rounded-md focus:ring-1 focus:ring-[#235999] focus:border-[#235999] ${
-                    errors.manager_contact ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter 10-digit phone number"
-                />
-                {errors.manager_contact && <p className="text-xs text-red-600">{errors.manager_contact}</p>}
-              </div>
+              <FormField
+                name="manager_contact"
+                label="Manager Contact"
+                required
+                value={formData.manager_contact}
+                onChange={handleInputChange}
+                error={errors.manager_contact}
+                placeholder="Enter 10-digit phone number"
+              />
 
               {/* Remarks - Full Width */}
-              <div className="lg:col-span-2 space-y-1">
-                <label htmlFor="remarks" className="block text-sm font-medium text-gray-900">
-                  Remarks
-                </label>
-                <textarea
-                  id="remarks"
+              <div className="lg:col-span-2">
+                <FormField
                   name="remarks"
-                  value={formData.remarks}
+                  label="Remarks"
+                  value={formData.remarks || ''}
                   onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-[#235999] focus:border-[#235999]"
                   placeholder="Enter any additional remarks..."
+                  type="textarea"
+                  rows={3}
                 />
               </div>
 
@@ -497,27 +471,13 @@ export default function EditBlock() {
 
             {/* Form Actions */}
             <div className="flex items-center justify-end space-x-2 pt-4 border-t border-gray-200 mt-4">
-              <button
-                type="button"
-                onClick={() => router.push('/admin/block')}
-                className="px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-1 focus:ring-[#235999]"
+              <CancelButton onClick={() => router.push('/admin/block')} />
+              <SubmitButton 
+                loading={isSubmitting}
+                loadingText="Updating..."
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-3 py-1.5 text-sm bg-[#235999] text-white rounded-md hover:bg-[#1e4d87] focus:ring-1 focus:ring-[#235999] disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
-                    <span>Updating...</span>
-                  </>
-                ) : (
-                  <span>Update Block</span>
-                )}
-              </button>
+                Update Block
+              </SubmitButton>
             </div>
           </form>
         </div>
