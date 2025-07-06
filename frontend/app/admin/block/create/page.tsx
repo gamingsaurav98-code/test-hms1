@@ -8,7 +8,8 @@ import {
   FormField, 
   SubmitButton, 
   CancelButton, 
-  SingleImageUploadCreate 
+  SingleImageUploadCreate,
+  ImageModal
 } from '@/components/ui';
 
 export default function CreateBlock() {
@@ -26,6 +27,8 @@ export default function CreateBlock() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isDragOver, setIsDragOver] = useState(false);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState({ url: '', alt: '' });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -262,32 +265,13 @@ export default function CreateBlock() {
               <div>
                 <SingleImageUploadCreate
                   imagePreview={imagePreview}
-                  onFileSelect={(file) => {
-                    setFormData(prev => ({
-                      ...prev,
-                      block_attachment: file
-                    }));
-                    
-                    // Create preview
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                      setImagePreview(e.target?.result as string);
-                    };
-                    reader.readAsDataURL(file);
-                    
-                    if (errors.block_attachment) {
-                      setErrors(prev => ({
-                        ...prev,
-                        block_attachment: ''
-                      }));
-                    }
-                  }}
+                  onFileSelect={processFile}
                   onRemove={removeImage}
                   error={errors.block_attachment}
                   label="Block Image"
-                  onImageClick={(imageUrl) => {
-                    // Simply preview the image, or implement a modal if needed
-                    console.log('Image clicked:', imageUrl);
+                  onImageClick={(imageUrl, alt) => {
+                    setSelectedImage({ url: imageUrl, alt });
+                    setImageModalOpen(true);
                   }}
                 />
               </div>
@@ -306,6 +290,14 @@ export default function CreateBlock() {
           </form>
         </div>
       </div>
+
+      {/* Image Modal */}
+      <ImageModal
+        show={imageModalOpen}
+        onClose={() => setImageModalOpen(false)}
+        imageUrl={selectedImage.url}
+        alt={selectedImage.alt}
+      />
     </div>
   );
 }

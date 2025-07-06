@@ -9,7 +9,8 @@ import {
   SubmitButton, 
   CancelButton, 
   SingleImageUploadEdit,
-  TableSkeleton 
+  TableSkeleton,
+  ImageModal
 } from '@/components/ui';
 
 export default function EditBlock() {
@@ -32,6 +33,8 @@ export default function EditBlock() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isDragOver, setIsDragOver] = useState(false);
   const [currentBlock, setCurrentBlock] = useState<Block | null>(null);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState({ url: '', alt: '' });
 
   // Fetch existing block data
   useEffect(() => {
@@ -344,128 +347,20 @@ export default function EditBlock() {
 
               {/* File Upload - Full Width */}
               <div className="lg:col-span-2 space-y-1">
-                <label className="block text-sm font-medium text-gray-900">Block Image</label>
-                
-                {!formData.block_attachment && !imagePreview ? (
-                  <div 
-                    className={`border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200 cursor-pointer ${
-                      isDragOver 
-                        ? 'border-[#235999] bg-blue-50 scale-105' 
-                        : 'border-gray-300 hover:border-[#235999] hover:bg-gray-50'
-                    }`}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                    onClick={() => document.getElementById('block_attachment')?.click()}
-                  >
-                    <input
-                      type="file"
-                      id="block_attachment"
-                      name="block_attachment"
-                      onChange={handleFileChange}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                    
-                    <div className="space-y-2">
-                      <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center transition-colors ${
-                        isDragOver ? 'bg-[#235999] text-white' : 'bg-gray-100 text-gray-400'
-                      }`}>
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      
-                      <div>
-                        <p className={`font-medium transition-colors ${
-                          isDragOver ? 'text-[#235999]' : 'text-gray-700'
-                        }`}>
-                          {isDragOver ? 'Drop image here' : 'Click or drag image here'}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">PNG, JPG up to 5MB</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {/* Hidden file input for changing existing image */}
-                    <input
-                      type="file"
-                      id="block_attachment"
-                      name="block_attachment"
-                      onChange={handleFileChange}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                    
-                    {/* Image Preview */}
-                    {imagePreview && (
-                      <div className="relative rounded-lg overflow-hidden bg-gray-50 border">
-                        <img
-                          src={imagePreview}
-                          alt="Block preview"
-                          className="w-full max-h-60 object-contain bg-white"
-                        />
-                        <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity duration-200 flex items-center justify-center opacity-0 hover:opacity-100">
-                          <div className="flex space-x-2">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                document.getElementById('block_attachment')?.click();
-                              }}
-                              className="bg-white text-gray-700 px-3 py-1 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors shadow-lg"
-                            >
-                              Change Image
-                            </button>
-                            <button
-                              type="button"
-                              onClick={removeImage}
-                              className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors shadow-lg"
-                            >
-                              Remove Image
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* File Info - Only show when new file is selected */}
-                    {formData.block_attachment && (
-                      <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-6 h-6 bg-[#235999] rounded flex items-center justify-center">
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium text-gray-900">{formData.block_attachment.name}</p>
-                            <p className="text-xs text-gray-500">{(formData.block_attachment.size / 1024 / 1024).toFixed(1)} MB</p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={removeImage}
-                          className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {errors.block_attachment && (
-                  <p className="text-sm text-red-600 mt-1 flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {errors.block_attachment}
-                  </p>
-                )}
+                <SingleImageUploadEdit
+                  imagePreview={imagePreview}
+                  existingImageUrl={currentBlock?.block_attachment?.startsWith('http') 
+                    ? currentBlock.block_attachment 
+                    : currentBlock?.block_attachment ? `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace('/api', '')}/storage/${currentBlock.block_attachment}` : null}
+                  onFileSelect={processFile}
+                  onRemove={removeImage}
+                  error={errors.block_attachment}
+                  label="Block Image"
+                  onImageClick={(imageUrl, alt) => {
+                    setSelectedImage({ url: imageUrl, alt });
+                    setImageModalOpen(true);
+                  }}
+                />
               </div>
             </div>
 
@@ -482,6 +377,14 @@ export default function EditBlock() {
           </form>
         </div>
       </div>
+
+      {/* Image Modal */}
+      <ImageModal
+        show={imageModalOpen}
+        onClose={() => setImageModalOpen(false)}
+        imageUrl={selectedImage.url}
+        alt={selectedImage.alt}
+      />
     </div>
   );
 }

@@ -96,7 +96,7 @@ export function MultipleImageUploadEdit({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/jpg,image/png,image/gif"
           onChange={handleFileSelect}
           multiple
           className="hidden"
@@ -210,7 +210,7 @@ export function MultipleImageUploadEdit({
                 <p className="text-sm text-neutral-600 font-medium">
                   Drop images here or <span className="font-semibold underline">browse files</span>
                 </p>
-                <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, GIF up to 10MB each</p>
+                <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, GIF up to 5MB each</p>
               </div>
             </div>
           )}

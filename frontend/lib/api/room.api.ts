@@ -110,7 +110,19 @@ export const roomApi = {
       },
     });
     
-    return handleResponse<Block[]>(response);
+    const data = await handleResponse<Block[] | any>(response);
+    
+    // Ensure we return an array even if the API response structure changes
+    if (Array.isArray(data)) {
+      return data;
+    } else if (data && data.data && Array.isArray(data.data)) {
+      // Handle case where API returns a paginated response with a data property
+      return data.data;
+    } else {
+      // Fallback to empty array if response is not what we expect
+      console.error('Unexpected response format from blocks API:', data);
+      return [];
+    }
   },
   
   // Hostel API removed as part of single-tenant conversion

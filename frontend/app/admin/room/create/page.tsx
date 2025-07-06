@@ -41,7 +41,8 @@ export default function CreateRoom() {
         
         // Fetch blocks for dropdown
         const blocksData = await roomApi.getBlocks();
-        setBlocks(blocksData);
+        // Ensure blocksData is an array
+        setBlocks(Array.isArray(blocksData) ? blocksData : []);
         
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -301,7 +302,7 @@ export default function CreateRoom() {
                   className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 focus:border-neutral-400 focus:ring-0 outline-none transition-all duration-200"
                 >
                   <option value="">Select block</option>
-                  {blocks.map(block => (
+                  {Array.isArray(blocks) && blocks.map(block => (
                     <option key={block.id} value={block.id}>{block.block_name}</option>
                   ))}
                 </select>

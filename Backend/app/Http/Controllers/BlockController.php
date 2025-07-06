@@ -23,10 +23,16 @@ class BlockController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $blocks = Block::paginate(10);
+            if ($request->has('all') && $request->all == 'true') {
+                // Return all blocks without pagination when 'all=true'
+                $blocks = Block::all();
+            } else {
+                // Otherwise, return paginated blocks
+                $blocks = Block::paginate(10);
+            }
             return response()->json($blocks);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Failed to fetch blocks: ' . $e->getMessage()], 500);

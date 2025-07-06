@@ -100,7 +100,7 @@ export function SingleImageUploadEdit({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/jpg,image/png,image/gif"
           onChange={handleFileSelect}
           className="hidden"
         />
@@ -115,7 +115,7 @@ export function SingleImageUploadEdit({
               <p className="text-sm text-neutral-600 font-medium">
                 Drop image here or <span className="font-semibold underline">browse files</span>
               </p>
-              <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, GIF up to 10MB</p>
+              <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, GIF up to 5MB</p>
             </div>
           </div>
         ) : hasBothImages ? (
@@ -124,12 +124,12 @@ export function SingleImageUploadEdit({
             <div className="grid grid-cols-2 gap-3">
               {/* Current Image */}
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-neutral-700 uppercase tracking-wide">Current</p>
+                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Current</p>
                 <div className="relative inline-block group">
                   <img
                     src={existingImageUrl!}
                     alt="Current image"
-                    className="w-full max-h-32 object-cover rounded-lg border border-neutral-200/60 cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                    className="w-full max-h-32 object-cover rounded-lg border border-blue-200 cursor-pointer hover:opacity-90 transition-opacity duration-200"
                     onClick={handleImageClick(existingImageUrl!, "Current image")}
                   />
                   <div className="absolute inset-0 rounded-lg bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center pointer-events-none">
@@ -165,6 +165,16 @@ export function SingleImageUploadEdit({
                 </div>
               </div>
             </div>
+            <div className="flex flex-wrap gap-3 text-xs text-neutral-600 pt-2">
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                <span>Current</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                <span>New</span>
+              </div>
+            </div>
             <p className="text-xs text-neutral-500">Click images to preview • Click area to replace • The new image will be saved</p>
           </div>
         ) : hasNewImage ? (
@@ -174,7 +184,7 @@ export function SingleImageUploadEdit({
               <img
                 src={imagePreview!}
                 alt="New image"
-                className="max-w-56 max-h-40 rounded-lg border border-neutral-200/60 cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                className="max-w-56 max-h-40 rounded-lg border border-green-200 cursor-pointer hover:opacity-90 transition-opacity duration-200"
                 onClick={handleImageClick(imagePreview!, "New image")}
               />
               <button
@@ -199,7 +209,7 @@ export function SingleImageUploadEdit({
               <img
                 src={existingImageUrl!}
                 alt="Current image"
-                className="max-w-56 max-h-40 rounded-lg border border-neutral-200/60 cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                className="max-w-56 max-h-40 rounded-lg border border-blue-200 cursor-pointer hover:opacity-90 transition-opacity duration-200"
                 onClick={handleImageClick(existingImageUrl!, "Current image")}
               />
               <div className="absolute inset-0 rounded-lg bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center pointer-events-none">

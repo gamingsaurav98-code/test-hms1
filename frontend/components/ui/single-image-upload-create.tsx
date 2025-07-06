@@ -94,7 +94,7 @@ export function SingleImageUploadCreate({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/jpg,image/png,image/gif"
           onChange={handleFileSelect}
           className="hidden"
         />
@@ -109,7 +109,7 @@ export function SingleImageUploadCreate({
               <p className="text-sm text-neutral-600 font-medium">
                 Drop image here or <span className="font-semibold underline">browse files</span>
               </p>
-              <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, GIF up to 10MB</p>
+              <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, GIF up to 5MB</p>
             </div>
           </div>
         ) : (
@@ -119,7 +119,7 @@ export function SingleImageUploadCreate({
               <img
                 src={imagePreview}
                 alt="New image"
-                className="max-w-56 max-h-40 rounded-lg border border-neutral-200/60 cursor-pointer hover:opacity-90 transition-opacity duration-200"
+                className="max-w-56 max-h-40 rounded-lg border border-green-200 cursor-pointer hover:opacity-90 transition-opacity duration-200"
                 onClick={handleImageClick(imagePreview, "New image")}
               />
               <button

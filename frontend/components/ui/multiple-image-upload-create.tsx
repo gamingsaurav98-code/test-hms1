@@ -87,7 +87,7 @@ export function MultipleImageUploadCreate({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/jpg,image/png,image/gif"
           onChange={handleFileSelect}
           multiple
           className="hidden"
@@ -100,13 +100,20 @@ export function MultipleImageUploadCreate({
               {/* New images */}
               {images.map((file, index) => (
                 <div key={`new-${index}`} className="image-preview relative group">
-                  <div className="aspect-square w-full rounded-lg overflow-hidden border border-neutral-200/60 relative transition-all duration-200 hover:border-neutral-300">
+                  <div className="aspect-square w-full rounded-lg overflow-hidden border border-green-200 relative transition-all duration-200 hover:border-green-300">
                     <img 
                       src={URL.createObjectURL(file)} 
                       alt={`Additional image ${index + 1}`}
                       className="w-full h-full object-cover cursor-pointer transition-transform duration-200 hover:scale-105"
                       onClick={() => onImageClick(URL.createObjectURL(file), `Additional image ${index + 1}`)}
                     />
+                    
+                    {/* New badge */}
+                    <div className="absolute top-2 left-2">
+                      <div className="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                        New
+                      </div>
+                    </div>
                     
                     {/* Remove button */}
                     <button
@@ -151,7 +158,7 @@ export function MultipleImageUploadCreate({
                 <p className="text-sm text-neutral-600 font-medium">
                   Drop images here or <span className="font-semibold underline">browse files</span>
                 </p>
-                <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, GIF up to 10MB each</p>
+                <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, GIF up to 5MB each</p>
               </div>
             </div>
           )}
