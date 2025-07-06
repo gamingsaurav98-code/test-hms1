@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { AlertCircle } from 'lucide-react';
 import { studentApi, type StudentFormData, type StudentAmenity } from '@/lib/api';
 import { ApiError } from '@/lib/api/core';
 import { 
@@ -408,24 +409,16 @@ export default function CreateStudent() {
                 />
                 
                 {/* Email */}
-                <div className="form-field">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="Enter email address"
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                      errors.email ? 'border-red-300' : ''
-                    }`}
-                  />
-                  {errors.email && (
-                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                  )}
-                </div>
+                <FormField
+                  name="email"
+                  label="Email Address"
+                  required
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  error={errors.email}
+                  placeholder="Enter email address"
+                />
                 
                 {/* Contact Number */}
                 <FormField
@@ -461,12 +454,12 @@ export default function CreateStudent() {
 
                 {/* Room Selection */}
                 <div className="form-field">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Room</label>
+                  <label className="block text-sm font-semibold text-neutral-900">Room</label>
                   <select
                     name="room_id"
                     value={formData.room_id || ''}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 focus:border-neutral-400 focus:ring-0 outline-none transition-all duration-200"
                   >
                     <option value="">Select Room</option>
                     {rooms.map((room) => (
@@ -474,21 +467,24 @@ export default function CreateStudent() {
                     ))}
                   </select>
                   {errors.room_id && (
-                    <p className="mt-1 text-sm text-red-600">{errors.room_id}</p>
+                    <div className="flex items-center mt-1.5 text-xs text-red-600">
+                      <AlertCircle className="h-3.5 w-3.5 mr-2" />
+                      {errors.room_id}
+                    </div>
                   )}
                 </div>
                 
                 {/* Active Status */}
-                <div className="flex items-center space-x-2 mt-8">
+                <div className="flex items-center mt-4">
                   <input
                     id="is_active"
                     name="is_active"
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     checked={formData.is_active || false}
                     onChange={handleInputChange}
                   />
-                  <label htmlFor="is_active" className="text-sm text-gray-700">Active Student</label>
+                  <label htmlFor="is_active" className="ml-2 text-sm font-semibold text-neutral-900">Active Student</label>
                 </div>
               </div>
             </div>
@@ -554,23 +550,14 @@ export default function CreateStudent() {
                 />
                 
                 {/* Date of Issue */}
-                <div className="form-field">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date of Issue
-                  </label>
-                  <input
-                    type="date"
-                    name="date_of_issue"
-                    value={formData.date_of_issue || ''}
-                    onChange={handleInputChange}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                      errors.date_of_issue ? 'border-red-300' : ''
-                    }`}
-                  />
-                  {errors.date_of_issue && (
-                    <p className="mt-1 text-sm text-red-600">{errors.date_of_issue}</p>
-                  )}
-                </div>
+                <FormField
+                  name="date_of_issue"
+                  label="Date of Issue"
+                  type="date"
+                  value={formData.date_of_issue || ''}
+                  onChange={handleInputChange}
+                  error={errors.date_of_issue}
+                />
                 
                 {/* Citizenship Issued District */}
                 <FormField
