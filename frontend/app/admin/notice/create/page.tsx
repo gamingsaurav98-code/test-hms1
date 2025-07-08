@@ -1,8 +1,15 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { noticeApi, NoticeFormData } from '@/lib/api';
+import { 
+  noticeApi, 
+  NoticeFormData, 
+  StudentForNotice, 
+  StaffForNotice, 
+  BlockForNotice,
+  PaginatedResponse
+} from '@/lib/api';
 import { 
   FormField, 
   SubmitButton, 
@@ -10,7 +17,7 @@ import {
   MultipleImageUploadCreate,
   ImageModal
 } from '@/components/ui';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Search } from 'lucide-react';
 
 export default function CreateNotice() {
   const router = useRouter();
@@ -33,6 +40,17 @@ export default function CreateNotice() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState({ url: '', alt: '' });
+  
+  // State for fetching data for specific targets
+  const [students, setStudents] = useState<StudentForNotice[]>([]);
+  const [staff, setStaff] = useState<StaffForNotice[]>([]);
+  const [blocks, setBlocks] = useState<BlockForNotice[]>([]);
+  const [isLoading, setIsLoading] = useState<{
+    students: boolean;
+    staff: boolean;
+    blocks: boolean;
+  }>({ students: false, staff: false, blocks: false });
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -76,6 +94,92 @@ export default function CreateNotice() {
       notice_attachments: updatedAttachments
     }));
   };
+  
+  // Modified to handle search through FormField component's onChange event
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    // If this is the student_id, staff_id, or block_id field and it's empty,
+    // we might want to search for new options
+    if ((name === 'student_id' || name === 'staff_id' || name === 'block_id') && !value) {
+      // Clear any existing timeout
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+      
+      const timeout = setTimeout(() => {
+        // Refresh the data based on the field name
+        if (name === 'student_id') {
+          fetchStudents(value);
+        } else if (name === 'staff_id') {
+          fetchStaff(value);
+        } else if (name === 'block_id') {
+          fetchBlocks(value);
+        }
+      }, 500);
+      
+      setSearchTimeout(timeout);
+    }
+  };
+  
+  // Fetch students data
+  const fetchStudents = async (search: string = '') => {
+    try {
+      setIsLoading(prev => ({ ...prev, students: true }));
+      const response = await noticeApi.getStudentsForNotice(search);
+      setStudents(response.data);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+    } finally {
+      setIsLoading(prev => ({ ...prev, students: false }));
+    }
+  };
+  
+  // Fetch staff data
+  const fetchStaff = async (search: string = '') => {
+    try {
+      setIsLoading(prev => ({ ...prev, staff: true }));
+      const response = await noticeApi.getStaffForNotice(search);
+      setStaff(response.data);
+    } catch (error) {
+      console.error('Error fetching staff:', error);
+    } finally {
+      setIsLoading(prev => ({ ...prev, staff: false }));
+    }
+  };
+  
+  // Fetch blocks data
+  const fetchBlocks = async (search: string = '') => {
+    try {
+      setIsLoading(prev => ({ ...prev, blocks: true }));
+      const response = await noticeApi.getBlocksForNotice(search);
+      setBlocks(response.data);
+    } catch (error) {
+      console.error('Error fetching blocks:', error);
+    } finally {
+      setIsLoading(prev => ({ ...prev, blocks: false }));
+    }
+  };
+  
+  // Effect to fetch data when target type changes
+  useEffect(() => {
+    // Reset IDs when target type changes
+    setFormData(prev => ({
+      ...prev,
+      student_id: null,
+      staff_id: null,
+      block_id: null
+    }));
+    
+    // Fetch data based on target type
+    if (formData.target_type === 'specific_student') {
+      fetchStudents('');
+    } else if (formData.target_type === 'specific_staff') {
+      fetchStaff('');
+    } else if (formData.target_type === 'block') {
+      fetchBlocks('');
+    }
+  }, [formData.target_type]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -94,6 +198,19 @@ export default function CreateNotice() {
 
     if (!formData.target_type) {
       newErrors.target_type = 'Target audience is required';
+    }
+    
+    // Validate specific target selections
+    if (formData.target_type === 'specific_student' && !formData.student_id) {
+      newErrors.student_id = 'Please select a student';
+    }
+    
+    if (formData.target_type === 'specific_staff' && !formData.staff_id) {
+      newErrors.staff_id = 'Please select a staff member';
+    }
+    
+    if (formData.target_type === 'block' && !formData.block_id) {
+      newErrors.block_id = 'Please select a block';
     }
 
     setErrors(newErrors);
@@ -247,10 +364,11 @@ export default function CreateNotice() {
                   onChange={handleInputChange}
                   error={errors.student_id}
                   options={[
-                    { value: '', label: 'Select a student' },
-                    // You would fetch students from API and map them here
-                    { value: '1', label: 'Student 1' },
-                    { value: '2', label: 'Student 2' }
+                    { value: '', label: isLoading.students ? 'Loading students...' : '-- Select a student --' },
+                    ...students.map(student => ({ 
+                      value: student.id.toString(), 
+                      label: `${student.name} ${student.room && student.room.block ? `(${student.room.block.name}, Room: ${student.room.room_number})` : ''}`
+                    }))
                   ]}
                 />
               )}
@@ -265,10 +383,11 @@ export default function CreateNotice() {
                   onChange={handleInputChange}
                   error={errors.staff_id}
                   options={[
-                    { value: '', label: 'Select a staff member' },
-                    // You would fetch staff from API and map them here
-                    { value: '1', label: 'Staff 1' },
-                    { value: '2', label: 'Staff 2' }
+                    { value: '', label: isLoading.staff ? 'Loading staff...' : 'Select a staff member' },
+                    ...staff.map(staffMember => ({ 
+                      value: staffMember.id.toString(), 
+                      label: `${staffMember.name} (${staffMember.staff_id})`
+                    }))
                   ]}
                 />
               )}
@@ -283,10 +402,11 @@ export default function CreateNotice() {
                   onChange={handleInputChange}
                   error={errors.block_id}
                   options={[
-                    { value: '', label: 'Select a block' },
-                    // You would fetch blocks from API and map them here
-                    { value: '1', label: 'Block A' },
-                    { value: '2', label: 'Block B' }
+                    { value: '', label: isLoading.blocks ? 'Loading blocks...' : 'Select a block' },
+                    ...blocks.map(block => ({ 
+                      value: block.id.toString(), 
+                      label: `${block.name} - ${block.location}` 
+                    }))
                   ]}
                 />
               )}

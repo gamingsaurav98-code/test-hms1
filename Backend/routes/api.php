@@ -35,6 +35,16 @@ Route::get('suppliers/{id}/financials', [SupplierFinancialController::class, 'ge
 Route::apiResource('notices', NoticeController::class);
 Route::delete('notices/{noticeId}/attachments/{attachmentId}', [NoticeController::class, 'deleteAttachment']);
 Route::get('debug/notices/schema', [NoticeController::class, 'debug']);
+Route::get('notices/target/{targetType}', [NoticeController::class, 'getNoticesByTargetType']);
+Route::get('notices/student/{studentId}', [NoticeController::class, 'getNoticesForStudent']);
+Route::get('notices/staff/{staffId}', [NoticeController::class, 'getNoticesForStaff']);
+Route::get('notices/block/{blockId}', [NoticeController::class, 'getNoticesForBlock']);
+Route::get('notices/user', [NoticeController::class, 'getNoticesForUser'])->middleware('auth:sanctum');
+
+// Routes for fetching data for notice creation/editing
+Route::get('notices-create/students', [NoticeController::class, 'getStudentsForNotice']);
+Route::get('notices-create/staff', [NoticeController::class, 'getStaffForNotice']);
+Route::get('notices-create/blocks', [NoticeController::class, 'getBlocksForNotice']);
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();

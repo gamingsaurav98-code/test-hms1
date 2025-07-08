@@ -25,9 +25,70 @@ export interface Notice extends Omit<NoticeFormData, 'notice_attachments'> {
     name: string;
     type: string;
   }[];
+  // Related entity information
+  student?: StudentForNotice | null;
+  staff?: StaffForNotice | null;
+  block?: BlockForNotice | null;
+  // Target information from backend
+  target_info?: {
+    type: string;
+    id?: number;
+    name: string;
+    identifier?: string;
+    contact?: string;
+    location?: string;
+    rooms_count?: number;
+  } | null;
+  // Additional profile data added by backend
+  profile_data?: any;
 }
 
 // Notice API functions
+// Types for fetching students/staff/blocks for notice creation
+export interface StudentForNotice {
+  id: number;
+  name: string;
+  student_id: string;
+  contact: string;
+  email: string;
+  image?: string;
+  room?: {
+    id: number;
+    room_number: string;
+    block?: {
+      id: number;
+      name: string;
+      location: string;
+    }
+  };
+  educational_institution?: string;
+  level_of_study?: string;
+}
+
+export interface StaffForNotice {
+  id: number;
+  name: string;
+  staff_id: string;
+  contact: string;
+  email: string;
+  image?: string;
+  educational_institution?: string;
+  level_of_study?: string;
+}
+
+export interface BlockForNotice {
+  id: number;
+  name: string;
+  location: string;
+  manager_name: string;
+  manager_contact: string;
+  room_count: number;
+  total_capacity?: number;
+  vacant_beds?: number;
+  remarks?: string;
+  image?: string;
+}
+
 export const noticeApi = {
   // Get all notices with pagination
   async getNotices(page: number = 1): Promise<PaginatedResponse<Notice>> {
@@ -40,6 +101,57 @@ export const noticeApi = {
     });
     
     return handleResponse<PaginatedResponse<Notice>>(response);
+  },
+  
+  // Get students for notice selection
+  async getStudentsForNotice(search: string = '', page: number = 1): Promise<PaginatedResponse<StudentForNotice>> {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (page) params.append('page', page.toString());
+    
+    const response = await fetch(`${API_BASE_URL}/notices-create/students?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return handleResponse<PaginatedResponse<StudentForNotice>>(response);
+  },
+  
+  // Get staff for notice selection
+  async getStaffForNotice(search: string = '', page: number = 1): Promise<PaginatedResponse<StaffForNotice>> {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (page) params.append('page', page.toString());
+    
+    const response = await fetch(`${API_BASE_URL}/notices-create/staff?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return handleResponse<PaginatedResponse<StaffForNotice>>(response);
+  },
+  
+  // Get blocks for notice selection
+  async getBlocksForNotice(search: string = '', page: number = 1): Promise<PaginatedResponse<BlockForNotice>> {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (page) params.append('page', page.toString());
+    
+    const response = await fetch(`${API_BASE_URL}/notices-create/blocks?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return handleResponse<PaginatedResponse<BlockForNotice>>(response);
   },
 
   // Get a single notice by ID

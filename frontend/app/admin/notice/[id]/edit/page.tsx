@@ -2,7 +2,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { noticeApi, NoticeFormData, Notice, blockApi, studentApi } from '@/lib/api';
+import { 
+  noticeApi, 
+  NoticeFormData, 
+  Notice, 
+  blockApi, 
+  studentApi, 
+  StudentForNotice, 
+  StaffForNotice, 
+  BlockForNotice 
+} from '@/lib/api';
 import { 
   FormField, 
   SubmitButton, 
@@ -26,9 +35,14 @@ export default function EditNotice() {
   const noticeId = Array.isArray(id) ? id[0] : id || '';
   
   // Initialize states for students, staff, and blocks
-  const [students, setStudents] = useState<any[]>([]);
-  const [staff, setStaff] = useState<any[]>([]);
-  const [blocks, setBlocks] = useState<any[]>([]);
+  const [students, setStudents] = useState<StudentForNotice[]>([]);
+  const [staff, setStaff] = useState<StaffForNotice[]>([]);
+  const [blocks, setBlocks] = useState<BlockForNotice[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState<{
+    students: boolean;
+    staff: boolean;
+    blocks: boolean;
+  }>({ students: false, staff: false, blocks: false });
   
   const [formData, setFormData] = useState<NoticeFormData>({
     title: '',
@@ -63,27 +77,75 @@ export default function EditNotice() {
     
     const fetchData = async () => {
       try {
-        // Fetch students and blocks in parallel
-        const [noticeData, studentsData, blocksData] = await Promise.all([
-          noticeApi.getNotice(noticeId),
-          studentApi.getStudents(),
-          blockApi.getBlocks()
-        ]);
+        setIsLoadingData({
+          students: true,
+          staff: true,
+          blocks: true
+        });
         
-        // Set staff data for now with dummy values
-        const staffData = [
-          { id: 1, name: 'Staff Member 1' },
-          { id: 2, name: 'Staff Member 2' }
-        ];
+        // Fetch notice data first
+        const noticeData = await noticeApi.getNotice(noticeId);
         
         // Format schedule_time for datetime-local input
         const scheduleDate = new Date(noticeData.schedule_time);
         const formattedScheduleTime = scheduleDate.toISOString().slice(0, 16);
         
-        // Set students, staff, and blocks data
-        setStudents(studentsData.data || []);
-        setBlocks(blocksData.data || []);
-        setStaff(staffData);
+        // Now fetch the students, staff, and blocks data using the appropriate API methods
+        try {
+          const studentsResponse = await noticeApi.getStudentsForNotice('');
+          setStudents(studentsResponse.data);
+        } catch (error) {
+          console.error('Error fetching students:', error);
+        } finally {
+          setIsLoadingData(prev => ({ ...prev, students: false }));
+        }
+        
+        try {
+          const staffResponse = await noticeApi.getStaffForNotice('');
+          setStaff(staffResponse.data);
+        } catch (error) {
+          console.error('Error fetching staff:', error);
+        } finally {
+          setIsLoadingData(prev => ({ ...prev, staff: false }));
+        }
+        
+        try {
+          const blocksResponse = await noticeApi.getBlocksForNotice('');
+          setBlocks(blocksResponse.data);
+        } catch (error) {
+          console.error('Error fetching blocks:', error);
+        } finally {
+          setIsLoadingData(prev => ({ ...prev, blocks: false }));
+        }
+        
+        // Set form data
+        setFormData({
+          title: noticeData.title,
+          description: noticeData.description,
+          schedule_time: formattedScheduleTime,
+          target_type: noticeData.target_type,
+          notice_type: noticeData.notice_type || 'general',
+          status: noticeData.status || 'active',
+          notice_attachments: [],
+          student_id: noticeData.student_id || null,
+          staff_id: noticeData.staff_id || null,
+          block_id: noticeData.block_id || null,
+        });
+
+        // Set existing attachments
+        if (noticeData.attachments && noticeData.attachments.length > 0) {
+          const mappedAttachments = noticeData.attachments.map(attachment => ({
+            id: attachment.id,
+            image: attachment.path,
+            is_primary: false,
+            name: attachment.name,
+            type: attachment.type,
+          }));
+          
+          setExistingAttachments(mappedAttachments);
+        }
+        
+        setIsLoading(false);
         
         // Set form data
         setFormData({
@@ -199,6 +261,19 @@ export default function EditNotice() {
 
     if (!formData.target_type) {
       newErrors.target_type = 'Target audience is required';
+    }
+    
+    // Validate specific target selections
+    if (formData.target_type === 'specific_student' && !formData.student_id) {
+      newErrors.student_id = 'Please select a student';
+    }
+    
+    if (formData.target_type === 'specific_staff' && !formData.staff_id) {
+      newErrors.staff_id = 'Please select a staff member';
+    }
+    
+    if (formData.target_type === 'block' && !formData.block_id) {
+      newErrors.block_id = 'Please select a block';
     }
 
     setErrors(newErrors);
@@ -359,10 +434,13 @@ export default function EditNotice() {
                   value={formData.student_id ? formData.student_id.toString() : ''}
                   onChange={handleInputChange}
                   error={errors.student_id}
-                  options={students.map(student => ({
-                    value: student.id.toString(),
-                    label: `${student.name} (${student.student_id})`
-                  }))}
+                  options={[
+                    { value: '', label: '-- Select a student --' },
+                    ...students.map(student => ({
+                      value: student.id.toString(),
+                      label: `${student.name} ${student.room && student.room.block ? `(${student.room.block.name}, Room: ${student.room.room_number})` : ''}`
+                    }))
+                  ]}
                 />
               )}
 
@@ -376,10 +454,13 @@ export default function EditNotice() {
                   value={formData.staff_id ? formData.staff_id.toString() : ''}
                   onChange={handleInputChange}
                   error={errors.staff_id}
-                  options={staff.map(staffMember => ({
-                    value: staffMember.id.toString(),
-                    label: staffMember.name
-                  }))}
+                  options={[
+                    { value: '', label: '-- Select a staff member --' },
+                    ...staff.map(staffMember => ({
+                      value: staffMember.id.toString(),
+                      label: `${staffMember.name} (${staffMember.staff_id || 'No ID'})`
+                    }))
+                  ]}
                 />
               )}
 
@@ -393,10 +474,13 @@ export default function EditNotice() {
                   value={formData.block_id ? formData.block_id.toString() : ''}
                   onChange={handleInputChange}
                   error={errors.block_id}
-                  options={blocks.map(block => ({
-                    value: block.id.toString(),
-                    label: block.name
-                  }))}
+                  options={[
+                    { value: '', label: '-- Select a block --' },
+                    ...blocks.map(block => ({
+                      value: block.id.toString(),
+                      label: `${block.name} - ${block.location || 'No location'}`
+                    }))
+                  ]}
                 />
               )}
 

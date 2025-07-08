@@ -211,12 +211,26 @@ export default function NoticeDetail() {
               <div className="flex items-center text-gray-600">
                 <User className="h-4 w-4 mr-2 text-gray-500" />
                 <span className="font-medium mr-2">Target:</span>
-                {notice.target_type === 'all' ? 'Everyone' : 
-                 notice.target_type === 'student' ? 'All Students' : 
-                 notice.target_type === 'staff' ? 'All Staff' : 
-                 notice.target_type === 'specific_student' ? 'Specific Student' : 
-                 notice.target_type === 'specific_staff' ? 'Specific Staff' : 
-                 notice.target_type === 'block' ? 'Specific Block' : notice.target_type}
+                {notice.target_info ? (
+                  notice.target_info.type === 'specific_student' ? 
+                    `Specific Student: ${notice.target_info.name}` : 
+                  notice.target_info.type === 'specific_staff' ? 
+                    `Specific Staff: ${notice.target_info.name}` : 
+                  notice.target_info.type === 'block' ? 
+                    `Specific Block: ${notice.target_info.name}` : 
+                  notice.target_info.name || notice.target_info.type
+                ) : (
+                  notice.target_type === 'all' ? 'Everyone' : 
+                  notice.target_type === 'student' ? 'All Students' : 
+                  notice.target_type === 'staff' ? 'All Staff' : 
+                  notice.target_type === 'specific_student' && notice.student ? `Specific Student: ${notice.student.name}` :
+                  notice.target_type === 'specific_student' ? 'Specific Student' : 
+                  notice.target_type === 'specific_staff' && notice.staff ? `Specific Staff: ${notice.staff.name}` :
+                  notice.target_type === 'specific_staff' ? 'Specific Staff' : 
+                  notice.target_type === 'block' && notice.block ? `Specific Block: ${notice.block.name}` :
+                  notice.target_type === 'block' ? 'Specific Block' : 
+                  notice.target_type
+                )}
               </div>
               <div className="flex items-center text-gray-600">
                 <File className="h-4 w-4 mr-2 text-gray-500" />
@@ -229,6 +243,128 @@ export default function NoticeDetail() {
                 {formatDate(notice.created_at)}
               </div>
             </div>
+            
+            {/* Target Details - Show only for specific targets */}
+            {(notice.target_type === 'specific_student' || 
+              notice.target_type === 'specific_staff' || 
+              notice.target_type === 'block') && (
+              <div className="mb-6 border-t border-gray-100 pt-6">
+                <h3 className="text-md font-medium text-gray-800 mb-2">
+                  {notice.target_type === 'specific_student' ? 'Student' : 
+                   notice.target_type === 'specific_staff' ? 'Staff' : 'Block'} Information
+                </h3>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  {notice.target_info ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Name:</span>
+                        <span>{notice.target_info.name}</span>
+                      </div>
+                      {notice.target_info.type === 'specific_student' && notice.target_info.identifier ? (
+                        <div className="flex items-center">
+                          <span className="font-medium mr-2">Student ID:</span>
+                          <span>{notice.target_info.identifier}</span>
+                        </div>
+                      ) : notice.target_info.identifier ? (
+                        <div className="flex items-center">
+                          <span className="font-medium mr-2">ID:</span>
+                          <span>{notice.target_info.identifier}</span>
+                        </div>
+                      ) : null}
+                      {notice.target_info.contact && (
+                        <div className="flex items-center">
+                          <span className="font-medium mr-2">Contact:</span>
+                          <span>{notice.target_info.contact}</span>
+                        </div>
+                      )}
+                      {notice.target_info.type === 'specific_student' && notice.profile_data?.address && (
+                        <div className="flex items-center">
+                          <span className="font-medium mr-2">Address:</span>
+                          <span>{notice.profile_data.address}</span>
+                        </div>
+                      )}
+                      {notice.target_info.location && (
+                        <div className="flex items-center">
+                          <span className="font-medium mr-2">Location:</span>
+                          <span>{notice.target_info.location}</span>
+                        </div>
+                      )}
+                      {notice.target_info.rooms_count !== undefined && (
+                        <div className="flex items-center">
+                          <span className="font-medium mr-2">Rooms:</span>
+                          <span>{notice.target_info.rooms_count}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : notice.student && notice.target_type === 'specific_student' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Name:</span>
+                        <span>{notice.student.name}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Student ID:</span>
+                        <span>{notice.student.student_id}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Contact:</span>
+                        <span>{notice.student.contact}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Email:</span>
+                        <span>{notice.student.email}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Address:</span>
+                        <span>{notice.profile_data?.address || "Not available"}</span>
+                      </div>
+                      {notice.student.room && (
+                        <div className="flex items-center">
+                          <span className="font-medium mr-2">Room:</span>
+                          <span>{notice.student.room.room_number}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : notice.staff && notice.target_type === 'specific_staff' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Name:</span>
+                        <span>{notice.staff.name}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">ID:</span>
+                        <span>{notice.staff.staff_id}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Contact:</span>
+                        <span>{notice.staff.contact}</span>
+                      </div>
+                    </div>
+                  ) : notice.block && notice.target_type === 'block' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Name:</span>
+                        <span>{notice.block.name}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Location:</span>
+                        <span>{notice.block.location}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Manager:</span>
+                        <span>{notice.block.manager_name}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium mr-2">Contact:</span>
+                        <span>{notice.block.manager_contact}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p>No detailed information available.</p>
+                  )}
+                </div>
+              </div>
+            )}
             
             {/* Description */}
             <div className="mb-6 border-t border-gray-100 pt-6">
@@ -261,7 +397,10 @@ export default function NoticeDetail() {
                           title="View"
                           onClick={() => handleAttachmentClick(attachment.path, attachment.name)}
                         >
-                          <ExternalLink className="h-4 w-4 text-blue-500" />
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                          </svg>
                         </button>
                         <a 
                           href={`${apiBaseUrl}/storage/${attachment.path}`} 

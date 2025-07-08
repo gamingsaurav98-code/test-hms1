@@ -32,7 +32,10 @@ export type {
 // Import notice API types
 export type {
   Notice,
-  NoticeFormData
+  NoticeFormData,
+  StudentForNotice,
+  StaffForNotice,
+  BlockForNotice
 } from './notice.api';
 
 // Re-export APIs
