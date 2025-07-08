@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentTypeController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierFinancialController;
+use App\Http\Controllers\NoticeController;
 
 Route::apiResource('blocks', BlockController::class);
 Route::apiResource('complains', ComplainController::class);
@@ -29,6 +30,11 @@ Route::get('available-rooms', [RoomController::class, 'getAvailableRooms']);
 Route::get('rooms/{id}/students', [RoomController::class, 'getStudentsByRoom']);
 Route::apiResource('supplier-financials', SupplierFinancialController::class);
 Route::get('suppliers/{id}/financials', [SupplierFinancialController::class, 'getFinancialsBySupplier']);
+
+// Notice routes
+Route::apiResource('notices', NoticeController::class);
+Route::delete('notices/{noticeId}/attachments/{attachmentId}', [NoticeController::class, 'deleteAttachment']);
+Route::get('debug/notices/schema', [NoticeController::class, 'debug']);
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
