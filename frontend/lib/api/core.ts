@@ -25,36 +25,58 @@ export class ApiError extends Error {
 // Helper function to handle API responses
 export async function handleResponse<T>(response: Response): Promise<T> {
   console.log(`API Response: ${response.url} - Status: ${response.status}`);
+  console.log('Response headers:', Object.fromEntries(response.headers.entries()));
   
+  // Handle network errors
+  if (!response) {
+    console.error('No response received from API');
+    throw new ApiError(0, 'No response from server. Please check your connection.');
+  }
+
+  const contentType = response.headers.get('content-type');
+  let responseData: any;
+
+  try {
+    // Always try to get JSON first if content type is application/json
+    if (contentType && contentType.includes('application/json')) {
+      responseData = await response.json();
+    } else {
+      // Fallback to text if not JSON
+      const text = await response.text();
+      try {
+        responseData = JSON.parse(text);
+      } catch {
+        responseData = text;
+      }
+    }
+  } catch (error) {
+    console.error('Error reading response:', error);
+    throw new ApiError(response.status, 'Failed to read server response');
+  }
+
   if (!response.ok) {
-    const errorText = await response.text();
     let errorMessage = `HTTP ${response.status}`;
     let validationErrors: Record<string, string | string[]> | undefined;
     
-    try {
-      console.log('Error response body:', errorText);
-      const errorJson = JSON.parse(errorText);
-      errorMessage = errorJson.message || errorMessage;
+    if (typeof responseData === 'object' && responseData !== null) {
+      // Handle both Laravel standard error format and custom error format
+      if (responseData.message) {
+        errorMessage = responseData.message;
+      } else if (responseData.error) {
+        errorMessage = responseData.error;
+      }
       
       // Extract validation errors from Laravel API response format
-      if (errorJson.errors && response.status === 422) {
-        validationErrors = errorJson.errors;
+      if (responseData.errors && response.status === 422) {
+        validationErrors = responseData.errors;
+        errorMessage = Object.values(responseData.errors).flat().join(', ');
       }
-    } catch {
-      errorMessage = errorText || errorMessage;
     }
     
     console.error(`API Error: ${errorMessage}`);
     throw new ApiError(response.status, errorMessage, validationErrors);
   }
   
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
-    const data = await response.json();
-    console.log('API Data received:', data);
-    return data;
-  }
-  
-  console.log('API Response not JSON');
-  return {} as T;
+  console.log('API Data received:', responseData);
+  return responseData as T;
 }

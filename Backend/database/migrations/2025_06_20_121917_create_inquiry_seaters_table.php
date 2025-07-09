@@ -13,10 +13,9 @@ return new class extends Migration
     {
         Schema::create('inquiry_seaters', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('room_id');
             $table->foreignId('inquiry_id');
-            $table->foreignId('block_id');
-            $table->integer('capacity')->default(0);
+            $table->integer('seater_type'); // 1 for single, 2 for double, etc.
+            $table->text('notes')->nullable(); // Any additional notes about their interest
             $table->timestamps();
         });
     }

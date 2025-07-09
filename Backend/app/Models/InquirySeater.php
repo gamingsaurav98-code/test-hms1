@@ -10,25 +10,30 @@ use App\Models\Block;
 class InquirySeater extends Model
 {
     protected $fillable = [
-        'room_id',
         'inquiry_id',
-        'block_id',
-        'capacity'
+        'seater_type',
+        'notes'
     ];
-    public function room()
-    {
-        return $this->belongsTo(Room::class);
-    }
-    
+
+    /**
+     * Get the inquiry that this seater preference belongs to
+     */
     public function inquiry()
     {
         return $this->belongsTo(Inquiry::class);
     }
-    
-    public function block()
+
+    /**
+     * Get the human-readable seater type
+     */
+    public function getSeaterTypeTextAttribute()
     {
-        return $this->belongsTo(Block::class);
+        return match($this->seater_type) {
+            1 => 'Single Seater',
+            2 => 'Double Seater',
+            3 => 'Triple Seater',
+            4 => 'Four Seater',
+            default => 'Unknown'
+        };
     }
-    
-    // Seater relationship removed as requested - capacity field is used instead
 }

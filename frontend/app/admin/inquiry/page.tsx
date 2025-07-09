@@ -66,8 +66,7 @@ export default function InquiryList() {
       const filtered = inquiries.filter(inquiry =>
         inquiry.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         inquiry.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (inquiry.email && inquiry.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (inquiry.block?.block_name && inquiry.block.block_name.toLowerCase().includes(searchQuery.toLowerCase()))
+        (inquiry.email && inquiry.email.toLowerCase().includes(searchQuery.toLowerCase()))
       );
       setFilteredInquiries(filtered);
     }
@@ -103,8 +102,7 @@ export default function InquiryList() {
         !searchQuery.trim() ||
         inquiry.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         inquiry.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (inquiry.email && inquiry.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (inquiry.block?.block_name && inquiry.block.block_name.toLowerCase().includes(searchQuery.toLowerCase()))
+        (inquiry.email && inquiry.email.toLowerCase().includes(searchQuery.toLowerCase()))
       ));
       
       setAlert({show: true, message: 'Inquiry deleted successfully!', type: 'success'});
@@ -273,12 +271,10 @@ export default function InquiryList() {
           {/* Table Header */}
           <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
             <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <div className="col-span-3">Inquiry Details</div>
-              <div className="col-span-2">Contact Info</div>
-              <div className="col-span-2">Block</div>
+              <div className="col-span-4">Inquiry Details</div>
+              <div className="col-span-3">Contact Info</div>
               <div className="col-span-2">Seater</div>
-              <div className="col-span-1 text-center">Rooms</div>
-              <div className="col-span-1 text-center">Created</div>
+              <div className="col-span-2 text-center">Created</div>
               <div className="col-span-1 text-center">Actions</div>
             </div>
           </div>
@@ -289,15 +285,12 @@ export default function InquiryList() {
               <div key={inquiry.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
                 <div className="grid grid-cols-12 gap-2 items-center">
                   {/* Inquiry Details */}
-                  <div className="col-span-3">
+                  <div className="col-span-4">
                     <div className="font-medium text-sm text-gray-900">{inquiry.name}</div>
-                    <div className="text-xs text-gray-500 mt-1 line-clamp-2">
-                      {inquiry.description || 'No description'}
-                    </div>
                   </div>
 
                   {/* Contact Info */}
-                  <div className="col-span-2">
+                  <div className="col-span-3">
                     <div className="text-sm text-gray-900">{inquiry.phone}</div>
                     {inquiry.email && (
                       <div className="text-xs text-gray-500 mt-1 truncate">
@@ -306,29 +299,15 @@ export default function InquiryList() {
                     )}
                   </div>
 
-                  {/* Block */}
-                  <div className="col-span-2">
-                    <div className="text-sm text-gray-900">
-                      {inquiry.block?.block_name || '-'}
-                    </div>
-                  </div>
-
                   {/* Seater */}
                   <div className="col-span-2">
                     <div className="text-sm text-gray-700">
-                      {inquiry.seater ? `${inquiry.seater}-seater` : 'Not specified'}
-                    </div>
-                  </div>
-
-                  {/* Rooms Count */}
-                  <div className="col-span-1">
-                    <div className="text-xs text-gray-500 text-center">
-                      {inquiry.inquirySeaters?.length || 0} room(s)
+                      {inquiry.seater_type ? `${inquiry.seater_type}-seater` : 'Not specified'}
                     </div>
                   </div>
 
                   {/* Created Date */}
-                  <div className="col-span-1">
+                  <div className="col-span-2">
                     <div className="text-xs text-gray-500 text-center">
                       {formatDate(inquiry.created_at)}
                     </div>

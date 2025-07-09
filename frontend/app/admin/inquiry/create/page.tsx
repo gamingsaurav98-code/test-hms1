@@ -1,21 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   inquiryApi, 
-  blockApi, 
-  roomApi, 
-  Block, 
   InquiryFormData,
   ApiError,
-  Room
 } from '@/lib/api/index';
 import { 
   FormField, 
   SubmitButton, 
   CancelButton, 
-  MultipleImageUploadCreate,
   SuccessToast,
 } from '@/components/ui';
 
@@ -25,54 +20,26 @@ export default function CreateInquiry() {
     name: '',
     email: '',
     phone: '',
-    block_id: '',
-    seater: undefined,
-    description: '',
-    notes: '', // Adding notes field instead of inquiry_seaters
-    attachments: []
+    seater_type: 1
   });
-  
-  const [attachments, setAttachments] = useState<File[]>([]);
-  const [blocks, setBlocks] = useState<Block[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isCustomSeater, setIsCustomSeater] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
-  // Load blocks for dropdown
-  useEffect(() => {
-    const fetchBlocks = async () => {
-      try {
-        const response = await blockApi.getBlocks();
-        setBlocks(response.data);
-      } catch (error) {
-        console.error('Error fetching blocks:', error);
-        setError('Failed to load blocks. Please try refreshing the page.');
-      }
-    };
-    
-    fetchBlocks();
-  }, []);
-  
-  // No longer fetching rooms data for inquiry creation
-  useEffect(() => {
-    // Reset rooms state when block changes
-    if (!formData.block_id) {
-      setRooms([]);
-      setAvailableRooms([]);
-    }
-  }, [formData.block_id]);
+  // Form handling logic
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
-    if (name === 'seater') {
-      setFormData({
-        ...formData,
-        [name]: value ? parseInt(value) : undefined
-      });
+    if (name === 'seater_type') {
+      // Only allow numbers and ensure value is within reasonable range
+      const numValue = value ? parseInt(value) : 0;
+      if (!isNaN(numValue) && numValue > 0) {
+        setFormData({
+          ...formData,
+          seater_type: numValue
+        });
+      }
     } else {
       setFormData({
         ...formData,
@@ -84,21 +51,13 @@ export default function CreateInquiry() {
   // Room seater options have been removed
   // No helper functions needed for room selection
   
-  const handleAttachmentsChange = (files: File[]) => {
-    // Limit to 5 files maximum
-    const limitedFiles = files.slice(0, 5);
-    setAttachments(limitedFiles);
-    setFormData({
-      ...formData,
-      attachments: limitedFiles
-    });
-  };
+
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate required fields
-    if (!formData.name || !formData.phone || !formData.block_id) {
+    if (!formData.name || !formData.phone || !formData.seater_type) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -107,7 +66,9 @@ export default function CreateInquiry() {
     setError(null);
     
     try {
-      await inquiryApi.createInquiry(formData);
+      console.log('Submitting data:', formData);
+      const response = await inquiryApi.createInquiry(formData);
+      console.log('Create response:', response);
       
       setSuccess('Inquiry created successfully!');
       
@@ -116,11 +77,7 @@ export default function CreateInquiry() {
         name: '',
         email: '',
         phone: '',
-        block_id: '',
-        seater: undefined,
-        description: '',
-        notes: '',
-        attachments: []
+        seater_type: 1
       });
       
       // Redirect after delay
@@ -130,7 +87,11 @@ export default function CreateInquiry() {
       
     } catch (error) {
       console.error('Error creating inquiry:', error);
-      if (error instanceof ApiError) {
+      if (error instanceof ApiError && error.validation) {
+        // Show validation errors if available
+        const validationMessages = Object.values(error.validation).flat();
+        setError(validationMessages.join('\n'));
+      } else if (error instanceof ApiError) {
         setError(`Failed to create inquiry: ${error.message}`);
       } else {
         setError('Failed to create inquiry. Please try again.');
@@ -199,77 +160,56 @@ export default function CreateInquiry() {
             placeholder="Enter email address (optional)"
           />
           
-          {/* Block */}
-          <FormField
-            label="Block"
-            name="block_id"
-            value={formData.block_id}
-            onChange={handleInputChange}
-            type="select"
-            options={blocks.map(block => ({ value: block.id, label: block.block_name }))}
-            required
-            error={!formData.block_id && error ? 'Block is required' : ''}
-          />
-          
-          {/* Seater */}
-          <FormField
-            label="Seater Preference"
-            name="seater"
-            value={formData.seater?.toString() || ''}
-            onChange={handleInputChange}
-            type="select"
-            options={[
-              { value: '1', label: '1-Seater' },
-              { value: '2', label: '2-Seater' },
-              { value: '3', label: '3-Seater' },
-              { value: '4', label: '4-Seater' },
-              { value: '6', label: '6-Seater' }
-            ]}
-          />
-        </div>
-        
-        {/* Description */}
-        <div className="mb-6">
-          <FormField 
-            label="Description"
-            name="description"
-            value={formData.description || ''}
-            onChange={handleInputChange}
-            type="textarea"
-            placeholder="Enter any additional details about the inquiry"
-          />
-        </div>
-        
-        {/* Simple Inquiry Notes - replacing Room Options */}
-        <div className="mb-6">
-          <FormField 
-            label="Notes"
-            name="notes"
-            value={formData.notes || ''}
-            onChange={handleInputChange}
-            type="textarea"
-            placeholder="Enter any specific requirements or notes about room preferences"
-          />
-        </div>
-        
-        {/* File Attachments */}
-        <div className="mb-6">
-          <h3 className="block text-sm font-semibold text-neutral-900 mb-2">Attachments</h3>
-          <MultipleImageUploadCreate
-            images={attachments}
-            onAddImages={handleAttachmentsChange}
-            onRemoveImage={(index) => {
-              const newAttachments = [...attachments];
-              newAttachments.splice(index, 1);
-              handleAttachmentsChange(newAttachments);
-            }}
-            onImageClick={(url, alt) => {
-              // Preview functionality could be added here
-              console.log('Preview image:', url, alt);
-            }}
-            label="Supporting Documents"
-          />
-          <p className="text-xs text-neutral-500 mt-1">Upload any supporting documents (max 5 files, 10MB each)</p>
+          {/* Number of Seaters */}
+          <div className="space-y-2">
+            <FormField
+              label="Number of Seaters"
+              name="seater_type_select"
+              value={isCustomSeater ? 'custom' : formData.seater_type.toString()}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === 'custom') {
+                  setIsCustomSeater(true);
+                  return;
+                }
+                setIsCustomSeater(false);
+                setFormData({
+                  ...formData,
+                  seater_type: parseInt(value)
+                });
+              }}
+              type="select"
+              options={[
+                { value: '1', label: '1-Seater' },
+                { value: '2', label: '2-Seater' },
+                { value: '3', label: '3-Seater' },
+                { value: '4', label: '4-Seater' },
+                { value: 'custom', label: 'Custom Seater' }
+              ]}
+              required
+              error={!formData.seater_type && error ? 'Number of seaters is required' : ''}
+            />
+            {isCustomSeater && (
+              <FormField
+                label="Custom Seater Number"
+                name="seater_type"
+                value={formData.seater_type?.toString() || ''}
+                onChange={(e) => {
+                  const numValue = e.target.value ? parseInt(e.target.value) : 0;
+                  if (!isNaN(numValue) && numValue > 0) {
+                    setFormData({
+                      ...formData,
+                      seater_type: numValue
+                    });
+                  }
+                }}
+                type="text"
+                placeholder="Enter custom number of seaters"
+                required
+                error={!formData.seater_type && error ? 'Number of seaters is required' : ''}
+              />
+            )}
+          </div>
         </div>
         
         {/* Form Actions */}

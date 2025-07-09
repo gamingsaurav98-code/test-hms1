@@ -33,9 +33,8 @@ class InquirySeaterController extends Controller
         // Validate incoming request
         $validator = Validator::make($request->all(), [
             'inquiry_id' => 'required|exists:inquiries,id',
-            'room_id' => 'required|exists:rooms,id',
-            'block_id' => 'required|exists:blocks,id',
-            'capacity' => 'required|integer|min:1',
+            'seater_type' => 'required|integer|min:1|max:4',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
