@@ -46,6 +46,16 @@ export type {
   Attachment as InquiryAttachment
 } from './types/inquiry.types';
 
+// Import expense API types
+export type {
+  Expense,
+  ExpenseFormData,
+  ExpenseCategory,
+  ExpenseCategoryFormData,
+  Purchase,
+  PurchaseFormData
+} from './types/expense.types';
+
 // Re-export APIs
 export { blockApi } from './block.api';
 export { roomApi } from './room.api';
@@ -55,3 +65,4 @@ export { supplierApi } from './supplier.api';
 export { supplierFinancialApi } from './supplier-financial.api';
 export { noticeApi } from './notice.api';
 export { inquiryApi } from './inquiry.api';
+export { expenseApi, expenseCategoryApi } from './expense.api';

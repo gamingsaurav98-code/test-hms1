@@ -14,6 +14,8 @@ use App\Http\Controllers\SupplierFinancialController;
 use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\InquirySeaterController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ExpenseCategoryController;
 
 Route::apiResource('blocks', BlockController::class);
 Route::apiResource('complains', ComplainController::class);
@@ -25,6 +27,8 @@ Route::apiResource('students', StudentController::class);
 Route::apiResource('suppliers', SupplierController::class);
 Route::apiResource('inquiries', InquiryController::class);
 Route::apiResource('inquiry-seaters', InquirySeaterController::class);
+Route::apiResource('expenses', ExpenseController::class);
+Route::apiResource('expense-categories', ExpenseCategoryController::class);
 
 Route::post('incomes/{id}/attachment', [IncomeController::class, 'uploadAttachment']);
 Route::post('suppliers/{id}/attachment', [SupplierController::class, 'uploadAttachment']);
@@ -34,6 +38,12 @@ Route::get('available-rooms', [RoomController::class, 'getAvailableRooms']);
 Route::get('rooms/{id}/students', [RoomController::class, 'getStudentsByRoom']);
 Route::apiResource('supplier-financials', SupplierFinancialController::class);
 Route::get('suppliers/{id}/financials', [SupplierFinancialController::class, 'getFinancialsBySupplier']);
+
+// Expense routes
+Route::get('expenses/category/{categoryId}', [ExpenseController::class, 'getExpensesByCategory']);
+Route::get('expenses/date-range', [ExpenseController::class, 'getExpensesByDateRange']);
+Route::post('expenses/{id}/attachment', [ExpenseController::class, 'uploadAttachment']);
+Route::delete('expenses/{expenseId}/attachments/{attachmentId}', [ExpenseController::class, 'deleteAttachment']);
 
 // Notice routes
 Route::apiResource('notices', NoticeController::class);
