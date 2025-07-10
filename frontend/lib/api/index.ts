@@ -56,6 +56,16 @@ export type {
   PurchaseFormData
 } from './types/expense.types';
 
+// Import salary API types
+export type {
+  Salary,
+  Staff,
+  SalaryStatistics,
+  CreateSalaryRequest,
+  UpdateSalaryRequest,
+  SalaryFilters
+} from './salary.api';
+
 // Re-export APIs
 export { blockApi } from './block.api';
 export { roomApi } from './room.api';
@@ -66,3 +76,4 @@ export { supplierFinancialApi } from './supplier-financial.api';
 export { noticeApi } from './notice.api';
 export { inquiryApi } from './inquiry.api';
 export { expenseApi, expenseCategoryApi } from './expense.api';
+export { SalaryApi, StaffApi } from './salary.api';

@@ -16,6 +16,8 @@ use App\Http\Controllers\InquiryController;
 use App\Http\Controllers\InquirySeaterController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ExpenseCategoryController;
+use App\Http\Controllers\SalaryController;
+use App\Http\Controllers\StaffController;
 
 Route::apiResource('blocks', BlockController::class);
 Route::apiResource('complains', ComplainController::class);
@@ -29,6 +31,8 @@ Route::apiResource('inquiries', InquiryController::class);
 Route::apiResource('inquiry-seaters', InquirySeaterController::class);
 Route::apiResource('expenses', ExpenseController::class);
 Route::apiResource('expense-categories', ExpenseCategoryController::class);
+Route::apiResource('salaries', SalaryController::class);
+Route::apiResource('staff', StaffController::class);
 
 Route::post('incomes/{id}/attachment', [IncomeController::class, 'uploadAttachment']);
 Route::post('suppliers/{id}/attachment', [SupplierController::class, 'uploadAttachment']);
@@ -44,6 +48,10 @@ Route::get('expenses/category/{categoryId}', [ExpenseController::class, 'getExpe
 Route::get('expenses/date-range', [ExpenseController::class, 'getExpensesByDateRange']);
 Route::post('expenses/{id}/attachment', [ExpenseController::class, 'uploadAttachment']);
 Route::delete('expenses/{expenseId}/attachments/{attachmentId}', [ExpenseController::class, 'deleteAttachment']);
+
+// Salary routes
+Route::get('staff/{staffId}/salaries', [SalaryController::class, 'getStaffSalaries']);
+Route::get('salaries/statistics', [SalaryController::class, 'getSalaryStatistics']);
 
 // Notice routes
 Route::apiResource('notices', NoticeController::class);
