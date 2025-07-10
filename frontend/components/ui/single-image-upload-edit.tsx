@@ -28,6 +28,27 @@ export function SingleImageUploadEdit({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Validate file type
+      const validFileTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+      if (!validFileTypes.includes(file.type)) {
+        console.error('Invalid file type:', file.type);
+        alert(`Invalid file type. Please select JPG, PNG, GIF, or PDF file.`);
+        return;
+      }
+
+      // Validate file size
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        console.error('File too large:', file.size);
+        alert(`File size exceeds 5MB limit. Please select a smaller file.`);
+        return;
+      }
+
+      console.log('File selected:', {
+        name: file.name,
+        type: file.type,
+        size: `${(file.size / 1024).toFixed(2)}KB`
+      });
       onFileSelect(file)
     }
   }
@@ -49,6 +70,27 @@ export function SingleImageUploadEdit({
 
     const file = e.dataTransfer.files?.[0]
     if (file) {
+      // Validate file type
+      const validFileTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+      if (!validFileTypes.includes(file.type)) {
+        console.error('Invalid file type:', file.type);
+        alert(`Invalid file type. Please select JPG, PNG, GIF, or PDF file.`);
+        return;
+      }
+
+      // Validate file size
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        console.error('File too large:', file.size);
+        alert(`File size exceeds 5MB limit. Please select a smaller file.`);
+        return;
+      }
+
+      console.log('File dropped:', {
+        name: file.name,
+        type: file.type,
+        size: `${(file.size / 1024).toFixed(2)}KB`
+      });
       onFileSelect(file)
     }
   }
@@ -100,7 +142,7 @@ export function SingleImageUploadEdit({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/jpg,image/png,image/gif"
+          accept="image/jpeg,image/jpg,image/png,image/gif,application/pdf"
           onChange={handleFileSelect}
           className="hidden"
         />
@@ -115,7 +157,7 @@ export function SingleImageUploadEdit({
               <p className="text-sm text-neutral-600 font-medium">
                 Drop image here or <span className="font-semibold underline">browse files</span>
               </p>
-              <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, GIF up to 5MB</p>
+              <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, GIF, PDF up to 5MB</p>
             </div>
           </div>
         ) : hasBothImages ? (

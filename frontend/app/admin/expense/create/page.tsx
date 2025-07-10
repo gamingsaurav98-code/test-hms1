@@ -116,19 +116,20 @@ export default function CreateExpense() {
     const value = e.target.value;
     setPaymentStatus(value);
     
-    // Show payment amount field for 'paid' and 'partially paid' status
-    if (value === 'paid' || value === 'partially paid') {
+    // Show payment amount field only for 'partially_paid' status
+    if (value === 'partially_paid') {
       setShowPaymentAmount(true);
-      if (value === 'paid') {
-        // Set payment amount to total amount or 0 if total is 0
-        const paymentValue = totalAmount > 0 ? totalAmount : 0;
-        setPaymentAmount(paymentValue);
-      } else {
-        setPaymentAmount(0);
-      }
-    } else {
+      setPaymentAmount(0); // Default to 0 for partial payment
+    } else if (value === 'paid') {
+      // Don't show payment amount input, but set full payment
       setShowPaymentAmount(false);
-      setPaymentAmount(0);
+      // Set payment amount to total amount or 0 if total is 0
+      const paymentValue = totalAmount > 0 ? totalAmount : 0;
+      setPaymentAmount(paymentValue);
+    } else {
+      // For 'credit' status
+      setShowPaymentAmount(false);
+      setPaymentAmount(0); // No payment for credit
     }
   };
 
@@ -162,12 +163,13 @@ export default function CreateExpense() {
   };
 
   const addPurchase = () => {
+    const today = new Date().toISOString().split('T')[0];
     const newPurchase: PurchaseFormData = {
       item_name: '',
       item_quantity: 1,
       item_price: 0,
       item_unit_price: 0,
-      purchase_date: new Date().toISOString().split('T')[0],
+      purchase_date: today,
       total_amount: 0
     };
     setPurchases([...purchases, newPurchase]);
@@ -225,24 +227,69 @@ export default function CreateExpense() {
     setError(null);
 
     try {
-      // Validate payment amount doesn't exceed total
-      if (paymentAmount > totalAmount) {
-        setError("Payment amount cannot exceed the total amount.");
+      // Validate required fields
+      if (!formData.expense_category_id) {
+        setError("Please select an expense category.");
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!formData.supplier_id) {
+        setError("Please select a supplier.");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Description is optional, removed validation
+
+      if (!paymentStatus) {
+        setError("Please select a payment status.");
+        setIsLoading(false);
+        return;
+      }
+      
+      // For partially paid, validate payment amount doesn't exceed total
+      if (paymentStatus === 'partially_paid' && paymentAmount > totalAmount) {
+        setError("Payment amount cannot exceed the total amount for a partial payment.");
         setIsLoading(false);
         return;
       }
       
       // Auto-generate expense_type from category
       const selectedCategory = expenseCategories.find(cat => cat.id === formData.expense_category_id);
+      
+      // Handle payment amount based on status
+      let finalPaidAmount = 0;
+      let finalDueAmount = 0;
+      
+      if (paymentStatus === 'paid') {
+        finalPaidAmount = totalAmount;
+        finalDueAmount = 0;
+      } else if (paymentStatus === 'partially_paid') {
+        finalPaidAmount = paymentAmount;
+        finalDueAmount = Math.max(0, totalAmount - paymentAmount);
+      } else {
+        // Credit - everything is due
+        finalPaidAmount = 0;
+        finalDueAmount = totalAmount;
+      }
+      
+      // Make sure purchases have all required fields, especially purchase_date
+      const processedPurchases = purchases.map(purchase => ({
+        ...purchase,
+        purchase_date: purchase.purchase_date || new Date().toISOString().split('T')[0]
+      }));
+      
       const dataToSubmit = {
         ...formData,
         expense_type: selectedCategory?.name || 'General',
         title: selectedCategory?.name || 'Expense',
         amount: totalAmount,
-        paid_amount: paymentAmount,
-        due_amount: Math.max(0, totalAmount - paymentAmount), // Ensure due amount is never negative
+        paid_amount: finalPaidAmount,
+        due_amount: finalDueAmount,
         payment_type_id: '1', // Default payment type
-        purchases: purchases.length > 0 ? purchases : undefined
+        payment_status: paymentStatus, // Add payment status to the submission
+        purchases: processedPurchases.length > 0 ? processedPurchases : undefined
       };
 
       await expenseApi.createExpense(dataToSubmit);
@@ -381,7 +428,7 @@ export default function CreateExpense() {
                 {/* Description */}
                 <div>
                   <label htmlFor="description" className="block text-sm font-semibold text-neutral-900 mb-2">
-                    Description <span className="text-red-500">*</span>
+                    Description
                   </label>
                   <textarea
                     id="description"
@@ -393,72 +440,6 @@ export default function CreateExpense() {
                     placeholder="Enter expense description..."
                   />
                 </div>
-
-                {/* Date and Payment Status Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  
-                  {/* Payment Date */}
-                  <div>
-                    <label htmlFor="expense_date" className="block text-sm font-semibold text-neutral-900 mb-2">
-                      Payment Date <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      id="expense_date"
-                      name="expense_date"
-                      value={formData.expense_date}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                    />
-                  </div>
-
-                  {/* Payment Status */}
-                  <div>
-                    <label htmlFor="payment_status" className="block text-sm font-semibold text-neutral-900 mb-2">
-                      Payment Status <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      id="payment_status"
-                      name="payment_status"
-                      value={paymentStatus}
-                      onChange={handlePaymentStatusChange}
-                      className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                    >
-                      <option value="">Select Status</option>
-                      <option value="paid">Paid</option>
-                      <option value="partially paid">Partially Paid</option>
-                      <option value="credit">Credit</option>
-                    </select>
-                  </div>
-
-                </div>
-
-                {/* Payment Amount (Conditional) */}
-                {showPaymentAmount && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="payment_amount" className="block text-sm font-semibold text-neutral-900 mb-2">
-                        Payment Amount <span className="text-red-500">*</span>
-                      </label>                        <input
-                          type="number"
-                          id="payment_amount"
-                          name="payment_amount"
-                          value={paymentAmount || ''}
-                          onChange={handlePaymentAmountChange}
-                          min="0"
-                          max={totalAmount}
-                          step="0.01"
-                          className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                          placeholder="Enter payment amount..."
-                        />
-                    </div>
-                    <div className="flex items-end">
-                      <div className="text-sm text-gray-600">
-                        {paymentStatus === 'paid' ? 'Full payment' : 'Partial payment'}
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Product Details */}
                 <div>
@@ -570,13 +551,85 @@ export default function CreateExpense() {
                   </div>
                 </div>
 
+                {/* Date and Payment Status Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  {/* Payment Date */}
+                  <div>
+                    <label htmlFor="expense_date" className="block text-sm font-semibold text-neutral-900 mb-2">
+                      Payment Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      id="expense_date"
+                      name="expense_date"
+                      value={formData.expense_date}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                    />
+                  </div>
+
+                  {/* Payment Status */}
+                  <div>
+                    <label htmlFor="payment_status" className="block text-sm font-semibold text-neutral-900 mb-2">
+                      Payment Status <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="payment_status"
+                      name="payment_status"
+                      value={paymentStatus}
+                      onChange={handlePaymentStatusChange}
+                      className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                    >
+                      <option value="">Select Status</option>
+                      <option value="paid">Paid</option>
+                      <option value="partially_paid">Partially Paid</option>
+                      <option value="credit">Credit</option>
+                    </select>
+                  </div>
+
+                </div>
+
+                {/* Payment Amount (Conditional) */}
+                {showPaymentAmount && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="payment_amount" className="block text-sm font-semibold text-neutral-900 mb-2">
+                        Payment Amount <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        id="payment_amount"
+                        name="payment_amount"
+                        value={paymentAmount || ''}
+                        onChange={handlePaymentAmountChange}
+                        min="0"
+                        step="0.01"
+                        className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                        placeholder="Enter payment amount..."
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <div className="space-y-2">
+                        <div className="text-sm text-gray-600">Partial payment</div>
+                        {paymentAmount > 0 && (
+                          <div className="text-sm font-medium">
+                            <span className="text-amber-600">Due to add to supplier: </span>
+                            <span className="text-amber-700 font-semibold">Rs.{Math.max(0, totalAmount - paymentAmount).toFixed(2)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
 
               {/* Right Column - Image Upload & Summary */}
               <div className="lg:col-span-1 space-y-6">
                 
                 {/* Image Upload */}
-                <div>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                   <label className="block text-sm font-semibold text-neutral-900 mb-2">
                     Expense Attachment
                   </label>
@@ -587,6 +640,9 @@ export default function CreateExpense() {
                     onImageClick={handleImageClick}
                     label=""
                   />
+                  {!imagePreview && (
+                    <p className="text-xs text-neutral-500 mt-1">Add an image of the receipt or invoice (optional)</p>
+                  )}
                 </div>
 
                 {/* Summary Card */}
@@ -607,15 +663,42 @@ export default function CreateExpense() {
                         <span className="font-bold text-blue-900">Rs.{totalAmount.toFixed(2)}</span>
                       </div>
                     </div>
-                    {showPaymentAmount && (
+                    {/* Payment details based on status */}
+                    {paymentStatus && (
                       <>
                         <div className="flex justify-between">
+                          <span className="text-blue-700">Payment Status:</span>
+                          <span className="font-medium">
+                            {paymentStatus === 'paid' && 
+                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Paid</span>
+                            }
+                            {paymentStatus === 'partially_paid' && 
+                              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Partially Paid</span>
+                            }
+                            {paymentStatus === 'credit' && 
+                              <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Credit</span>
+                            }
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
                           <span className="text-blue-700">Paid Amount:</span>
-                          <span className="font-medium text-blue-900">Rs.{paymentAmount.toFixed(2)}</span>
+                          <span className="font-medium text-blue-900">
+                            Rs.{paymentStatus === 'paid' 
+                              ? totalAmount.toFixed(2) 
+                              : paymentStatus === 'partially_paid' 
+                                ? paymentAmount.toFixed(2) 
+                                : '0.00'}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-blue-700">Due Amount:</span>
-                          <span className="font-medium text-blue-900">Rs.{(totalAmount - paymentAmount).toFixed(2)}</span>
+                          <span className="font-medium text-blue-900">
+                            Rs.{paymentStatus === 'paid' 
+                              ? '0.00' 
+                              : paymentStatus === 'partially_paid' 
+                                ? (totalAmount - paymentAmount).toFixed(2) 
+                                : totalAmount.toFixed(2)}
+                          </span>
                         </div>
                       </>
                     )}

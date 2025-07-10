@@ -13,14 +13,14 @@ interface ImageModalProps {
 export function ImageModal({ show, imageUrl, alt, onClose }: ImageModalProps) {
   if (!show) return null
   
-  // Check if it's an image file
-  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(alt);
-  const isPDF = /\.pdf$/i.test(alt);
+  console.log('ImageModal:', { imageUrl, alt });
   
-  // For image URLs from the server, we may need to make them absolute
-  const fullImageUrl = imageUrl.startsWith('http') 
-    ? imageUrl 
-    : `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace('/api', '')}/storage/${imageUrl}`;
+  // Check file type from the extension or URL
+  const isPDF = /\.pdf$/i.test(imageUrl) || /\.pdf$/i.test(alt);
+  const isImage = !isPDF; // Default to image if not PDF
+  
+  // For image URLs from the server, ensure it's a complete URL
+  const fullImageUrl = imageUrl;
   
   return (
     <div 
@@ -56,6 +56,12 @@ export function ImageModal({ show, imageUrl, alt, onClose }: ImageModalProps) {
           <img
             src={fullImageUrl}
             alt={alt}
+            onError={(e) => {
+              console.error('Image failed to load:', fullImageUrl);
+              const target = e.target as HTMLImageElement;
+              target.onerror = null; // Prevent infinite loops
+              target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTMgOUgxOSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xMyAxNUgxOSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yMiAxOUMyMiAxOS41MzA0IDIxLjc4OTMgMjAuMDM5MSAyMS40MTQyIDIwLjQxNDJDMjEuMDM5MSAyMC43ODkzIDIwLjUzMDQgMjEgMjAgMjFINEMzLjQ2OTU3IDIxIDIuOTYwODYgMjAuNzg5MyAyLjU4NTc5IDIwLjQxNDJDMi4yMTA3MSAyMC4wMzkxIDIgMTkuNTMwNCAyIDE5VjVDMiA0LjQ2OTU3IDIuMjEwNzEgMy45NjA4NiAyLjU4NTc5IDMuNTg1NzlDMi45NjA4NiAzLjIxMDcxIDMuNDY5NTcgMyA0IDNIMjBDMjAuNTMwNCAzIDIxLjAzOTEgMy4yMTA3MSAyMS40MTQyIDMuNTg1NzlDMjEuNzg5MyAzLjk2MDg2IDIyIDQuNDY5NTcgMjIgNVYxOVoiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNOSA5SDdWMTVIOVY5WiIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==';
+            }}
             className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
             draggable={false}
           />

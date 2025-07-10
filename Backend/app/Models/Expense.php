@@ -89,7 +89,7 @@ class Expense extends Model
     }
     
     /**
-     * Get the status of the expense (paid, partially paid, unpaid)
+     * Get the status of the expense (paid, partially paid, credit)
      *
      * @return string
      */
@@ -100,7 +100,7 @@ class Expense extends Model
         } elseif ($this->paid_amount > 0) {
             return 'partially_paid';
         } else {
-            return 'unpaid';
+            return 'credit';
         }
     }
     

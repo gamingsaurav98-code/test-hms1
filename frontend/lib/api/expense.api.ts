@@ -90,6 +90,14 @@ export const expenseApi = {
       formData.append('due_amount', data.due_amount.toString());
     }
     
+    if (data.payment_status) {
+      formData.append('payment_status', data.payment_status);
+    }
+    
+    if (data.payment_type_id) {
+      formData.append('payment_type_id', data.payment_type_id);
+    }
+    
     // Append file if present
     if (data.expense_attachment) {
       formData.append('expense_attachment', data.expense_attachment);
@@ -129,10 +137,6 @@ export const expenseApi = {
       formData.append('description', data.description);
     }
     
-    if (data.description) {
-      formData.append('description', data.description);
-    }
-    
     if (data.student_id) {
       formData.append('student_id', data.student_id);
     }
@@ -153,9 +157,40 @@ export const expenseApi = {
       formData.append('due_amount', data.due_amount.toString());
     }
     
-    // Append file if present
+    if (data.payment_status) {
+      formData.append('payment_status', data.payment_status);
+    }
+    
+    if (data.payment_type_id) {
+      formData.append('payment_type_id', data.payment_type_id);
+    }
+    
+    // Append file if present and validate it again
     if (data.expense_attachment) {
-      formData.append('expense_attachment', data.expense_attachment);
+      // Double-check file type and size
+      const file = data.expense_attachment;
+      
+      // Check file type
+      const validFileTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+      if (!validFileTypes.includes(file.type)) {
+        throw new Error(`Invalid file type: ${file.type}. Allowed types: JPG, PNG, GIF, PDF.`);
+      }
+      
+      // Check file size
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        throw new Error(`File size exceeds 5MB limit. Selected file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
+      }
+      
+      console.log('Adding file to form data:', {
+        name: file.name,
+        type: file.type,
+        size: `${(file.size / 1024).toFixed(2)}KB`
+      });
+      
+      formData.append('expense_attachment', file);
+    } else {
+      console.log('No new attachment file to upload');
     }
     
     // Append purchases if present
@@ -163,15 +198,22 @@ export const expenseApi = {
       formData.append('purchases', JSON.stringify(data.purchases));
     }
 
-    const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
-      method: 'POST', // Using POST with _method override for file uploads
-      headers: {
-        'Accept': 'application/json',
-      },
-      body: formData,
-    });
+    console.log('Sending update request to:', `${API_BASE_URL}/expenses/${id}`);
     
-    return handleResponse<Expense>(response);
+    try {
+      const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+        method: 'POST', // Using POST with _method override for file uploads
+        headers: {
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+      
+      return handleResponse<Expense>(response);
+    } catch (error) {
+      console.error('Network error during expense update:', error);
+      throw error;
+    }
   },
 
   // Delete an expense

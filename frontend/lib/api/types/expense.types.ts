@@ -50,7 +50,7 @@ export interface Expense {
   payment_type_id?: string; // Made optional since we removed it from forms
   paid_amount?: number;
   due_amount?: number;
-  payment_status: 'paid' | 'partially_paid' | 'unpaid';
+  payment_status: string;
   created_at: string;
   updated_at?: string;
   expenseCategory?: ExpenseCategory;
@@ -74,5 +74,7 @@ export interface ExpenseFormData {
   expense_attachment?: File | null;
   paid_amount?: number;
   due_amount?: number;
+  payment_status?: string;
+  payment_type_id?: string;
   purchases?: PurchaseFormData[];
 }

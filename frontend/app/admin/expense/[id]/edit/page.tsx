@@ -63,9 +63,17 @@ export default function EditExpense() {
 
   // Calculate total amount from purchases
   useEffect(() => {
-    const total = purchases.reduce((sum, purchase) => sum + purchase.total_amount, 0);
-    setTotalAmount(total);
-    setFormData(prev => ({ ...prev, amount: total }));
+    // Ensure each purchase total_amount is a number
+    const total = purchases.reduce((sum, purchase) => {
+      const purchaseAmount = typeof purchase.total_amount === 'number' ? purchase.total_amount : 0;
+      return sum + purchaseAmount;
+    }, 0);
+    
+    // Make sure total is a valid number
+    const safeTotal = isNaN(total) ? 0 : total;
+    
+    setTotalAmount(safeTotal);
+    setFormData(prev => ({ ...prev, amount: safeTotal }));
   }, [purchases]);
 
   // Load initial data and expense details
@@ -89,7 +97,19 @@ export default function EditExpense() {
         
         // Set existing image
         if (expenseResponse.expense_attachment) {
-          setExistingImage(expenseResponse.expense_attachment);
+          // Ensure the URL is properly formatted for display
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+          const attachmentPath = expenseResponse.expense_attachment || '';
+          
+          // Check if attachment path already includes /storage/ to avoid duplication
+          const attachmentUrl = attachmentPath.startsWith('http')
+            ? attachmentPath // Already a full URL
+            : attachmentPath.startsWith('/storage/')
+              ? `${baseUrl}${attachmentPath}` // Path already includes /storage/
+              : `${baseUrl}/storage/${attachmentPath}`; // Need to add /storage/
+          
+          console.log('Setting existing image URL:', attachmentUrl);
+          setExistingImage(attachmentUrl);
         }
         
         // Set form data with existing values
@@ -108,6 +128,23 @@ export default function EditExpense() {
           due_amount: expenseResponse.due_amount || 0,
           purchases: []
         });
+        
+        // Set payment status from the response
+        if (expenseResponse.payment_status) {
+          setPaymentStatus(expenseResponse.payment_status);
+          
+          // Set showPaymentAmount and paymentAmount based on status
+          if (expenseResponse.payment_status === 'partially_paid') {
+            setShowPaymentAmount(true);
+            setPaymentAmount(expenseResponse.paid_amount || 0);
+          } else if (expenseResponse.payment_status === 'paid') {
+            setShowPaymentAmount(false);
+            setPaymentAmount(expenseResponse.amount || 0);
+          } else {
+            setShowPaymentAmount(false);
+            setPaymentAmount(0);
+          }
+        }
         
         // Set purchases if they exist
         if (expenseResponse.purchases && expenseResponse.purchases.length > 0) {
@@ -161,17 +198,18 @@ export default function EditExpense() {
     const value = e.target.value;
     setPaymentStatus(value);
     
-    // Show payment amount field for 'paid' and 'partially paid' status
-    if (value === 'paid' || value === 'partially paid') {
+    // Show payment amount field only for 'partially_paid' status
+    if (value === 'partially_paid') {
       setShowPaymentAmount(true);
-      if (value === 'paid') {
-        setPaymentAmount(totalAmount);
-      } else {
-        setPaymentAmount(0);
-      }
-    } else {
+      setPaymentAmount(0); // Default to 0 for partial payment
+    } else if (value === 'paid') {
+      // Don't show payment amount input, but set full payment
       setShowPaymentAmount(false);
-      setPaymentAmount(0);
+      setPaymentAmount(totalAmount); // Full payment amount
+    } else {
+      // For 'credit' status
+      setShowPaymentAmount(false);
+      setPaymentAmount(0); // No payment for credit
     }
   };
 
@@ -268,50 +306,116 @@ export default function EditExpense() {
     setError(null);
 
     try {
-      // Validate payment amount doesn't exceed total
-      if (paymentAmount > totalAmount) {
-        setError("Payment amount cannot exceed the total amount.");
+      // For partially paid, validate payment amount doesn't exceed total
+      if (paymentStatus === 'partially_paid' && paymentAmount > totalAmount) {
+        setError("Payment amount cannot exceed the total amount for a partial payment.");
         setIsLoading(false);
         return;
       }
       
+      // Validate attachment file if a new one is selected
+      if (selectedFile) {
+        // Check file type
+        const validFileTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+        if (!validFileTypes.includes(selectedFile.type)) {
+          setError(`Invalid file type. Allowed types: JPG, PNG, GIF, PDF. Selected file is ${selectedFile.type}`);
+          setIsLoading(false);
+          return;
+        }
+
+        // Check file size (5MB limit)
+        const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+        if (selectedFile.size > maxSize) {
+          setError(`File size exceeds 5MB limit. Selected file is ${(selectedFile.size / (1024 * 1024)).toFixed(2)}MB`);
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('Uploading file:', {
+          name: selectedFile.name,
+          type: selectedFile.type,
+          size: `${(selectedFile.size / 1024).toFixed(2)}KB`
+        });
+      }
+      
       // Auto-generate expense_type from category
       const selectedCategory = expenseCategories.find(cat => cat.id === formData.expense_category_id);
-      const dataToSubmit = {
+      
+      // Handle payment amount based on status
+      let finalPaidAmount = 0;
+      let finalDueAmount = 0;
+      
+      if (paymentStatus === 'paid') {
+        finalPaidAmount = totalAmount;
+        finalDueAmount = 0;
+      } else if (paymentStatus === 'partially_paid') {
+        finalPaidAmount = paymentAmount;
+        finalDueAmount = Math.max(0, totalAmount - paymentAmount);
+      } else {
+        // Credit - everything is due
+        finalPaidAmount = 0;
+        finalDueAmount = totalAmount;
+      }
+      
+      // Create a copy of the form data to avoid manipulating the state directly
+      const dataToSubmit: ExpenseFormData = {
         ...formData,
         expense_type: selectedCategory?.name || 'General',
         title: selectedCategory?.name || 'Expense',
         amount: totalAmount,
-        paid_amount: paymentAmount,
-        due_amount: Math.max(0, totalAmount - paymentAmount), // Ensure due amount is never negative
-        purchases: purchases.length > 0 ? purchases : undefined
+        paid_amount: finalPaidAmount,
+        due_amount: finalDueAmount,
+        payment_status: paymentStatus,
+        purchases: purchases.length > 0 ? purchases : undefined,
+        // Only include expense_attachment if there's a new file selected
+        expense_attachment: selectedFile
       };
 
-      await expenseApi.updateExpense(params.id as string, dataToSubmit);
-      
-      setAlert({
-        show: true,
-        message: 'Expense updated successfully!',
-        type: 'success'
-      });
+      try {
+        console.log('Submitting expense update with data:', {
+          ...dataToSubmit,
+          expense_attachment: dataToSubmit.expense_attachment ? 'File included' : 'No file',
+          purchases: dataToSubmit.purchases?.length
+        });
+        
+        await expenseApi.updateExpense(params.id as string, dataToSubmit);
+        
+        setAlert({
+          show: true,
+          message: 'Expense updated successfully!',
+          type: 'success'
+        });
 
-      // Redirect after success
-      setTimeout(() => {
-        router.push('/admin/expense');
-      }, 2000);
-      
-    } catch (error) {
-      console.error('Error updating expense:', error);
-      if (error instanceof ApiError) {
-        setError(`Failed to update expense: ${error.message}`);
-      } else {
-        setError('Failed to update expense. Please try again.');
+        // Redirect after success
+        setTimeout(() => {
+          router.push('/admin/expense');
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Error updating expense:', error);
+        
+        if (error instanceof ApiError) {
+          // Handle file upload error specifically
+          if (error.message.includes('attachment') || error.message.includes('upload')) {
+            setError(`Failed to upload attachment: ${error.message}. Please check the file type and size.`);
+          } else {
+            setError(`Failed to update expense: ${error.message}`);
+          }
+          
+          // Log validation errors if available
+          if (error.validation) {
+            console.error('Validation errors:', error.validation);
+          }
+        } else {
+          setError('Failed to update expense. Please try again.');
+        }
+        
+        setAlert({
+          show: true,
+          message: 'Failed to update expense. Please try again.',
+          type: 'error'
+        });
       }
-      setAlert({
-        show: true,
-        message: 'Failed to update expense. Please try again.',
-        type: 'error'
-      });
     } finally {
       setIsLoading(false);
     }
@@ -444,7 +548,7 @@ export default function EditExpense() {
                 {/* Description */}
                 <div>
                   <label htmlFor="description" className="block text-sm font-semibold text-neutral-900 mb-2">
-                    Description <span className="text-red-500">*</span>
+                    Description
                   </label>
                   <textarea
                     id="description"
@@ -456,72 +560,6 @@ export default function EditExpense() {
                     placeholder="Enter expense description..."
                   />
                 </div>
-
-                {/* Date and Payment Status Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  
-                  {/* Payment Date */}
-                  <div>
-                    <label htmlFor="expense_date" className="block text-sm font-semibold text-neutral-900 mb-2">
-                      Payment Date <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      id="expense_date"
-                      name="expense_date"
-                      value={formData.expense_date}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                    />
-                  </div>
-
-                  {/* Payment Status */}
-                  <div>
-                    <label htmlFor="payment_status" className="block text-sm font-semibold text-neutral-900 mb-2">
-                      Payment Status <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      id="payment_status"
-                      name="payment_status"
-                      value={paymentStatus}
-                      onChange={handlePaymentStatusChange}
-                      className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                    >
-                      <option value="">Select Status</option>
-                      <option value="paid">Paid</option>
-                      <option value="partially paid">Partially Paid</option>
-                      <option value="credit">Credit</option>
-                    </select>
-                  </div>
-
-                </div>
-
-                {/* Payment Amount (Conditional) */}
-                {showPaymentAmount && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="payment_amount" className="block text-sm font-semibold text-neutral-900 mb-2">
-                        Payment Amount <span className="text-red-500">*</span>
-                      </label>                        <input
-                          type="number"
-                          id="payment_amount"
-                          name="payment_amount"
-                          value={paymentAmount || ''}
-                          onChange={handlePaymentAmountChange}
-                          min="0"
-                          max={totalAmount}
-                          step="0.01"
-                          className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                          placeholder="Enter payment amount..."
-                        />
-                    </div>
-                    <div className="flex items-end">
-                      <div className="text-sm text-gray-600">
-                        {paymentStatus === 'paid' ? 'Full payment' : 'Partial payment'}
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Product Details */}
                 <div>
@@ -633,13 +671,85 @@ export default function EditExpense() {
                   </div>
                 </div>
 
+                {/* Date and Payment Status Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  {/* Payment Date */}
+                  <div>
+                    <label htmlFor="expense_date" className="block text-sm font-semibold text-neutral-900 mb-2">
+                      Payment Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      id="expense_date"
+                      name="expense_date"
+                      value={formData.expense_date}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                    />
+                  </div>
+
+                  {/* Payment Status */}
+                  <div>
+                    <label htmlFor="payment_status" className="block text-sm font-semibold text-neutral-900 mb-2">
+                      Payment Status <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="payment_status"
+                      name="payment_status"
+                      value={paymentStatus}
+                      onChange={handlePaymentStatusChange}
+                      className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                    >
+                      <option value="">Select Status</option>
+                      <option value="paid">Paid</option>
+                      <option value="partially_paid">Partially Paid</option>
+                      <option value="credit">Credit</option>
+                    </select>
+                  </div>
+
+                </div>
+
+                {/* Payment Amount (Conditional) */}
+                {showPaymentAmount && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="payment_amount" className="block text-sm font-semibold text-neutral-900 mb-2">
+                        Payment Amount <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        id="payment_amount"
+                        name="payment_amount"
+                        value={paymentAmount || ''}
+                        onChange={handlePaymentAmountChange}
+                        min="0"
+                        step="0.01"
+                        className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                        placeholder="Enter payment amount..."
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <div className="space-y-2">
+                        <div className="text-sm text-gray-600">Partial payment</div>
+                        {paymentAmount > 0 && (
+                          <div className="text-sm font-medium">
+                            <span className="text-amber-600">Due to add to supplier: </span>
+                            <span className="text-amber-700 font-semibold">Rs.{Math.max(0, (typeof totalAmount === 'number' && typeof paymentAmount === 'number') ? totalAmount - paymentAmount : 0).toFixed(2)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
 
               {/* Right Column - Image Upload & Summary */}
               <div className="lg:col-span-1 space-y-6">
                 
                 {/* Image Upload */}
-                <div>
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                   <label className="block text-sm font-semibold text-neutral-900 mb-2">
                     Expense Attachment
                   </label>
@@ -650,7 +760,14 @@ export default function EditExpense() {
                     onRemove={handleFileRemove}
                     onImageClick={handleImageClick}
                     label=""
+                    error={error && error.includes('attachment') ? error : undefined}
                   />
+                  {!existingImage && !imagePreview && (
+                    <p className="text-xs text-neutral-500 mt-1">No attachment currently available</p>
+                  )}
+                  {existingImage && (
+                    <p className="text-xs text-green-600 mt-1">Current attachment will be displayed in the preview above</p>
+                  )}
                 </div>
 
                 {/* Summary Card */}
@@ -668,21 +785,50 @@ export default function EditExpense() {
                     <div className="border-t border-blue-200 pt-2 mt-2">
                       <div className="flex justify-between">
                         <span className="text-blue-700 font-medium">Total Amount:</span>
-                        <span className="font-bold text-blue-900">Rs.{totalAmount.toFixed(2)}</span>
+                        <span className="font-bold text-blue-900">Rs.{(typeof totalAmount === 'number' ? totalAmount : 0).toFixed(2)}</span>
                       </div>
                     </div>
-                    {showPaymentAmount && (
-                      <>
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Paid Amount:</span>
-                          <span className="font-medium text-blue-900">Rs.{paymentAmount.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-blue-700">Due Amount:</span>
-                          <span className="font-medium text-blue-900">Rs.{(totalAmount - paymentAmount).toFixed(2)}</span>
-                        </div>
-                      </>
-                    )}
+                    
+                    {/* Payment Status */}
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Payment Status:</span>
+                      <span className="font-medium">
+                        {paymentStatus === 'paid' && 
+                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Paid</span>
+                        }
+                        {paymentStatus === 'partially_paid' && 
+                          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Partially Paid</span>
+                        }
+                        {paymentStatus === 'credit' && 
+                          <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Credit</span>
+                        }
+                        {!paymentStatus && 
+                          <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">Not Set</span>
+                        }
+                      </span>
+                    </div>
+                    
+                    {/* Payment details based on status */}
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Paid Amount:</span>
+                      <span className="font-medium text-blue-900">
+                        Rs.{paymentStatus === 'paid' 
+                          ? (typeof totalAmount === 'number' ? totalAmount : 0).toFixed(2) 
+                          : paymentStatus === 'partially_paid' 
+                            ? (typeof paymentAmount === 'number' ? paymentAmount : 0).toFixed(2) 
+                            : '0.00'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Due Amount:</span>
+                      <span className="font-medium text-blue-900">
+                        Rs.{paymentStatus === 'paid' 
+                          ? '0.00' 
+                          : paymentStatus === 'partially_paid' 
+                            ? (typeof totalAmount === 'number' && typeof paymentAmount === 'number' ? Math.max(0, totalAmount - paymentAmount) : 0).toFixed(2) 
+                            : (typeof totalAmount === 'number' ? totalAmount : 0).toFixed(2)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

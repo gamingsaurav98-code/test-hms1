@@ -40,8 +40,32 @@ export default function ExpenseList() {
         setError(null);
         
         const response = await expenseApi.getExpenses(currentPage);
-        setExpenses(response.data);
-        setFilteredExpenses(response.data);
+        // Log the first expense to see what fields are available
+        if (response.data && response.data.length > 0) {
+          console.log('Sample expense data:', response.data[0]);
+        }
+        
+        // Process expenses to ensure payment status is set
+        const processedExpenses = response.data.map(expense => {
+          const expenseCopy = { ...expense };
+          // If payment status is missing but we have payment data, calculate it
+          if (!expenseCopy.payment_status) {
+            const paidAmount = expenseCopy.paid_amount || 0;
+            const totalAmount = expenseCopy.amount || 0;
+            
+            if (paidAmount >= totalAmount && totalAmount > 0) {
+              expenseCopy.payment_status = 'paid';
+            } else if (paidAmount > 0) {
+              expenseCopy.payment_status = 'partially_paid';
+            } else {
+              expenseCopy.payment_status = 'credit';
+            }
+          }
+          return expenseCopy;
+        });
+        
+        setExpenses(processedExpenses);
+        setFilteredExpenses(processedExpenses);
         setTotalPages(response.last_page);
       } catch (error) {
         console.error('Error fetching expenses:', error);
@@ -88,18 +112,24 @@ export default function ExpenseList() {
     }).format(amount);
   };
 
-  const getPaymentStatusColor = (status: string) => {
+  const getPaymentStatusColor = (status: string | null | undefined) => {
+    if (!status) {
+      return 'bg-gray-100 text-gray-800';
+    }
+    
     switch (status) {
       case 'paid':
         return 'bg-green-100 text-green-800';
       case 'partially_paid':
         return 'bg-yellow-100 text-yellow-800';
-      case 'unpaid':
+      case 'credit':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
+  
+  // No longer needed as we're using payment_status directly
 
   const handleDeleteExpense = async (expenseId: string) => {
     setDeleteModal({show: true, expenseId});
@@ -294,7 +324,7 @@ export default function ExpenseList() {
           <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
             <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
               <div className="col-span-3">Expense Details</div>
-              <div className="col-span-2">Category</div>
+              <div className="col-span-2">Description</div>
               <div className="col-span-2">Amount</div>
               <div className="col-span-1">Status</div>
               <div className="col-span-2">Supplier</div>
@@ -308,32 +338,40 @@ export default function ExpenseList() {
             {filteredExpenses.map((expense) => (
               <div key={expense.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
                 <div className="grid grid-cols-12 gap-2 items-center">
-                  {/* Expense Details */}
+                  {/* Expense Details - Title only */}
                   <div className="col-span-3">
                     <div className="font-medium text-sm text-gray-900">{expense.title}</div>
-                    <div className="text-xs text-gray-500 mt-1 line-clamp-2">
-                      {expense.description || 'No description'}
-                    </div>
                   </div>
 
-                  {/* Category */}
+                  {/* Description - truncated to 30 characters */}
                   <div className="col-span-2">
-                    <div className="text-sm text-gray-900">{expense.expenseCategory?.name || 'N/A'}</div>
-                    <div className="text-xs text-gray-500 capitalize">{expense.expense_type}</div>
+                    <div className="text-sm text-gray-900">
+                      {expense.description 
+                        ? (expense.description.length > 30 
+                            ? expense.description.substring(0, 30) + '...' 
+                            : expense.description)
+                        : 'No description'
+                      }
+                    </div>
                   </div>
 
                   {/* Amount */}
                   <div className="col-span-2">
                     <div className="text-sm font-medium text-gray-900">{formatCurrency(expense.amount)}</div>
-                    {expense.paid_amount && (
-                      <div className="text-xs text-green-600">Paid: {formatCurrency(expense.paid_amount)}</div>
+                    {(expense.paid_amount || 0) > 0 && (
+                      <div className="text-xs text-green-600">Paid: {formatCurrency(expense.paid_amount || 0)}</div>
+                    )}
+                    {expense.amount > (expense.paid_amount || 0) && (
+                      <div className="text-xs text-red-600">Due: {formatCurrency(expense.amount - (expense.paid_amount || 0))}</div>
                     )}
                   </div>
 
-                  {/* Status */}
+                  {/* Status - Using pre-calculated status from data processing */}
                   <div className="col-span-1">
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusColor(expense.payment_status)}`}>
-                      {expense.payment_status.replace('_', ' ')}
+                      {expense.payment_status === 'paid' && 'Paid'}
+                      {expense.payment_status === 'partially_paid' && 'Partial'}
+                      {(!expense.payment_status || expense.payment_status === 'credit') && 'Credit'}
                     </span>
                   </div>
 

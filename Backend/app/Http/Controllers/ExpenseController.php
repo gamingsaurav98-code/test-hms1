@@ -20,7 +20,7 @@ class ExpenseController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Expense::with(['expense_category', 'student', 'supplier', 'payment_type', 'attachments', 'purchases']);
+            $query = Expense::with(['expenseCategory', 'student', 'supplier', 'paymentType', 'attachments', 'purchases']);
 
             // Apply filters
             if ($request->has('category_id')) {
@@ -76,6 +76,7 @@ class ExpenseController extends Controller
                 'supplier_id' => 'nullable|exists:suppliers,id',
                 'paid_amount' => 'nullable|numeric|min:0',
                 'due_amount' => 'nullable|numeric|min:0',
+                'payment_status' => 'nullable|string|in:paid,partially_paid,credit,credit',
                 'expense_attachment' => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf|max:2048',
                 'purchases' => 'nullable|string', // JSON string of purchases
             ]);
@@ -108,6 +109,7 @@ class ExpenseController extends Controller
                 'payment_type_id' => $request->payment_type_id ?? 1, // Default to 1 if not provided
                 'paid_amount' => $request->paid_amount ?? 0,
                 'due_amount' => $request->due_amount ?? 0,
+                // Payment status is computed based on paid and due amounts in the model
             ]);
 
             // Handle file upload
@@ -118,12 +120,10 @@ class ExpenseController extends Controller
                 
                 // Create attachment record
                 Attachment::create([
-                    'attachable_type' => 'App\Models\Expense',
-                    'attachable_id' => $expense->id,
-                    'file_name' => $fileName,
-                    'file_path' => $filePath,
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
+                    'name' => $fileName, // Add the name field
+                    'path' => $filePath,
+                    'type' => $file->getMimeType(),
+                    'expense_id' => $expense->id
                 ]);
 
                 // Update expense with attachment path
@@ -152,7 +152,7 @@ class ExpenseController extends Controller
             DB::commit();
 
             // Load relationships and return
-            $expense->load(['expense_category', 'student', 'supplier', 'payment_type', 'attachments', 'purchases']);
+            $expense->load(['expenseCategory', 'student', 'supplier', 'paymentType', 'attachments', 'purchases']);
             
             return response()->json($expense, 201);
         } catch (\Exception $e) {
@@ -170,7 +170,7 @@ class ExpenseController extends Controller
     public function show(string $id): JsonResponse
     {
         try {
-            $expense = Expense::with(['expense_category', 'student', 'supplier', 'payment_type', 'attachments', 'purchases'])
+            $expense = Expense::with(['expenseCategory', 'student', 'supplier', 'paymentType', 'attachments', 'purchases'])
                 ->findOrFail($id);
 
             return response()->json($expense);
@@ -200,6 +200,7 @@ class ExpenseController extends Controller
                 'supplier_id' => 'nullable|exists:suppliers,id',
                 'paid_amount' => 'nullable|numeric|min:0',
                 'due_amount' => 'nullable|numeric|min:0',
+                'payment_status' => 'nullable|string|in:paid,partially_paid,credit,credit',
                 'expense_attachment' => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf|max:2048',
                 'purchases' => 'nullable|string', // JSON string of purchases
             ]);
@@ -232,6 +233,7 @@ class ExpenseController extends Controller
                 'payment_type_id' => $request->payment_type_id ?? 1, // Default to 1 if not provided
                 'paid_amount' => $request->paid_amount ?? 0,
                 'due_amount' => $request->due_amount ?? 0,
+                // Payment status is computed based on paid and due amounts in the model
             ]);
 
             // Handle file upload
@@ -239,7 +241,7 @@ class ExpenseController extends Controller
                 // Delete old attachment if exists
                 $oldAttachment = $expense->attachments()->first();
                 if ($oldAttachment) {
-                    Storage::disk('public')->delete($oldAttachment->file_path);
+                    Storage::disk('public')->delete($oldAttachment->path);
                     $oldAttachment->delete();
                 }
 
@@ -249,12 +251,10 @@ class ExpenseController extends Controller
                 
                 // Create new attachment record
                 Attachment::create([
-                    'attachable_type' => 'App\Models\Expense',
-                    'attachable_id' => $expense->id,
-                    'file_name' => $fileName,
-                    'file_path' => $filePath,
-                    'file_size' => $file->getSize(),
-                    'mime_type' => $file->getMimeType(),
+                    'name' => $fileName, // Add the name field
+                    'path' => $filePath,
+                    'type' => $file->getMimeType(),
+                    'expense_id' => $expense->id
                 ]);
 
                 // Update expense with attachment path
@@ -286,7 +286,7 @@ class ExpenseController extends Controller
             DB::commit();
 
             // Load relationships and return
-            $expense->load(['expense_category', 'student', 'supplier', 'payment_type', 'attachments', 'purchases']);
+            $expense->load(['expenseCategory', 'student', 'supplier', 'paymentType', 'attachments', 'purchases']);
             
             return response()->json($expense);
         } catch (\Exception $e) {
@@ -310,7 +310,7 @@ class ExpenseController extends Controller
 
             // Delete associated attachments
             foreach ($expense->attachments as $attachment) {
-                Storage::disk('public')->delete($attachment->file_path);
+                Storage::disk('public')->delete($attachment->path);
                 $attachment->delete();
             }
 
