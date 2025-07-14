@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { studentCheckInCheckOutApi, StudentCheckInCheckOut } from '@/lib/api/student-checkincheckout.api';
 import { Button, ConfirmModal } from '@/components/ui';
-import { Check, X, ArrowLeft, Edit, Trash } from 'lucide-react';
+import { Check, X, ArrowLeft, Edit, Trash, Clock } from 'lucide-react';
 
 export default function StudentCheckinCheckoutDetail() {
   const router = useRouter();
@@ -106,17 +106,33 @@ export default function StudentCheckinCheckoutDetail() {
   const getStatusBadge = () => {
     if (!record) return null;
     
-    if (record.checkout_time && record.checkin_time) {
+    // Check admin approval status first
+    if (record.status === 'approved') {
       return (
         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
           <Check className="w-4 h-4 mr-2" />
-          Checked Out
+          Approved
+        </span>
+      );
+    } else if (record.status === 'declined') {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+          <X className="w-4 h-4 mr-2" />
+          Declined
+        </span>
+      );
+    } else if (record.checkout_time) {
+      // If checkout exists but not approved/declined, show pending
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+          <Clock className="w-4 h-4 mr-2" />
+          Pending Approval
         </span>
       );
     } else if (record.checkin_time) {
       return (
         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-          <Check className="w-4 h-4 mr-2" />
+          <Clock className="w-4 h-4 mr-2" />
           Checked In
         </span>
       );
@@ -124,14 +140,14 @@ export default function StudentCheckinCheckoutDetail() {
       return (
         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
           <X className="w-4 h-4 mr-2" />
-          Pending
+          Draft
         </span>
       );
     }
   };
 
   const needsApproval = () => {
-    return record?.checkout_time && record?.status === 'checked_out';
+    return record?.checkout_time && record?.status !== 'approved' && record?.status !== 'declined';
   };
 
   if (loading) {
@@ -149,41 +165,20 @@ export default function StudentCheckinCheckoutDetail() {
       <div className="p-6">
         <div className="text-center">
           <p className="text-red-500 mb-4">{error || 'Record not found'}</p>
-          <Button
-            variant="secondary"
-            onClick={() => router.push('/admin/student-checkin-checkout')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to List
-          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 px-4 py-4">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/admin/student-checkin-checkout')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to List
-            </Button>
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
-                Check-in/Check-out Details
-              </h1>
-              <p className="text-gray-600">
-                {record.student?.student_name || 'Unknown Student'}
-              </p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Check-in/Check-out Details
+            </h1>
           </div>
           <div className="flex items-center gap-3">
             {getStatusBadge()}
@@ -276,24 +271,23 @@ export default function StudentCheckinCheckoutDetail() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Admin Actions</h3>
               <div className="space-y-3">
                 <Button
-                  variant="primary"
                   onClick={handleApproveCheckout}
                   disabled={actionLoading === 'approve'}
                   loading={actionLoading === 'approve'}
-                  className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
+                  className="w-full bg-green-600 text-white hover:bg-green-700 border-0"
+                  icon={<Check className="w-4 h-4" />}
                 >
-                  <Check className="w-4 h-4" />
-                  Approve Checkout
+                  {actionLoading === 'approve' ? 'Approving...' : 'Approve Checkout'}
                 </Button>
                 <Button
                   variant="danger"
                   onClick={handleDeclineCheckout}
                   disabled={actionLoading === 'decline'}
                   loading={actionLoading === 'decline'}
-                  className="w-full flex items-center justify-center gap-2"
+                  className="w-full"
+                  icon={<X className="w-4 h-4" />}
                 >
-                  <X className="w-4 h-4" />
-                  Decline Checkout
+                  {actionLoading === 'decline' ? 'Declining...' : 'Decline Checkout'}
                 </Button>
               </div>
             </div>
@@ -304,19 +298,19 @@ export default function StudentCheckinCheckoutDetail() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Record Actions</h3>
             <div className="space-y-3">
               <Button
-                variant="secondary"
+                variant="edit"
                 onClick={() => router.push(`/admin/student-checkin-checkout/${record.id}/edit`)}
-                className="w-full flex items-center justify-center gap-2"
+                className="w-full"
+                icon={<Edit className="w-4 h-4" />}
               >
-                <Edit className="w-4 h-4" />
                 Edit Record
               </Button>
               <Button
                 variant="danger"
                 onClick={() => setDeleteModal(true)}
-                className="w-full flex items-center justify-center gap-2"
+                className="w-full"
+                icon={<Trash className="w-4 h-4" />}
               >
-                <Trash className="w-4 h-4" />
                 Delete Record
               </Button>
             </div>

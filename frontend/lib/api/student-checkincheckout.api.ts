@@ -10,7 +10,7 @@ export interface StudentCheckInCheckOut {
   checkin_time?: string;
   checkout_time?: string;
   checkout_duration?: string;
-  status: 'checked_in' | 'checked_out';
+  status: 'pending' | 'approved' | 'declined' | 'checked_in' | 'checked_out';
   remarks?: string;
   created_at: string;
   updated_at: string;

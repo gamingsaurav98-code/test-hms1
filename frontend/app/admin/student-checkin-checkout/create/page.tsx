@@ -97,7 +97,7 @@ export default function CreateStudentCheckinCheckout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 px-4 py-4">
+      <div className="p-6">
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
@@ -107,22 +107,20 @@ export default function CreateStudentCheckinCheckout() {
 
   if (errors.fetch) {
     return (
-      <div className="min-h-screen bg-gray-50 px-4 py-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex">
-              <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-red-800">{errors.fetch}</p>
-            </div>
-            <button
-              onClick={() => router.push('/admin/student-checkin-checkout')}
-              className="mt-3 bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded text-sm"
-            >
-              Back to List
-            </button>
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex">
+            <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-red-800">{errors.fetch}</p>
           </div>
+          <button
+            onClick={() => router.push('/admin/student-checkin-checkout')}
+            className="mt-3 bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded text-sm"
+          >
+            Back to List
+          </button>
         </div>
       </div>
     );
@@ -130,7 +128,7 @@ export default function CreateStudentCheckinCheckout() {
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-4">
-      <div className="max-w-2xl mx-auto">
+      <div className="w-full">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="mb-6">
             <h1 className="text-2xl font-semibold text-gray-900">Create Check-in/Check-out Record</h1>

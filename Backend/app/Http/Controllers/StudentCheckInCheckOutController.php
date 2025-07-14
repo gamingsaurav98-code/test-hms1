@@ -126,7 +126,7 @@ class StudentCheckInCheckOutController extends Controller
 
             // Determine status based on times
             if ($data['checkin_time'] && $data['checkout_time']) {
-                $data['status'] = 'checked_out';
+                $data['status'] = 'pending'; // Checkout needs approval
             } elseif ($data['checkin_time']) {
                 $data['status'] = 'checked_in';
             } else {
@@ -361,7 +361,7 @@ class StudentCheckInCheckOutController extends Controller
 
             $record->update([
                 'checkout_time' => $checkoutTime,
-                'status' => 'checked_out',
+                'status' => 'pending', // Checkout needs admin approval
                 'remarks' => $request->remarks ?? $record->remarks,
             ]);
 
@@ -423,11 +423,15 @@ class StudentCheckInCheckOutController extends Controller
                 ], 404);
             }
 
-            // Update record to approved status or set checkout time if not set
+            // Update record to approved status
+            $record->update([
+                'status' => 'approved'
+            ]);
+
+            // If checkout time is not set, set it now
             if (!$record->checkout_time) {
                 $record->update([
-                    'checkout_time' => Carbon::now(),
-                    'status' => 'checked_out'
+                    'checkout_time' => Carbon::now()
                 ]);
             }
 
@@ -472,10 +476,9 @@ class StudentCheckInCheckOutController extends Controller
                 ], 404);
             }
 
-            // Reset checkout time and update remarks
+            // Update status to declined and optionally update remarks
             $record->update([
-                'checkout_time' => null,
-                'status' => 'checked_in',
+                'status' => 'declined',
                 'remarks' => $request->remarks ?? $record->remarks
             ]);
 

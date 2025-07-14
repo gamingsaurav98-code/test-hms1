@@ -20,6 +20,8 @@ import {
 
 export default function StudentCheckinCheckoutList() {
   const [records, setRecords] = useState<StudentCheckInCheckOut[]>([]);
+  const [filteredRecords, setFilteredRecords] = useState<StudentCheckInCheckOut[]>([]);
+  const [allRecords, setAllRecords] = useState<StudentCheckInCheckOut[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,31 +37,15 @@ export default function StudentCheckinCheckoutList() {
   });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const fetchRecords = async (page: number = 1, search: string = '') => {
+  const fetchRecords = async (page: number = 1) => {
     try {
       setLoading(true);
-      const filters: any = {};
+      const response: PaginatedResponse<StudentCheckInCheckOut> = await studentCheckInCheckOutApi.getCheckInCheckOuts(page, { all: true });
       
-      if (search.trim()) {
-        // For search, we'll fetch all records and filter client-side
-        filters.all = true;
-      }
-
-      const response: PaginatedResponse<StudentCheckInCheckOut> = await studentCheckInCheckOutApi.getCheckInCheckOuts(page, filters);
-      
-      let filteredRecords = response.data || [];
-      
-      // Client-side search filter
-      if (search.trim()) {
-        const searchLower = search.toLowerCase();
-        filteredRecords = filteredRecords.filter(record => 
-          record.student?.student_name?.toLowerCase().includes(searchLower) ||
-          record.block?.block_name?.toLowerCase().includes(searchLower) ||
-          record.remarks?.toLowerCase().includes(searchLower)
-        );
-      }
-
-      setRecords(filteredRecords);
+      const fetchedRecords = response.data || [];
+      setAllRecords(fetchedRecords);
+      setRecords(fetchedRecords);
+      setFilteredRecords(fetchedRecords);
       
       // Set pagination info from PaginatedResponse structure
       if (response.last_page) {
@@ -70,19 +56,33 @@ export default function StudentCheckinCheckoutList() {
     } catch (error) {
       console.error('Error fetching records:', error);
       setRecords([]);
+      setFilteredRecords([]);
+      setAllRecords([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Live search effect
   useEffect(() => {
-    fetchRecords(currentPage, searchTerm);
+    if (!searchTerm.trim()) {
+      setFilteredRecords(allRecords);
+    } else {
+      const searchLower = searchTerm.toLowerCase();
+      const filtered = allRecords.filter(record => 
+        record.student?.student_name?.toLowerCase().includes(searchLower)
+      );
+      setFilteredRecords(filtered);
+    }
+  }, [searchTerm, allRecords]);
+
+  useEffect(() => {
+    fetchRecords(currentPage);
   }, [currentPage]);
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setCurrentPage(1);
-    fetchRecords(1, searchTerm);
+    // Live search handles filtering, no need to fetch again
   };
 
   const handleDelete = async () => {
@@ -91,7 +91,7 @@ export default function StudentCheckinCheckoutList() {
     try {
       await studentCheckInCheckOutApi.deleteCheckInCheckOut(deleteModal.recordId);
       setDeleteModal({ show: false, recordId: null, studentName: '' });
-      fetchRecords(currentPage, searchTerm);
+      fetchRecords(currentPage);
     } catch (error) {
       console.error('Error deleting record:', error);
     }
@@ -128,11 +128,27 @@ export default function StudentCheckinCheckoutList() {
   };
 
   const getStatusBadge = (record: StudentCheckInCheckOut) => {
-    if (record.checkout_time && record.checkin_time) {
+    // Check admin approval status first
+    if (record.status === 'approved') {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
           <Check className="w-3 h-3 mr-1" />
-          Checked Out
+          Approved
+        </span>
+      );
+    } else if (record.status === 'declined') {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          <X className="w-3 h-3 mr-1" />
+          Declined
+        </span>
+      );
+    } else if (record.checkout_time) {
+      // If checkout exists but not approved/declined, show pending
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <Clock className="w-3 h-3 mr-1" />
+          Pending
         </span>
       );
     } else if (record.checkin_time) {
@@ -146,7 +162,7 @@ export default function StudentCheckinCheckoutList() {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
           <X className="w-3 h-3 mr-1" />
-          Pending
+          Draft
         </span>
       );
     }
@@ -163,15 +179,17 @@ export default function StudentCheckinCheckoutList() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Student Check-in/Check-out</h1>
-        <Link href="/admin/student-checkin-checkout/create">
-          <Button variant="primary" className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Add New Record
-          </Button>
-        </Link>
+    <div className="p-4 max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Student Check-in/Check-out</h1>
+          <Link href="/admin/student-checkin-checkout/create">
+            <Button 
+              className="bg-[#235999] hover:bg-[#1e4d87] text-white"
+              icon={<Plus className="w-4 h-4" />}
+            >
+              Add New Record
+            </Button>
+          </Link>
       </div>
 
       <div className="mb-6">
@@ -180,7 +198,7 @@ export default function StudentCheckinCheckoutList() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by student name, block, or remarks..."
+              placeholder="Search by student name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg text-sm text-gray-600 placeholder:text-gray-400 focus:border-gray-400 focus:ring-0 outline-none transition-all duration-200 bg-white"
@@ -218,14 +236,14 @@ export default function StudentCheckinCheckoutList() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {records.length === 0 ? (
+              {filteredRecords.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                    No check-in/check-out records found.
+                    {searchTerm ? `No students found matching "${searchTerm}"` : 'No check-in/check-out records found.'}
                   </td>
                 </tr>
               ) : (
-                records.map((record) => (
+                filteredRecords.map((record) => (
                   <tr key={record.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">

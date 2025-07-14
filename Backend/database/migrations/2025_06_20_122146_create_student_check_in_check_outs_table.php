@@ -22,7 +22,7 @@ return new class extends Migration
             $table->timestamp('checkin_time')->nullable();
             $table->timestamp('checkout_time')->nullable();
             $table->string('checkout_duration')->nullable();
-            $table->enum('status', ['checked_in', 'checked_out'])->default('checked_in');
+            $table->enum('status', ['checked_in', 'checked_out', 'pending', 'approved', 'declined'])->default('checked_in');
             $table->text('remarks')->nullable();
             $table->timestamps();
         });
