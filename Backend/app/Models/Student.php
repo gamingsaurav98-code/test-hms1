@@ -60,7 +60,6 @@ class Student extends Model
         'local_guardian_relation',
         'verified_by',
         'verified_on',
-        'student_id',
         'room_id',
         'student_image',
         'student_citizenship_image',
@@ -70,8 +69,6 @@ class Student extends Model
     ];
     
     protected $appends = ['monthly_fee'];
-    
-    protected $with = ['financials'];
 
     /**
      * The "booted" method of the model.

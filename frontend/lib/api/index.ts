@@ -26,7 +26,9 @@ export type {
 export type {
   StudentWithAmenities,
   StudentFormData,
-  StudentAmenity
+  StudentAmenity,
+  StudentFinancial,
+  StudentFinancialFormData
 } from './student.api';
 
 // Import notice API types
@@ -70,7 +72,7 @@ export type {
 export { blockApi } from './block.api';
 export { roomApi } from './room.api';
 export { incomeApi } from './income.api';
-export { studentApi } from './student.api';
+export { studentApi, studentFinancialApi } from './student.api';
 export { supplierApi } from './supplier.api';
 export { supplierFinancialApi } from './supplier-financial.api';
 export { noticeApi } from './notice.api';

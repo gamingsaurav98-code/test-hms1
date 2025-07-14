@@ -19,5 +19,12 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Call the seeders in correct order
+        $this->call([
+            BlockSeeder::class,      // Create blocks first
+            RoomSeeder::class,       // Then create rooms
+            StudentSeeder::class,    // Finally create students
+        ]);
     }
 }

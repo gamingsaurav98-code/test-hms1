@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Student;
+use App\Models\StudentAmenities;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -82,35 +83,57 @@ class StudentController extends Controller
             'student_name' => 'required|string|max:255',
             'email' => 'required|email|unique:students,email',
             'contact_number' => 'required|string|max:20',
-            'room_id' => 'nullable|exists:rooms,id',
+            'date_of_birth' => 'required|date',
+            'room_id' => 'required|exists:rooms,id',
             'is_active' => 'nullable',
             'student_id' => 'nullable|string|max:50',
             'is_existing_student' => 'nullable',
             'declaration_agreed' => 'nullable',
             'rules_agreed' => 'nullable',
             'food' => 'nullable|string|in:vegetarian,non-vegetarian,egg-only',
-            'student_image' => 'nullable|image|max:2048', // Max 2MB
-            'student_citizenship_image' => 'nullable|image|max:2048', // Max 2MB
-            'registration_form_image' => 'nullable|image|max:2048', // Max 2MB
-            'physical_copy_image' => 'nullable|image|max:2048', // Max 2MB
-            'address' => 'nullable|string',
-            'emergency_contact' => 'nullable|string|max:20',
-            'guardian_name' => 'nullable|string|max:255',
-            'guardian_contact' => 'nullable|string|max:20',
-            // Additional fields
-            'date_of_birth' => 'nullable|date',
+            'student_image' => 'nullable|image|max:2048',
+            'student_citizenship_image' => 'nullable|image|max:2048',
+            'registration_form_image' => 'nullable|image|max:2048',
+            // Amenities
+            'amenities' => 'nullable|array',
+            'amenities.*.name' => 'required_with:amenities|string|max:255',
+            'amenities.*.description' => 'nullable|string|max:500',
+            // Address fields
             'district' => 'nullable|string|max:100',
             'city_name' => 'nullable|string|max:100',
             'ward_no' => 'nullable|string|max:20',
             'street_name' => 'nullable|string|max:100',
+            // Citizenship fields
+            'citizenship_no' => 'nullable|string|max:50',
+            'date_of_issue' => 'nullable|date',
+            'citizenship_issued_district' => 'nullable|string|max:100',
+            // Education fields
             'educational_institution' => 'nullable|string|max:255',
             'class_time' => 'nullable|string|max:50',
             'level_of_study' => 'nullable|string|max:100',
-            'monthly_fee' => 'nullable|numeric|min:0',
+            'expected_stay_duration' => 'nullable|string|max:100',
+            // Health fields
+            'blood_group' => 'nullable|string|max:10',
+            'disease' => 'nullable|string|max:255',
+            // Family information
             'father_name' => 'nullable|string|max:255',
             'father_contact' => 'nullable|string|max:20',
+            'father_occupation' => 'nullable|string|max:255',
             'mother_name' => 'nullable|string|max:255',
             'mother_contact' => 'nullable|string|max:20',
+            'mother_occupation' => 'nullable|string|max:255',
+            'spouse_name' => 'nullable|string|max:255',
+            'spouse_contact' => 'nullable|string|max:20',
+            'spouse_occupation' => 'nullable|string|max:255',
+            // Local guardian information
+            'local_guardian_name' => 'nullable|string|max:255',
+            'local_guardian_address' => 'nullable|string|max:500',
+            'local_guardian_contact' => 'nullable|string|max:20',
+            'local_guardian_occupation' => 'nullable|string|max:255',
+            'local_guardian_relation' => 'nullable|string|max:100',
+            // Verification fields
+            'verified_by' => 'nullable|string|max:255',
+            'verified_on' => 'nullable|date',
         ]);
         
         // Handle file uploads
@@ -129,11 +152,6 @@ class StudentController extends Controller
             $validated['registration_form_image'] = $path;
         }
         
-        if ($request->hasFile('physical_copy_image')) {
-            $path = $request->file('physical_copy_image')->store('students/financial', 'public');
-            $validated['physical_copy_image'] = $path;
-        }
-        
         // Ensure boolean fields are properly set
         $validated['is_active'] = $this->parseBoolean($request->input('is_active', true));
         $validated['is_existing_student'] = $this->parseBoolean($request->input('is_existing_student', false));
@@ -141,6 +159,21 @@ class StudentController extends Controller
         $validated['rules_agreed'] = $this->parseBoolean($request->input('rules_agreed', false));
         
         $student = Student::create($validated);
+        
+        // Handle amenities if provided
+        if ($request->has('amenities') && is_array($request->amenities)) {
+            foreach ($request->amenities as $amenityData) {
+                if (isset($amenityData['name']) && !empty(trim($amenityData['name']))) {
+                    $student->amenities()->create([
+                        'name' => trim($amenityData['name']),
+                        'description' => isset($amenityData['description']) ? trim($amenityData['description']) : null,
+                    ]);
+                }
+            }
+        }
+        
+        // Load relationships for response
+        $student->load(['room.block', 'amenities']);
         
         return response()->json($student, 201);
     }
@@ -150,7 +183,12 @@ class StudentController extends Controller
      */
     public function show(string $id)
     {
-        $student = Student::with('room.block')->findOrFail($id);
+        $student = Student::with([
+            'room.block', 
+            'financials.paymentType', 
+            'amenities',
+            'attachments'
+        ])->findOrFail($id);
         return response()->json($student);
     }
 
@@ -165,6 +203,7 @@ class StudentController extends Controller
             'student_name' => 'string|max:255',
             'email' => 'email|unique:students,email,' . $id,
             'contact_number' => 'string|max:20',
+            'date_of_birth' => 'date',
             'room_id' => 'nullable|exists:rooms,id',
             'is_active' => 'nullable',
             'student_id' => 'nullable|string|max:50',
@@ -172,28 +211,59 @@ class StudentController extends Controller
             'declaration_agreed' => 'nullable',
             'rules_agreed' => 'nullable',
             'food' => 'nullable|string|in:vegetarian,non-vegetarian,egg-only',
-            'student_image' => 'nullable|image|max:2048', // Max 2MB
-            'student_citizenship_image' => 'nullable|image|max:2048', // Max 2MB 
-            'registration_form_image' => 'nullable|image|max:2048', // Max 2MB
-            'physical_copy_image' => 'nullable|image|max:2048', // Max 2MB
-            'address' => 'nullable|string',
-            'emergency_contact' => 'nullable|string|max:20',
-            'guardian_name' => 'nullable|string|max:255',
-            'guardian_contact' => 'nullable|string|max:20',
-            // Additional fields
-            'date_of_birth' => 'nullable|date',
+            'student_image' => 'nullable|image|max:2048',
+            'student_citizenship_image' => 'nullable|image|max:2048',
+            'registration_form_image' => 'nullable|image|max:2048',
+            // Amenities
+            'amenities' => 'nullable|array',
+            'amenities.*.id' => 'nullable|integer|exists:student_amenities,id',
+            'amenities.*.name' => 'required_with:amenities|string|max:255',
+            'amenities.*.description' => 'nullable|string|max:500',
+            'removedAmenityIds' => 'nullable|array',
+            'removedAmenityIds.*' => 'integer|exists:student_amenities,id',
+            // Document removal tracking
+            'removedCitizenshipDocIds' => 'nullable|array',
+            'removedCitizenshipDocIds.*' => 'integer',
+            'removedRegistrationDocIds' => 'nullable|array', 
+            'removedRegistrationDocIds.*' => 'integer',
+            // Address fields
             'district' => 'nullable|string|max:100',
             'city_name' => 'nullable|string|max:100',
             'ward_no' => 'nullable|string|max:20',
             'street_name' => 'nullable|string|max:100',
+            // Citizenship fields
+            'citizenship_no' => 'nullable|string|max:50',
+            'date_of_issue' => 'nullable|date',
+            'citizenship_issued_district' => 'nullable|string|max:100',
+            // Education fields
             'educational_institution' => 'nullable|string|max:255',
             'class_time' => 'nullable|string|max:50',
             'level_of_study' => 'nullable|string|max:100',
-            'monthly_fee' => 'nullable|numeric|min:0',
+            'expected_stay_duration' => 'nullable|string|max:100',
+            // Health fields
+            'blood_group' => 'nullable|string|max:10',
+            'disease' => 'nullable|string|max:255',
+            // Family information
             'father_name' => 'nullable|string|max:255',
             'father_contact' => 'nullable|string|max:20',
+            'father_occupation' => 'nullable|string|max:255',
             'mother_name' => 'nullable|string|max:255',
             'mother_contact' => 'nullable|string|max:20',
+            'mother_occupation' => 'nullable|string|max:255',
+            'spouse_name' => 'nullable|string|max:255',
+            'spouse_contact' => 'nullable|string|max:20',
+            'spouse_occupation' => 'nullable|string|max:255',
+            // Local guardian information
+            'local_guardian_name' => 'nullable|string|max:255',
+            'local_guardian_address' => 'nullable|string|max:500',
+            'local_guardian_contact' => 'nullable|string|max:20',
+            'local_guardian_occupation' => 'nullable|string|max:255',
+            'local_guardian_relation' => 'nullable|string|max:100',
+            // Verification fields
+            'verified_by' => 'nullable|string|max:255',
+            'verified_on' => 'nullable|date',
+            // Financial fields (accepted but ignored - handled by StudentFinancialController)
+            'monthly_fee' => 'nullable|string',
         ]);
         
         // Handle file uploads
@@ -227,23 +297,80 @@ class StudentController extends Controller
             $validated['registration_form_image'] = $path;
         }
         
-        if ($request->hasFile('physical_copy_image')) {
-            // Delete old image if exists
-            if ($student->physical_copy_image) {
-                Storage::disk('public')->delete($student->physical_copy_image);
-            }
-            
-            $path = $request->file('physical_copy_image')->store('students/financial', 'public');
-            $validated['physical_copy_image'] = $path;
+        // Properly cast boolean values using our parseBoolean method
+        if ($request->has('is_active')) {
+            $validated['is_active'] = $this->parseBoolean($request->input('is_active'));
+        }
+        if ($request->has('is_existing_student')) {
+            $validated['is_existing_student'] = $this->parseBoolean($request->input('is_existing_student'));
+        }
+        if ($request->has('declaration_agreed')) {
+            $validated['declaration_agreed'] = $this->parseBoolean($request->input('declaration_agreed'));
+        }
+        if ($request->has('rules_agreed')) {
+            $validated['rules_agreed'] = $this->parseBoolean($request->input('rules_agreed'));
         }
         
-        // Properly cast boolean values using our parseBoolean method
-        $validated['is_active'] = $this->parseBoolean($request->input('is_active', $student->is_active ?? true));
-        $validated['is_existing_student'] = $this->parseBoolean($request->input('is_existing_student', $student->is_existing_student ?? false));
-        $validated['declaration_agreed'] = $this->parseBoolean($request->input('declaration_agreed', $student->declaration_agreed ?? false));
-        $validated['rules_agreed'] = $this->parseBoolean($request->input('rules_agreed', $student->rules_agreed ?? false));
-        
         $student->update($validated);
+        
+        // Handle amenities updates if provided
+        if ($request->has('amenities') || $request->has('removedAmenityIds')) {
+            // First, remove any amenities that were deleted
+            if ($request->has('removedAmenityIds') && is_array($request->removedAmenityIds)) {
+                $student->amenities()->whereIn('id', $request->removedAmenityIds)->delete();
+            }
+            
+            // Then handle existing and new amenities
+            if ($request->has('amenities') && is_array($request->amenities)) {
+                foreach ($request->amenities as $amenityData) {
+                    if (isset($amenityData['name']) && !empty(trim($amenityData['name']))) {
+                        if (isset($amenityData['id']) && !empty($amenityData['id'])) {
+                            // Update existing amenity
+                            $student->amenities()->where('id', $amenityData['id'])->update([
+                                'name' => trim($amenityData['name']),
+                                'description' => isset($amenityData['description']) ? trim($amenityData['description']) : null,
+                            ]);
+                        } else {
+                            // Create new amenity
+                            $student->amenities()->create([
+                                'name' => trim($amenityData['name']),
+                                'description' => isset($amenityData['description']) ? trim($amenityData['description']) : null,
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Handle document removals if provided
+        // Note: Since we store documents as single files on the student model,
+        // any "removal" means we should clear the field when new files aren't uploaded
+        if ($request->has('removedCitizenshipDocIds') && !$request->hasFile('student_citizenship_image')) {
+            // If citizenship docs are marked for removal and no new file uploaded, clear the field
+            if ($student->student_citizenship_image) {
+                Storage::disk('public')->delete($student->student_citizenship_image);
+                $student->student_citizenship_image = null;
+            }
+        }
+        
+        if ($request->has('removedRegistrationDocIds') && !$request->hasFile('registration_form_image')) {
+            // If registration docs are marked for removal and no new file uploaded, clear the field
+            if ($student->registration_form_image) {
+                Storage::disk('public')->delete($student->registration_form_image);
+                $student->registration_form_image = null;
+            }
+        }
+        
+        // Note: Physical copy images are handled by StudentFinancialController, not here
+        // The frontend should send those to the financial endpoints instead
+        
+        // Save any document field changes
+        if ($request->has('removedCitizenshipDocIds') || $request->has('removedRegistrationDocIds')) {
+            $student->save();
+        }
+        
+        // Load relationships for response
+        $student->load(['room.block', 'amenities']);
         
         return response()->json($student);
     }
@@ -266,10 +393,6 @@ class StudentController extends Controller
         
         if ($student->registration_form_image) {
             Storage::disk('public')->delete($student->registration_form_image);
-        }
-        
-        if ($student->physical_copy_image) {
-            Storage::disk('public')->delete($student->physical_copy_image);
         }
         
         $student->delete();
@@ -309,5 +432,87 @@ class StudentController extends Controller
         }
         
         return $default;
+    }
+    
+    /**
+     * Get all available fields for student creation/editing
+     * This helper method provides field metadata for frontend forms
+     * Financial fields are handled separately via StudentFinancialController
+     */
+    public function getFields()
+    {
+        return response()->json([
+            'student_fields' => [
+                // Basic Information
+                'student_name' => ['type' => 'string', 'required' => true, 'max' => 255],
+                'email' => ['type' => 'email', 'required' => true, 'unique' => true],
+                'contact_number' => ['type' => 'string', 'required' => true, 'max' => 20],
+                'date_of_birth' => ['type' => 'date', 'required' => true],
+                'room_id' => ['type' => 'foreign_id', 'required' => true, 'table' => 'rooms'],
+                'student_id' => ['type' => 'string', 'required' => false, 'max' => 50],
+                
+                // Address Information
+                'district' => ['type' => 'string', 'required' => false, 'max' => 100],
+                'city_name' => ['type' => 'string', 'required' => false, 'max' => 100],
+                'ward_no' => ['type' => 'string', 'required' => false, 'max' => 20],
+                'street_name' => ['type' => 'string', 'required' => false, 'max' => 100],
+                
+                // Citizenship Information
+                'citizenship_no' => ['type' => 'string', 'required' => false, 'max' => 50],
+                'date_of_issue' => ['type' => 'date', 'required' => false],
+                'citizenship_issued_district' => ['type' => 'string', 'required' => false, 'max' => 100],
+                
+                // Education Information
+                'educational_institution' => ['type' => 'string', 'required' => false, 'max' => 255],
+                'class_time' => ['type' => 'string', 'required' => false, 'max' => 50],
+                'level_of_study' => ['type' => 'string', 'required' => false, 'max' => 100],
+                'expected_stay_duration' => ['type' => 'string', 'required' => false, 'max' => 100],
+                
+                // Health Information
+                'blood_group' => ['type' => 'string', 'required' => false, 'max' => 10],
+                'food' => ['type' => 'enum', 'required' => false, 'options' => ['vegetarian', 'non-vegetarian', 'egg-only']],
+                'disease' => ['type' => 'string', 'required' => false, 'max' => 255],
+                
+                // Family Information
+                'father_name' => ['type' => 'string', 'required' => false, 'max' => 255],
+                'father_contact' => ['type' => 'string', 'required' => false, 'max' => 20],
+                'father_occupation' => ['type' => 'string', 'required' => false, 'max' => 255],
+                'mother_name' => ['type' => 'string', 'required' => false, 'max' => 255],
+                'mother_contact' => ['type' => 'string', 'required' => false, 'max' => 20],
+                'mother_occupation' => ['type' => 'string', 'required' => false, 'max' => 255],
+                'spouse_name' => ['type' => 'string', 'required' => false, 'max' => 255],
+                'spouse_contact' => ['type' => 'string', 'required' => false, 'max' => 20],
+                'spouse_occupation' => ['type' => 'string', 'required' => false, 'max' => 255],
+                
+                // Guardian Information
+                'local_guardian_name' => ['type' => 'string', 'required' => false, 'max' => 255],
+                'local_guardian_address' => ['type' => 'string', 'required' => false, 'max' => 500],
+                'local_guardian_contact' => ['type' => 'string', 'required' => false, 'max' => 20],
+                'local_guardian_occupation' => ['type' => 'string', 'required' => false, 'max' => 255],
+                'local_guardian_relation' => ['type' => 'string', 'required' => false, 'max' => 100],
+                
+                // Verification Information
+                'verified_by' => ['type' => 'string', 'required' => false, 'max' => 255],
+                'verified_on' => ['type' => 'date', 'required' => false],
+                
+                // Status Fields
+                'is_active' => ['type' => 'boolean', 'required' => false, 'default' => true],
+                'is_existing_student' => ['type' => 'boolean', 'required' => false, 'default' => false],
+                'declaration_agreed' => ['type' => 'boolean', 'required' => false, 'default' => false],
+                'rules_agreed' => ['type' => 'boolean', 'required' => false, 'default' => false],
+                
+                // File Upload Fields
+                'student_image' => ['type' => 'file', 'required' => false, 'max_size' => '2MB', 'types' => ['jpg', 'jpeg', 'png']],
+                'student_citizenship_image' => ['type' => 'file', 'required' => false, 'max_size' => '2MB', 'types' => ['jpg', 'jpeg', 'png']],
+                'registration_form_image' => ['type' => 'file', 'required' => false, 'max_size' => '2MB', 'types' => ['jpg', 'jpeg', 'png']],
+                
+                // Amenities Fields
+                'amenities' => ['type' => 'array', 'required' => false, 'description' => 'Array of amenity objects'],
+                'amenities.*.name' => ['type' => 'string', 'required' => true, 'max' => 255, 'description' => 'Amenity name'],
+                'amenities.*.description' => ['type' => 'string', 'required' => false, 'max' => 500, 'description' => 'Amenity description'],
+                'removedAmenityIds' => ['type' => 'array', 'required' => false, 'description' => 'Array of amenity IDs to remove (update only)'],
+            ],
+            'note' => 'Financial fields are handled separately via /api/student-financials endpoints'
+        ]);
     }
 }

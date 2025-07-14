@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { studentApi, type StudentWithAmenities } from '@/lib/api';
 import { ApiError } from '@/lib/api/core';
@@ -14,7 +13,7 @@ import {
 } from '@/components/ui';
 import { formatDate, getImageUrl } from '@/lib/utils';
 
-export default function StudentList() {
+export default function Page() {
   const router = useRouter();
   
   const [students, setStudents] = useState<StudentWithAmenities[]>([]);
@@ -69,6 +68,10 @@ export default function StudentList() {
     if (!students.length) return;
 
     let result = [...students];
+    
+    console.log('Original students:', students.length);
+    console.log('Status filter:', statusFilter);
+    console.log('Sample student is_active values:', students.slice(0, 3).map(s => ({ name: s.student_name, is_active: s.is_active, type: typeof s.is_active })));
 
     // Filter by search term
     if (searchTerm) {
@@ -82,10 +85,42 @@ export default function StudentList() {
 
     // Filter by status
     if (statusFilter) {
-      const isActive = statusFilter === 'active';
-      result = result.filter(student => student.is_active === isActive);
+      console.log('Applying status filter:', statusFilter);
+      console.log('Sample students before filtering:', result.slice(0, 5).map(s => ({ 
+        name: s.student_name, 
+        is_active: s.is_active, 
+        type: typeof s.is_active,
+        stringValue: String(s.is_active)
+      })));
+      
+      if (statusFilter === 'active') {
+        result = result.filter(student => {
+          // Handle different possible values for is_active
+          const isActiveValue: any = student.is_active;
+          const isActive = isActiveValue === true || 
+                          isActiveValue === 1 || 
+                          isActiveValue === '1' || 
+                          String(isActiveValue).toLowerCase() === 'true';
+          return isActive;
+        });
+      } else if (statusFilter === 'inactive') {
+        result = result.filter(student => {
+          // Handle different possible values for is_active
+          const isActiveValue: any = student.is_active;
+          const isInactive = isActiveValue === false || 
+                            isActiveValue === 0 || 
+                            isActiveValue === '0' || 
+                            String(isActiveValue).toLowerCase() === 'false' ||
+                            isActiveValue === null ||
+                            isActiveValue === undefined;
+          return isInactive;
+        });
+      }
+      
+      console.log('Students after status filtering:', result.length);
     }
-
+    
+    console.log('Filtered students:', result.length);
     setFilteredStudents(result);
   }, [searchTerm, statusFilter, students]);
 
@@ -147,6 +182,26 @@ export default function StudentList() {
     );
   };
 
+  const getTotalAvailableBeds = () => {
+    // Calculate total available beds from vacant space in rooms
+    const uniqueRooms = students.reduce((acc, student) => {
+      if (student.room && !acc.some(r => r.id === student.room!.id)) {
+        acc.push(student.room);
+      }
+      return acc;
+    }, [] as any[]);
+    
+    let availableBeds = 0;
+    uniqueRooms.forEach(room => {
+      if (room.capacity) {
+        const studentsInRoom = students.filter(s => s.room_id === room.id).length;
+        availableBeds += Math.max(0, room.capacity - studentsInRoom);
+      }
+    });
+    
+    return availableBeds;
+  };
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -197,6 +252,73 @@ export default function StudentList() {
             </Button>
           </div>
         </div>
+
+        {/* Summary Stats */}
+        {!isLoading && students.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-lg shadow-sm p-4 border">
+              <div className="flex items-center">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-semibold text-gray-900">{students.length}</p>
+                  <p className="text-sm text-gray-500">Total Students</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-sm p-4 border">
+              <div className="flex items-center">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {students.filter(s => s.is_active).length}
+                  </p>
+                  <p className="text-sm text-gray-500">Active Students</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-sm p-4 border">
+              <div className="flex items-center">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {students.filter(s => !s.is_active).length}
+                  </p>
+                  <p className="text-sm text-gray-500">Inactive Students</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow-sm p-4 border">
+              <div className="flex items-center">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div className="ml-4">
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {getTotalAvailableBeds()}
+                  </p>
+                  <p className="text-sm text-gray-500">Available Beds</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Search and Filter Bar */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
@@ -307,19 +429,14 @@ export default function StudentList() {
               </table>
             </div>
           ) : (
-            <div className="py-8 text-center">
-              <div className="text-gray-500">No students found matching your filters</div>
-              {searchTerm || statusFilter ? (
-                <button 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setStatusFilter('');
-                  }}
-                  className="mt-2 text-sm text-blue-600 hover:text-blue-800"
-                >
-                  Clear filters
-                </button>
-              ) : null}
+            <div className="text-center py-12">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No students found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {searchTerm || statusFilter ? 'Try adjusting your search or filter criteria.' : 'Get started by adding a new student.'}
+              </p>
             </div>
           )}
 

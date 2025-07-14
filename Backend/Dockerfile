@@ -46,7 +46,12 @@ RUN useradd -u 1000 -ms /bin/bash -g www www
 # Copy existing application directory contents
 COPY . /var/www/html
 
-# Copy existing application directory permissions
+# Install additional tools for database connectivity
+RUN apt-get update && apt-get install -y \
+    default-mysql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a startup script
 COPY --chown=www:www . /var/www/html
 
 # Change current user to www
@@ -63,11 +68,12 @@ USER root
 RUN mkdir -p /var/www/html/storage/app/public/rooms && \
     chown -R www:www /var/www/html/storage && \
     chmod -R 777 /var/www/html/storage
+
+# Copy and setup startup script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 USER www
 
-# Run artisan commands
-RUN php artisan config:clear && \
-    php artisan cache:clear
-
 # Start Laravel development server
-CMD php artisan storage:link && php artisan serve --host=0.0.0.0 --port=8000
+CMD ["/start.sh"]

@@ -44,16 +44,9 @@ class StudentFinancialController extends Controller
             'balance_type' => 'nullable|string|in:due,advance',
             'payment_date' => 'required|date',
             'joining_date' => 'nullable|date',
-            'physical_copy_image' => 'nullable|image|max:5120', // Max 5MB
             'payment_type_id' => 'nullable|exists:payment_types,id',
             'remark' => 'nullable|string',
         ]);
-        
-        // Handle file upload
-        if ($request->hasFile('physical_copy_image')) {
-            $path = $request->file('physical_copy_image')->store('financial_documents', 'public');
-            $validated['physical_copy_image'] = $path;
-        }
         
         // Ensure boolean fields are properly set
         $validated['is_existing_student'] = $this->parseBoolean($request->input('is_existing_student', false));
@@ -61,6 +54,7 @@ class StudentFinancialController extends Controller
         $financial = StudentFinancial::create($validated);
         
         return response()->json($financial, 201);
+    }
 
     /**
      * Display the specified resource.
@@ -98,21 +92,9 @@ class StudentFinancialController extends Controller
             'balance_type' => 'nullable|string|in:due,advance',
             'payment_date' => 'date',
             'joining_date' => 'nullable|date',
-            'physical_copy_image' => 'nullable|image|max:5120', // Max 5MB
             'payment_type_id' => 'nullable|exists:payment_types,id',
             'remark' => 'nullable|string',
         ]);
-        
-        // Handle file upload
-        if ($request->hasFile('physical_copy_image')) {
-            // Delete old image if exists
-            if ($financial->physical_copy_image) {
-                Storage::disk('public')->delete($financial->physical_copy_image);
-            }
-            
-            $path = $request->file('physical_copy_image')->store('financial_documents', 'public');
-            $validated['physical_copy_image'] = $path;
-        }
         
         // Ensure boolean fields are properly set
         $validated['is_existing_student'] = $this->parseBoolean($request->input('is_existing_student', $financial->is_existing_student ?? false));
@@ -128,11 +110,6 @@ class StudentFinancialController extends Controller
     public function destroy(string $id)
     {
         $financial = StudentFinancial::findOrFail($id);
-        
-        // Delete image if exists
-        if ($financial->physical_copy_image) {
-            Storage::disk('public')->delete($financial->physical_copy_image);
-        }
         
         $financial->delete();
         
@@ -180,5 +157,32 @@ class StudentFinancialController extends Controller
         }
         
         return $default;
+    }
+    
+    /**
+     * Get all available fields for student financial creation/editing
+     * This helper method provides field metadata for frontend forms
+     */
+    public function getFields()
+    {
+        return response()->json([
+            'financial_fields' => [
+                'student_id' => ['type' => 'foreign_id', 'required' => true, 'table' => 'students'],
+                'amount' => ['type' => 'string', 'required' => true, 'note' => 'Total amount'],
+                'admission_fee' => ['type' => 'string', 'required' => false, 'note' => 'One-time admission fee'],
+                'form_fee' => ['type' => 'string', 'required' => false, 'note' => 'Application form fee'],
+                'security_deposit' => ['type' => 'string', 'required' => false, 'note' => 'Refundable security deposit'],
+                'monthly_fee' => ['type' => 'string', 'required' => false, 'note' => 'Monthly accommodation fee'],
+                'is_existing_student' => ['type' => 'boolean', 'required' => false, 'default' => false],
+                'previous_balance' => ['type' => 'string', 'required' => false, 'note' => 'Balance from previous records'],
+                'initial_balance_after_registration' => ['type' => 'string', 'required' => false, 'note' => 'Balance after initial payment'],
+                'balance_type' => ['type' => 'enum', 'required' => false, 'options' => ['due', 'advance'], 'note' => 'Type of balance'],
+                'payment_date' => ['type' => 'date', 'required' => true],
+                'joining_date' => ['type' => 'date', 'required' => false, 'note' => 'Date when student joined'],
+                'payment_type_id' => ['type' => 'foreign_id', 'required' => false, 'table' => 'payment_types'],
+                'remark' => ['type' => 'text', 'required' => false, 'note' => 'Additional notes or comments'],
+            ],
+            'note' => 'Financial records are separate from student records. Student basic info is handled via /api/students endpoints'
+        ]);
     }
 }

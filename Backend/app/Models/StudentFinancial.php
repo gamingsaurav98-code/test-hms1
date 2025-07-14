@@ -24,7 +24,6 @@ class StudentFinancial extends Model
         'remark',
         'payment_type_id',
         'joining_date',
-        'physical_copy_image',
     ];
     public function student()
     {

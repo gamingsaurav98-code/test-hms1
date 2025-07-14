@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
-import { studentApi, roomApi, type Room, type StudentFormData, type StudentAmenity } from '@/lib/api';
+import { studentApi, studentFinancialApi, roomApi, type Room, type StudentFormData, type StudentFinancialFormData, type StudentAmenity } from '@/lib/api';
 import { ApiError } from '@/lib/api/core';
 import { 
   Button, 
@@ -59,12 +59,21 @@ export default function CreateStudent() {
     declaration_agreed: false,
     rules_agreed: false,
     verified_on: '',
+    amenities: []
+  });
+  
+  // Financial form state
+  const [financialData, setFinancialData] = useState<StudentFinancialFormData>({
     admission_fee: '',
     form_fee: '',
     security_deposit: '',
     monthly_fee: '',
     joining_date: '',
-    amenities: []
+    payment_date: new Date().toISOString().split('T')[0], // Default to today
+    amount: '',
+    payment_type_id: '',
+    remark: '',
+    is_existing_student: false
   });
   
   // Form processing state
@@ -82,9 +91,7 @@ export default function CreateStudent() {
   const [registrationFormDocuments, setRegistrationFormDocuments] = useState<File[]>([]);
   
   // Amenities state
-  const [amenities, setAmenities] = useState<StudentAmenity[]>([
-    { name: '', description: '' }
-  ]);
+  const [amenities, setAmenities] = useState<StudentAmenity[]>([]);
 
   // Fetch available rooms for selection
   useEffect(() => {
@@ -115,6 +122,32 @@ export default function CreateStudent() {
     } else {
       setFormData({
         ...formData,
+        [name]: value
+      });
+    }
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  // Handle financial form field changes
+  const handleFinancialInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+
+    if (type === 'checkbox') {
+      const checkbox = e.target as HTMLInputElement;
+      setFinancialData({
+        ...financialData,
+        [name]: checkbox.checked
+      });
+    } else {
+      setFinancialData({
+        ...financialData,
         [name]: value
       });
     }
@@ -277,14 +310,6 @@ export default function CreateStudent() {
       [field]: value
     };
     setAmenities(updatedAmenities);
-    
-    // Clear amenities error
-    if (errors.amenities) {
-      setErrors(prev => ({
-        ...prev,
-        amenities: ''
-      }));
-    }
   };
 
   // Add new amenity field
@@ -294,11 +319,9 @@ export default function CreateStudent() {
 
   // Remove amenity field
   const removeAmenity = (index: number) => {
-    if (amenities.length > 1) {
-      const updatedAmenities = [...amenities];
-      updatedAmenities.splice(index, 1);
-      setAmenities(updatedAmenities);
-    }
+    const updatedAmenities = [...amenities];
+    updatedAmenities.splice(index, 1);
+    setAmenities(updatedAmenities);
   };
 
   // Form validation
@@ -321,11 +344,7 @@ export default function CreateStudent() {
       newErrors.contact_number = 'Please enter a valid 10-digit phone number';
     }
     
-    // Check if at least one amenity has a name
-    const validAmenities = amenities.filter(item => item.name.trim() !== '');
-    if (validAmenities.length === 0) {
-      newErrors.amenities = 'Please add at least one amenity with a name';
-    }
+    // Student amenities are now optional - no validation required
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -346,7 +365,7 @@ export default function CreateStudent() {
     const filteredAmenities = amenities.filter(item => item.name.trim() !== '');
     
     try {
-      // Prepare the form data with all files
+      // Step 1: Create the student first (without financial data)
       const studentFormData = {
         ...formData,
         amenities: filteredAmenities,
@@ -354,8 +373,30 @@ export default function CreateStudent() {
         registration_form_image: registrationFormDocuments.length > 0 ? registrationFormDocuments[0] : null
       };
       
-      // Submit form data
-      await studentApi.createStudent(studentFormData);
+      const createdStudent = await studentApi.createStudent(studentFormData);
+      
+      // Step 2: Create financial record if any financial data is provided
+      const hasFinancialData = Object.entries(financialData).some(([key, value]) => {
+        if (key === 'payment_date' || key === 'is_existing_student') return false; // These always have values
+        return value !== null && value !== undefined && value !== '';
+      });
+      
+      if (hasFinancialData) {
+        // Calculate total amount from individual fees
+        const admissionFee = parseFloat(financialData.admission_fee || '0');
+        const formFee = parseFloat(financialData.form_fee || '0');
+        const securityDeposit = parseFloat(financialData.security_deposit || '0');
+        const monthlyFee = parseFloat(financialData.monthly_fee || '0');
+        const totalAmount = (admissionFee + formFee + securityDeposit + monthlyFee).toString();
+        
+        const financialFormData = {
+          ...financialData,
+          student_id: createdStudent.id,
+          amount: financialData.amount || totalAmount // Use provided amount or calculated total
+        };
+        
+        await studentFinancialApi.createStudentFinancial(financialFormData);
+      }
 
       // Redirect to student list on success
       router.push('/admin/student');
@@ -917,8 +958,8 @@ export default function CreateStudent() {
                     <input
                       type="text"
                       name="admission_fee"
-                      value={formData.admission_fee || ''}
-                      onChange={handleInputChange}
+                      value={financialData.admission_fee || ''}
+                      onChange={handleFinancialInputChange}
                       className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 focus:border-neutral-400 focus:ring-0 outline-none transition-all duration-200"
                     />
                   </div>
@@ -938,8 +979,8 @@ export default function CreateStudent() {
                     <input
                       type="text"
                       name="form_fee"
-                      value={formData.form_fee || ''}
-                      onChange={handleInputChange}
+                      value={financialData.form_fee || ''}
+                      onChange={handleFinancialInputChange}
                       className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 focus:border-neutral-400 focus:ring-0 outline-none transition-all duration-200"
                     />
                   </div>
@@ -959,8 +1000,8 @@ export default function CreateStudent() {
                     <input
                       type="text"
                       name="security_deposit"
-                      value={formData.security_deposit || ''}
-                      onChange={handleInputChange}
+                      value={financialData.security_deposit || ''}
+                      onChange={handleFinancialInputChange}
                       className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 focus:border-neutral-400 focus:ring-0 outline-none transition-all duration-200"
                     />
                   </div>
@@ -980,8 +1021,8 @@ export default function CreateStudent() {
                     <input
                       type="text"
                       name="monthly_fee"
-                      value={formData.monthly_fee || ''}
-                      onChange={handleInputChange}
+                      value={financialData.monthly_fee || ''}
+                      onChange={handleFinancialInputChange}
                       className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 focus:border-neutral-400 focus:ring-0 outline-none transition-all duration-200"
                     />
                   </div>
@@ -994,38 +1035,14 @@ export default function CreateStudent() {
                 </div>
               </div>
               
-              {/* Physical Copy Image */}
-              <div className="mt-4">
-                <h3 className="text-md font-medium text-gray-800 mb-3">Physical Copy Image (Optional)</h3>
-                <div className="w-full">
-                  <MultipleImageUploadCreate
-                    images={formData.physical_copy_images ? [formData.physical_copy_images] : []}
-                    onAddImages={(files) => {
-                      if (files.length > 0) {
-                        setFormData(prev => ({...prev, physical_copy_images: files[0]}));
-                      }
-                    }}
-                    onRemoveImage={() => {
-                      setFormData(prev => ({...prev, physical_copy_images: null}));
-                    }}
-                    error={errors.physical_copy_images}
-                    label="Upload Document"
-                    onImageClick={(imageUrl, alt) => {
-                      setSelectedImage({ url: imageUrl, alt });
-                      setImageModalOpen(true);
-                    }}
-                  />
-                </div>
-              </div>
-              
               {/* Joining Date */}
               <div className="mt-4">
                 <FormField
                   name="joining_date"
                   label="Joining Date"
                   type="date"
-                  value={formData.joining_date || ''}
-                  onChange={handleInputChange}
+                  value={financialData.joining_date || ''}
+                  onChange={handleFinancialInputChange}
                   error={errors.joining_date}
                 />
               </div>
@@ -1045,45 +1062,44 @@ export default function CreateStudent() {
                 </Button>
               </div>
               
-              {errors.amenities && (
-                <p className="text-red-600 text-sm mb-2">{errors.amenities}</p>
-              )}
-              
               <div className="space-y-4">
-                {amenities.map((amenity, index) => (
-                  <div key={index} className="flex space-x-4 items-start">
-                    <div className="flex-1">
-                      <FormField
-                        name={`amenity_name_${index}`}
-                        label={`Amenity ${index + 1} Name`}
-                        placeholder="Enter amenity name"
-                        value={amenity.name}
-                        onChange={(e) => handleAmenityChange(index, 'name', e.target.value)}
-                      />
+                {amenities.length > 0 ? (
+                  amenities.map((amenity, index) => (
+                    <div key={index} className="flex space-x-4 items-start">
+                      <div className="flex-1">
+                        <FormField
+                          name={`amenity_name_${index}`}
+                          label={`Amenity ${index + 1} Name`}
+                          placeholder="Enter amenity name"
+                          value={amenity.name}
+                          onChange={(e) => handleAmenityChange(index, 'name', e.target.value)}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <FormField
+                          name={`amenity_description_${index}`}
+                          label="Description (Optional)"
+                          placeholder="Enter description"
+                          value={amenity.description || ''}
+                          onChange={(e) => handleAmenityChange(index, 'description', e.target.value)}
+                        />
+                      </div>
+                      <div className="pt-8">
+                        <button
+                          type="button"
+                          onClick={() => removeAmenity(index)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <FormField
-                        name={`amenity_description_${index}`}
-                        label="Description (Optional)"
-                        placeholder="Enter description"
-                        value={amenity.description || ''}
-                        onChange={(e) => handleAmenityChange(index, 'description', e.target.value)}
-                      />
-                    </div>
-                    <div className="pt-8">
-                      <button
-                        type="button"
-                        onClick={() => removeAmenity(index)}
-                        className="text-red-600 hover:text-red-800"
-                        disabled={amenities.length === 1}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm italic">No amenities added. Click "Add Amenity" to add student amenities.</p>
+                )}
               </div>
             </div>
           </div>            {/* Verification */}

@@ -10,9 +10,32 @@ export interface StudentAmenity {
   description?: string;
 }
 
-// Extended Student interface with amenities
+// StudentFinancial interface
+export interface StudentFinancial {
+  id?: string;
+  student_id?: string;
+  admission_fee?: string;
+  form_fee?: string;
+  security_deposit?: string;
+  monthly_fee?: string;
+  room_fee?: string;
+  other_fee?: string;
+  discount_amount?: string;
+  joining_date?: string;
+  payment_type_id?: string;
+  payment_type?: {
+    id: string;
+    name: string;
+    description?: string;
+  };
+  created_at: string;
+  updated_at?: string;
+}
+
+// Extended Student interface with amenities and financials
 export interface StudentWithAmenities extends Student {
   amenities?: StudentAmenity[];
+  financials?: StudentFinancial[];
 }
 
 // Student form data interface
@@ -56,18 +79,28 @@ export interface StudentFormData {
   declaration_agreed?: boolean;
   rules_agreed?: boolean;
   verified_on?: string;
-  // Financial fields
-  admission_fee?: string;
-  form_fee?: string;
-  security_deposit?: string;
-  monthly_fee?: string;
-  physical_copy_images?: File | null;
-  joining_date?: string;
   // Image fields
   student_image?: File | null;
   student_citizenship_image?: File | null;
   registration_form_image?: File | null;
   amenities?: StudentAmenity[] | string[];
+  removedAmenityIds?: number[];
+  removedCitizenshipDocIds?: number[];
+  removedRegistrationDocIds?: number[];
+}
+
+// Student financial form data interface
+export interface StudentFinancialFormData {
+  admission_fee?: string;
+  form_fee?: string;
+  security_deposit?: string;
+  monthly_fee?: string;
+  joining_date?: string;
+  payment_date: string;
+  amount?: string;
+  payment_type_id?: string;
+  remark?: string;
+  is_existing_student?: boolean;
 }
 
 // Student API functions
@@ -153,7 +186,7 @@ export const studentApi = {
     Object.entries(data).forEach(([key, value]) => {
       // Skip amenities as we'll handle them separately
       if (key !== 'amenities' && value !== undefined && value !== null) {
-        if (key === 'student_image' || key === 'student_citizenship_image' || key === 'registration_form_image' || key === 'physical_copy_images') {
+        if (key === 'student_image' || key === 'student_citizenship_image' || key === 'registration_form_image') {
           if (value instanceof File) {
             formData.append(key, value);
           }
@@ -203,9 +236,9 @@ export const studentApi = {
     
     // Append all base form fields
     Object.entries(data).forEach(([key, value]) => {
-      // Skip amenities as we'll handle them separately
-      if (key !== 'amenities' && value !== undefined && value !== null) {
-        if (key === 'student_image' || key === 'student_citizenship_image' || key === 'registration_form_image' || key === 'physical_copy_images') {
+      // Skip amenities and removed tracking arrays as we'll handle them separately
+      if (key !== 'amenities' && key !== 'removedAmenityIds' && key !== 'removedCitizenshipDocIds' && key !== 'removedRegistrationDocIds' && value !== undefined && value !== null) {
+        if (key === 'student_image' || key === 'student_citizenship_image' || key === 'registration_form_image') {
           if (value instanceof File) {
             formData.append(key, value);
           }
@@ -214,6 +247,27 @@ export const studentApi = {
         }
       }
     });
+    
+    // Handle removed amenity IDs
+    if (data.removedAmenityIds && Array.isArray(data.removedAmenityIds)) {
+      data.removedAmenityIds.forEach((id: number, index: number) => {
+        formData.append(`removedAmenityIds[${index}]`, String(id));
+      });
+    }
+    
+    // Handle removed citizenship document IDs
+    if ((data as any).removedCitizenshipDocIds && Array.isArray((data as any).removedCitizenshipDocIds)) {
+      (data as any).removedCitizenshipDocIds.forEach((id: number, index: number) => {
+        formData.append(`removedCitizenshipDocIds[${index}]`, String(id));
+      });
+    }
+    
+    // Handle removed registration document IDs
+    if ((data as any).removedRegistrationDocIds && Array.isArray((data as any).removedRegistrationDocIds)) {
+      (data as any).removedRegistrationDocIds.forEach((id: number, index: number) => {
+        formData.append(`removedRegistrationDocIds[${index}]`, String(id));
+      });
+    }
     
     // Handle amenities
     if (data.amenities && Array.isArray(data.amenities)) {
@@ -276,5 +330,125 @@ export const studentApi = {
     });
     
     return handleResponse<{ student_image: string }>(response);
+  }
+};
+
+// Student Financial API functions
+export const studentFinancialApi = {
+  // Create financial record for a student
+  async createStudentFinancial(data: {
+    student_id: string;
+    admission_fee?: string;
+    form_fee?: string;
+    security_deposit?: string;
+    monthly_fee?: string;
+    joining_date?: string;
+    payment_date: string;
+    amount: string;
+    payment_type_id?: string;
+    remark?: string;
+    is_existing_student?: boolean;
+  }): Promise<StudentFinancial> {
+    const formData = new FormData();
+    
+    // Add all fields to FormData
+    Object.keys(data).forEach(key => {
+      const value = data[key as keyof typeof data];
+      if (value !== null && value !== undefined && value !== '') {
+        if (key === 'is_existing_student') {
+          formData.append(key, value ? '1' : '0');
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    });
+
+    const response = await fetch(`${API_BASE_URL}/student-financials`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+      },
+      body: formData,
+    });
+    
+    return handleResponse<StudentFinancial>(response);
+  },
+
+  // Update financial record
+  async updateStudentFinancial(id: string, data: {
+    admission_fee?: string;
+    form_fee?: string;
+    security_deposit?: string;
+    monthly_fee?: string;
+    joining_date?: string;
+    payment_date?: string;
+    amount?: string;
+    payment_type_id?: string;
+    remark?: string;
+    is_existing_student?: boolean;
+  }): Promise<StudentFinancial> {
+    const formData = new FormData();
+    formData.append('_method', 'PUT');
+    
+    // Add all fields to FormData
+    Object.keys(data).forEach(key => {
+      const value = data[key as keyof typeof data];
+      if (value !== null && value !== undefined && value !== '') {
+        if (key === 'is_existing_student') {
+          formData.append(key, value ? '1' : '0');
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    });
+
+    const response = await fetch(`${API_BASE_URL}/student-financials/${id}`, {
+      method: 'POST', // Using POST with _method override for file uploads
+      headers: {
+        'Accept': 'application/json',
+      },
+      body: formData,
+    });
+    
+    return handleResponse<StudentFinancial>(response);
+  },
+
+  // Get financial records for a specific student
+  async getStudentFinancials(studentId: string): Promise<StudentFinancial[]> {
+    const response = await fetch(`${API_BASE_URL}/students/${studentId}/financials`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return handleResponse<StudentFinancial[]>(response);
+  },
+
+  // Get a specific financial record
+  async getStudentFinancial(id: string): Promise<StudentFinancial> {
+    const response = await fetch(`${API_BASE_URL}/student-financials/${id}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return handleResponse<StudentFinancial>(response);
+  },
+
+  // Delete financial record
+  async deleteStudentFinancial(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/student-financials/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return handleResponse<void>(response);
   }
 };

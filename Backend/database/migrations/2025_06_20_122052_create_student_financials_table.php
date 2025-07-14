@@ -25,7 +25,6 @@ return new class extends Migration
             $table->string('balance_type')->nullable();
             $table->date('payment_date');
             $table->date('joining_date')->nullable();
-            $table->string('physical_copy_image')->nullable();
             $table->foreignId('payment_type_id')->nullable();
             $table->text('remark')->nullable(); // Additional notes or remarks
             $table->timestamps();

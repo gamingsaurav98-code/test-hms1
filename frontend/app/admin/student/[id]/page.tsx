@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { studentApi, type StudentWithAmenities } from '@/lib/api';
 import { ApiError } from '@/lib/api/core';
-import { Button, TableSkeleton, ActionButtons, ConfirmModal } from '@/components/ui';
+import { Button, TableSkeleton, ActionButtons, ConfirmModal, ImageModal } from '@/components/ui';
 import { formatDate, getImageUrl } from '@/lib/utils';
 
 export default function StudentDetail() {
@@ -17,6 +17,8 @@ export default function StudentDetail() {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState({ url: '', alt: '' });
 
   useEffect(() => {
     const fetchStudent = async () => {
@@ -58,6 +60,11 @@ export default function StudentDetail() {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleImageClick = (imageUrl: string, alt: string) => {
+    setSelectedImage({ url: imageUrl, alt });
+    setImageModalOpen(true);
   };
 
   if (isLoading) {
@@ -123,71 +130,21 @@ export default function StudentDetail() {
             <h1 className="text-xl font-semibold text-gray-900">Student Details</h1>
             <p className="text-sm text-gray-600 mt-1">View complete student information</p>
           </div>
-          <div className="mt-4 md:mt-0 flex space-x-3">
-            <Button
-              onClick={() => router.push('/admin/student')}
-              variant="secondary"
-              className="px-4"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-              </svg>
-              Back
-            </Button>
+          <div className="mt-4 md:mt-0 flex space-x-2">
             <Button
               onClick={() => router.push(`/admin/student/${student.id}/edit`)}
-              variant="edit"
-              className="px-4"
+              variant="primary"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-              </svg>
-              Edit
+              Edit Student
             </Button>
             <Button
               onClick={() => setShowDeleteModal(true)}
               disabled={isDeleting}
-              variant="delete"
+              variant="danger"
               loading={isDeleting}
-              className="px-4"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
               {isDeleting ? "Deleting..." : "Delete"}
             </Button>
-          </div>
-        </div>
-
-        {/* Student Status Banner */}
-        <div className={`mb-6 p-4 rounded-lg shadow-sm border ${student.is_active ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
-          <div className="flex items-center">
-            <div className={`p-2 rounded-full ${student.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-              {student.is_active ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              )}
-            </div>
-            <div className="ml-3 flex-1">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-medium">{student.is_active ? 'Active Student' : 'Inactive Student'}</h3>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  student.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {student.is_active ? 'Active' : 'Inactive'}
-                </span>
-              </div>
-              <p className="text-sm mt-1">
-                {student.is_active 
-                  ? 'This student is currently active and residing in the hostel.' 
-                  : 'This student is currently inactive and not residing in the hostel.'}
-              </p>
-            </div>
           </div>
         </div>
 
@@ -303,16 +260,6 @@ export default function StudentDetail() {
                       <dd className="text-sm text-gray-900">{student.disease}</dd>
                     </div>
                   )}
-                  <div className="py-3 flex justify-between">
-                    <dt className="text-sm font-medium text-gray-500">Status</dt>
-                    <dd className="text-sm text-gray-900">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        student.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {student.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </dd>
-                  </div>
                 </dl>
               </div>
               
@@ -358,12 +305,12 @@ export default function StudentDetail() {
               </div>
 
               {/* Citizenship & Identity */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-3">Citizenship & Identity</h3>
-                <dl className="divide-y divide-gray-200">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <h3 className="text-base font-medium text-gray-700 mb-3 pb-2 border-b border-gray-200">Citizenship & Identity</h3>
+                <dl className="divide-y divide-gray-100">
                   {student.citizenship_no && (
-                    <div className="py-3 flex justify-between">
-                      <dt className="text-sm font-medium text-gray-500">Citizenship No.</dt>
+                    <div className="py-2 flex justify-between">
+                      <dt className="text-sm font-medium text-gray-600">Citizenship No.</dt>
                       <dd className="text-sm text-gray-900">{student.citizenship_no}</dd>
                     </div>
                   )}
@@ -382,11 +329,7 @@ export default function StudentDetail() {
                   {student.student_citizenship_image && (
                     <div className="py-3 flex justify-between">
                       <dt className="text-sm font-medium text-gray-500">Citizenship Document</dt>
-                      <dd className="text-sm text-blue-600 cursor-pointer hover:underline" onClick={() => {
-                        const url = getImageUrl(student.student_citizenship_image!);
-                        // You can open the image in a modal or new tab
-                        window.open(url, '_blank');
-                      }}>View Document</dd>
+                      <dd className="text-sm text-blue-600 cursor-pointer hover:underline" onClick={() => handleImageClick(getImageUrl(student.student_citizenship_image!), 'Citizenship Document')}>View Document</dd>
                     </div>
                   )}
                 </dl>
@@ -584,36 +527,76 @@ export default function StudentDetail() {
                       <dd className="text-sm text-gray-900">{student.is_existing_student ? 'Yes' : 'No'}</dd>
                     </div>
                   )}
-                  {student.admission_fee && (
-                    <div className="py-3 flex justify-between">
-                      <dt className="text-sm font-medium text-gray-500">Admission Fee</dt>
-                      <dd className="text-sm text-gray-900">Rs {student.admission_fee}</dd>
-                    </div>
-                  )}
-                  {student.form_fee && (
-                    <div className="py-3 flex justify-between">
-                      <dt className="text-sm font-medium text-gray-500">Form Fee</dt>
-                      <dd className="text-sm text-gray-900">Rs {student.form_fee}</dd>
-                    </div>
-                  )}
-                  {student.security_deposit && (
-                    <div className="py-3 flex justify-between">
-                      <dt className="text-sm font-medium text-gray-500">Security Deposit</dt>
-                      <dd className="text-sm text-gray-900">Rs {student.security_deposit}</dd>
-                    </div>
-                  )}
-                  {student.monthly_fee && (
-                    <div className="py-3 flex justify-between">
-                      <dt className="text-sm font-medium text-gray-500">Monthly Fee</dt>
-                      <dd className="text-sm text-gray-900">Rs {student.monthly_fee}</dd>
-                    </div>
-                  )}
-                  {student.joining_date && (
-                    <div className="py-3 flex justify-between">
-                      <dt className="text-sm font-medium text-gray-500">Joining Date</dt>
-                      <dd className="text-sm text-gray-900">{formatDate(student.joining_date)}</dd>
-                    </div>
-                  )}
+                  
+                  {/* Display financial information from the latest financial record */}
+                  {student.financials && student.financials.length > 0 && (() => {
+                    // Get the latest financial record
+                    const latestFinancial = student.financials.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+                    
+                    return (
+                      <>
+                        {latestFinancial.admission_fee && (
+                          <div className="py-3 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-500">Admission Fee</dt>
+                            <dd className="text-sm text-gray-900">Rs {latestFinancial.admission_fee}</dd>
+                          </div>
+                        )}
+                        {latestFinancial.form_fee && (
+                          <div className="py-3 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-500">Form Fee</dt>
+                            <dd className="text-sm text-gray-900">Rs {latestFinancial.form_fee}</dd>
+                          </div>
+                        )}
+                        {latestFinancial.security_deposit && (
+                          <div className="py-3 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-500">Security Deposit</dt>
+                            <dd className="text-sm text-gray-900">Rs {latestFinancial.security_deposit}</dd>
+                          </div>
+                        )}
+                        {latestFinancial.monthly_fee && (
+                          <div className="py-3 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-500">Monthly Fee</dt>
+                            <dd className="text-sm text-gray-900">Rs {latestFinancial.monthly_fee}</dd>
+                          </div>
+                        )}
+                        {latestFinancial.room_fee && (
+                          <div className="py-3 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-500">Room Fee</dt>
+                            <dd className="text-sm text-gray-900">Rs {latestFinancial.room_fee}</dd>
+                          </div>
+                        )}
+                        {latestFinancial.other_fee && (
+                          <div className="py-3 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-500">Other Fee</dt>
+                            <dd className="text-sm text-gray-900">Rs {latestFinancial.other_fee}</dd>
+                          </div>
+                        )}
+                        {latestFinancial.discount_amount && (
+                          <div className="py-3 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-500">Discount Amount</dt>
+                            <dd className="text-sm text-green-600">Rs {latestFinancial.discount_amount}</dd>
+                          </div>
+                        )}
+                        {latestFinancial.joining_date && (
+                          <div className="py-3 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-500">Joining Date</dt>
+                            <dd className="text-sm text-gray-900">{formatDate(latestFinancial.joining_date)}</dd>
+                          </div>
+                        )}
+                        {latestFinancial.payment_type && (
+                          <div className="py-3 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-500">Payment Type</dt>
+                            <dd className="text-sm text-gray-900">
+                              {typeof latestFinancial.payment_type === 'object' && latestFinancial.payment_type.name 
+                                ? latestFinancial.payment_type.name 
+                                : String(latestFinancial.payment_type)}
+                            </dd>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                  
                   <div className="py-3 flex justify-between">
                     <dt className="text-sm font-medium text-gray-500">Registered On</dt>
                     <dd className="text-sm text-gray-900">{formatDate(student.created_at)}</dd>
@@ -622,11 +605,11 @@ export default function StudentDetail() {
               </div>
               
               {/* System Information */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 mb-3">System Information</h3>
-                <dl className="divide-y divide-gray-200">
-                  <div className="py-3 flex justify-between">
-                    <dt className="text-sm font-medium text-gray-500">Student ID</dt>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <h3 className="text-base font-medium text-gray-700 mb-3 pb-2 border-b border-gray-200">System Information</h3>
+                <dl className="divide-y divide-gray-100">
+                  <div className="py-2 flex justify-between">
+                    <dt className="text-sm font-medium text-gray-600">Student ID</dt>
                     <dd className="text-sm text-gray-900 font-mono">{student.id}</dd>
                   </div>
                   {student.user_id && (
@@ -703,10 +686,7 @@ export default function StudentDetail() {
                         src={getImageUrl(student.student_image)} 
                         alt="Student Photo" 
                         className="object-cover w-full h-full cursor-pointer"
-                        onClick={() => {
-                          // This could be modified to show the image in a modal instead of a new tab
-                          window.open(getImageUrl(student.student_image!), '_blank');
-                        }}
+                        onClick={() => handleImageClick(getImageUrl(student.student_image!), 'Student Photo')}
                       />
                     </div>
                     <div className="p-3 bg-gray-50 border-t">
@@ -723,9 +703,7 @@ export default function StudentDetail() {
                         src={getImageUrl(student.student_citizenship_image)} 
                         alt="Citizenship Document" 
                         className="object-contain w-full h-full cursor-pointer"
-                        onClick={() => {
-                          window.open(getImageUrl(student.student_citizenship_image!), '_blank');
-                        }}
+                        onClick={() => handleImageClick(getImageUrl(student.student_citizenship_image!), 'Citizenship Document')}
                       />
                     </div>
                     <div className="p-3 bg-gray-50 border-t">
@@ -742,9 +720,7 @@ export default function StudentDetail() {
                         src={getImageUrl(student.registration_form_image)} 
                         alt="Registration Form" 
                         className="object-contain w-full h-full cursor-pointer"
-                        onClick={() => {
-                          window.open(getImageUrl(student.registration_form_image!), '_blank');
-                        }}
+                        onClick={() => handleImageClick(getImageUrl(student.registration_form_image!), 'Registration Form')}
                       />
                     </div>
                     <div className="p-3 bg-gray-50 border-t">
@@ -761,9 +737,7 @@ export default function StudentDetail() {
                         src={getImageUrl(student.physical_copy_image)} 
                         alt="Financial Document" 
                         className="object-contain w-full h-full cursor-pointer"
-                        onClick={() => {
-                          window.open(getImageUrl(student.physical_copy_image!), '_blank');
-                        }}
+                        onClick={() => handleImageClick(getImageUrl(student.physical_copy_image!), 'Financial Document')}
                       />
                     </div>
                     <div className="p-3 bg-gray-50 border-t">
@@ -799,6 +773,14 @@ export default function StudentDetail() {
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteModal(false)}
         variant="danger"
+      />
+
+      {/* Image Modal */}
+      <ImageModal
+        show={imageModalOpen}
+        onClose={() => setImageModalOpen(false)}
+        imageUrl={selectedImage.url}
+        alt={selectedImage.alt}
       />
     </div>
   );

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
-import { studentApi, roomApi, type Room, type StudentWithAmenities, type StudentFormData, type StudentAmenity } from '@/lib/api';
+import { studentApi, studentFinancialApi, roomApi, type Room, type StudentWithAmenities, type StudentFormData, type StudentFinancialFormData, type StudentAmenity } from '@/lib/api';
 import { ApiError } from '@/lib/api/core';
 import { 
   Button, 
@@ -62,12 +62,16 @@ export default function EditStudent() {
     declaration_agreed: false,
     rules_agreed: false,
     verified_on: '',
+    amenities: []
+  });
+  
+  // Separate state for financial data (display only, not editable in student form)
+  const [financialData, setFinancialData] = useState({
     admission_fee: '',
     form_fee: '',
     security_deposit: '',
     monthly_fee: '',
-    joining_date: '',
-    amenities: []
+    joining_date: ''
   });
   
   // Form processing state
@@ -85,18 +89,14 @@ export default function EditStudent() {
   // Document state - Multiple file uploads
   const [citizenshipDocuments, setCitizenshipDocuments] = useState<File[]>([]);
   const [registrationFormDocuments, setRegistrationFormDocuments] = useState<File[]>([]);
-  const [physicalCopyDocuments, setPhysicalCopyDocuments] = useState<File[]>([]);
   const [existingCitizenshipDoc, setExistingCitizenshipDoc] = useState<{id: number; image: string; is_primary: boolean}[]>([]);
   const [existingRegistrationDoc, setExistingRegistrationDoc] = useState<{id: number; image: string; is_primary: boolean}[]>([]);
-  const [existingPhysicalCopyDoc, setExistingPhysicalCopyDoc] = useState<{id: number; image: string; is_primary: boolean}[]>([]);
   const [removedCitizenshipDocIds, setRemovedCitizenshipDocIds] = useState<number[]>([]);
   const [removedRegistrationDocIds, setRemovedRegistrationDocIds] = useState<number[]>([]);
-  const [removedPhysicalCopyDocIds, setRemovedPhysicalCopyDocIds] = useState<number[]>([]);
+  const [removedAmenityIds, setRemovedAmenityIds] = useState<number[]>([]);
   
   // Amenities state
-  const [amenities, setAmenities] = useState<StudentAmenity[]>([
-    { name: '', description: '' }
-  ]);
+  const [amenities, setAmenities] = useState<StudentAmenity[]>([]);
 
   // Fetch student data and available options
   useEffect(() => {
@@ -106,6 +106,14 @@ export default function EditStudent() {
         
         // Fetch student data
         const studentData = await studentApi.getStudent(id);
+        
+        // Get the latest financial record if available
+        let latestFinancial = null;
+        if (studentData.financials && studentData.financials.length > 0) {
+          latestFinancial = studentData.financials.sort((a: any, b: any) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )[0];
+        }
         
         // Format student data for the form
         setFormData({
@@ -144,14 +152,9 @@ export default function EditStudent() {
           room_id: studentData.room_id || '',
           is_active: studentData.is_active !== undefined ? studentData.is_active : true,
           
-          // Administrative Details
+          // Administrative Details - Remove financial fields from student data
           student_id: studentData.student_id || '',
           is_existing_student: studentData.is_existing_student || false,
-          admission_fee: studentData.admission_fee || '',
-          form_fee: studentData.form_fee || '',
-          security_deposit: studentData.security_deposit || '',
-          monthly_fee: studentData.monthly_fee || '',
-          joining_date: studentData.joining_date || '',
           
           // Verification Details
           declaration_agreed: studentData.declaration_agreed || false,
@@ -160,6 +163,15 @@ export default function EditStudent() {
           
           // Initialize amenities array
           amenities: []
+        });
+        
+        // Set financial data separately
+        setFinancialData({
+          admission_fee: latestFinancial?.admission_fee || studentData.admission_fee || '',
+          form_fee: latestFinancial?.form_fee || studentData.form_fee || '',
+          security_deposit: latestFinancial?.security_deposit || studentData.security_deposit || '',
+          monthly_fee: latestFinancial?.monthly_fee || studentData.monthly_fee || '',
+          joining_date: latestFinancial?.joining_date || studentData.joining_date || ''
         });
         
         // Set image previews if available
@@ -181,15 +193,6 @@ export default function EditStudent() {
           setExistingRegistrationDoc([{
             id: 1, // Using 1 as id since we don't have real IDs from the API
             image: studentData.registration_form_image,
-            is_primary: true
-          }]);
-        }
-        
-        // Set physical copy image if available
-        if (studentData.physical_copy_image) {
-          setExistingPhysicalCopyDoc([{
-            id: 1,
-            image: studentData.physical_copy_image,
             is_primary: true
           }]);
         }
@@ -409,19 +412,6 @@ export default function EditStudent() {
     return true;
   };
 
-  // Add physical copy documents
-  const addPhysicalCopyDocuments = (files: File[]) => {
-    const validFiles = files.filter(file => validatePhysicalCopyFile(file));
-    if (validFiles.length > 0) {
-      setPhysicalCopyDocuments(prev => [...prev, ...validFiles]);
-    }
-  };
-
-  // Remove physical copy document
-  const removePhysicalCopyImage = (index: number) => {
-    setPhysicalCopyDocuments(prev => prev.filter((_, i) => i !== index));
-  };
-
   // Handle amenity changes
   const handleAmenityChange = (index: number, field: keyof StudentAmenity, value: string) => {
     const updatedAmenities = [...amenities];
@@ -430,14 +420,6 @@ export default function EditStudent() {
       [field]: value
     };
     setAmenities(updatedAmenities);
-    
-    // Clear amenities error
-    if (errors.amenities) {
-      setErrors(prev => ({
-        ...prev,
-        amenities: ''
-      }));
-    }
   };
 
   // Add new amenity field
@@ -447,11 +429,20 @@ export default function EditStudent() {
 
   // Remove amenity field
   const removeAmenity = (index: number) => {
-    if (amenities.length > 1) {
-      const updatedAmenities = [...amenities];
-      updatedAmenities.splice(index, 1);
-      setAmenities(updatedAmenities);
+    const amenityToRemove = amenities[index];
+    
+    // If the amenity has an ID (existing amenity), track it for deletion
+    if (amenityToRemove.id) {
+      const amenityId = typeof amenityToRemove.id === 'string' ? parseInt(amenityToRemove.id) : amenityToRemove.id;
+      if (!isNaN(amenityId)) {
+        setRemovedAmenityIds(prev => [...prev, amenityId]);
+      }
     }
+    
+    // Remove from local state
+    const updatedAmenities = [...amenities];
+    updatedAmenities.splice(index, 1);
+    setAmenities(updatedAmenities);
   };
 
   // Form validation
@@ -473,23 +464,6 @@ export default function EditStudent() {
     } else if (!/^\d{10}$/.test(formData.contact_number.trim())) {
       newErrors.contact_number = 'Please enter a valid 10-digit phone number';
     }
-    
-    // Validate financial fields (optional but must be numeric if provided)
-    if (formData.admission_fee && !/^\d+(\.\d{1,2})?$/.test(formData.admission_fee)) {
-      newErrors.admission_fee = 'Please enter a valid amount';
-    }
-    
-    if (formData.form_fee && !/^\d+(\.\d{1,2})?$/.test(formData.form_fee)) {
-      newErrors.form_fee = 'Please enter a valid amount';
-    }
-    
-    if (formData.security_deposit && !/^\d+(\.\d{1,2})?$/.test(formData.security_deposit)) {
-      newErrors.security_deposit = 'Please enter a valid amount';
-    }
-    
-    if (formData.monthly_fee && !/^\d+(\.\d{1,2})?$/.test(formData.monthly_fee)) {
-      newErrors.monthly_fee = 'Please enter a valid amount';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -510,20 +484,57 @@ export default function EditStudent() {
     const filteredAmenities = amenities.filter(item => item.name.trim() !== '');
 
     try {
-      // Prepare the form data with all files
+      // Prepare the form data with all files (excluding monthly_fee)
       const studentFormData = {
         ...formData,
         amenities: filteredAmenities,
+        removedAmenityIds: removedAmenityIds,
+        removedCitizenshipDocIds: removedCitizenshipDocIds,
+        removedRegistrationDocIds: removedRegistrationDocIds,
         student_image: studentImage,
         // For now, we use the first file of multiple uploads as the API only accepts one file
         // In the future, the API could be updated to handle multiple files
         student_citizenship_image: citizenshipDocuments.length > 0 ? citizenshipDocuments[0] : null,
         registration_form_image: registrationFormDocuments.length > 0 ? registrationFormDocuments[0] : null,
-        physical_copy_image: physicalCopyDocuments.length > 0 ? physicalCopyDocuments[0] : null
       };
       
-      // Submit form data
+      // Debug logging
+      console.log('Registration form documents count:', registrationFormDocuments.length);
+      console.log('Registration form document:', registrationFormDocuments.length > 0 ? registrationFormDocuments[0] : 'None');
+      console.log('Removed registration doc IDs:', removedRegistrationDocIds);
+      
+      // Submit student form data (without financial fields)
       await studentApi.updateStudent(id, studentFormData);
+
+      // Handle financial data separately if monthly_fee was changed
+      if (financialData.monthly_fee) {
+        // Get the student's latest financial record to update
+        const studentData = await studentApi.getStudent(id);
+        if (studentData.financials && studentData.financials.length > 0) {
+          // Update the latest financial record
+          const latestFinancial = studentData.financials.sort((a: any, b: any) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )[0];
+          
+          if (latestFinancial.id) {
+            await studentFinancialApi.updateStudentFinancial(latestFinancial.id, {
+              monthly_fee: financialData.monthly_fee,
+              // Keep existing values for required fields
+              admission_fee: latestFinancial.admission_fee,
+              form_fee: latestFinancial.form_fee,
+              security_deposit: latestFinancial.security_deposit,
+            });
+          }
+        } else {
+          // Create new financial record if none exists
+          await studentFinancialApi.createStudentFinancial({
+            student_id: id,
+            monthly_fee: financialData.monthly_fee,
+            payment_date: new Date().toISOString().split('T')[0],
+            amount: financialData.monthly_fee || '0'
+          });
+        }
+      }
 
       // Redirect to student details page on success
       router.push(`/admin/student/${id}`);
@@ -638,6 +649,7 @@ export default function EditStudent() {
                   value={formData.date_of_birth || ''}
                   onChange={handleInputChange}
                   error={errors.date_of_birth}
+                  placeholder="YYYY-MM-DD"
                 />
                 
                 {/* Blood Group */}
@@ -661,34 +673,27 @@ export default function EditStudent() {
                 />
 
                 {/* Room Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Room</label>
-                  <select
-                    name="room_id"
-                    value={formData.room_id || ''}
-                    onChange={handleInputChange}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                  >
-                    <option value="">Select Room</option>
-                    {rooms.map((room) => (
-                      <option key={room.id} value={room.id}>
-                        {room.room_name} - {room.block?.block_name || ''} ({room.room_type})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <FormField
+                  name="room_id"
+                  label="Room"
+                  type="select"
+                  value={formData.room_id || ''}
+                  onChange={handleInputChange}
+                  error={errors.room_id}
+                  options={rooms.map(room => ({ value: room.id, label: room.room_name }))}
+                />
                 
                 {/* Active Status */}
-                <div className="flex items-center space-x-2 mt-8">
+                <div className="flex items-center mt-4">
                   <input
                     id="is_active"
                     name="is_active"
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     checked={formData.is_active || false}
                     onChange={handleInputChange}
                   />
-                  <label htmlFor="is_active" className="text-sm text-gray-700">Active Student</label>
+                  <label htmlFor="is_active" className="ml-2 text-sm font-semibold text-neutral-900">Active Student</label>
                 </div>
               </div>
             </div>
@@ -754,23 +759,14 @@ export default function EditStudent() {
                 />
                 
                 {/* Date of Issue */}
-                <div className="form-field">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date of Issue
-                  </label>
-                  <input
-                    type="date"
-                    name="date_of_issue"
-                    value={formData.date_of_issue || ''}
-                    onChange={handleInputChange}
-                    className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${
-                      errors.date_of_issue ? 'border-red-300' : ''
-                    }`}
-                  />
-                  {errors.date_of_issue && (
-                    <p className="mt-1 text-sm text-red-600">{errors.date_of_issue}</p>
-                  )}
-                </div>
+                <FormField
+                  name="date_of_issue"
+                  label="Date of Issue"
+                  type="date"
+                  value={formData.date_of_issue || ''}
+                  onChange={handleInputChange}
+                  error={errors.date_of_issue}
+                />
                 
                 {/* Citizenship Issued District */}
                 <FormField
@@ -834,26 +830,6 @@ export default function EditStudent() {
             <div className="mb-8 border-t border-gray-200 pt-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Health Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Blood Group */}
-                <FormField
-                  name="blood_group"
-                  label="Blood Group"
-                  type="select"
-                  value={formData.blood_group || ''}
-                  onChange={handleInputChange}
-                  error={errors.blood_group}
-                  options={[
-                    { value: 'A+', label: 'A+' },
-                    { value: 'A-', label: 'A-' },
-                    { value: 'B+', label: 'B+' },
-                    { value: 'B-', label: 'B-' },
-                    { value: 'AB+', label: 'AB+' },
-                    { value: 'AB-', label: 'AB-' },
-                    { value: 'O+', label: 'O+' },
-                    { value: 'O-', label: 'O-' },
-                  ]}
-                />
-                
                 {/* Food Preference */}
                 <FormField
                   name="food"
@@ -1037,7 +1013,6 @@ export default function EditStudent() {
               
               {/* Student Photo */}
               <div className="mb-6">
-                <h3 className="text-md font-medium text-gray-800 mb-3">Student Photo</h3>
                 <div className="w-full">
                   <SingleImageUploadEdit
                     imagePreview={imagePreview}
@@ -1140,21 +1115,15 @@ export default function EditStudent() {
                     <input
                       type="text"
                       name="admission_fee"
-                      value={formData.admission_fee || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 focus:border-neutral-400 focus:ring-0 outline-none transition-all duration-200"
+                      value={financialData.admission_fee || ''}
+                      disabled
+                      className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-400 bg-neutral-50 cursor-not-allowed"
+                      title="Financial data is managed separately. Contact administrator to modify."
                     />
                   </div>
-                  {errors.admission_fee && (
-                    <div className="flex items-center mt-1.5 text-xs text-red-600">
-                      <svg className="h-3.5 w-3.5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
-                        <path d="M12 8V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                        <circle cx="12" cy="16" r="0.5" stroke="currentColor" strokeLinecap="round"/>
-                      </svg>
-                      {errors.admission_fee}
-                    </div>
-                  )}
+                  <div className="text-xs text-neutral-500 mt-1">
+                    Financial data is read-only. Contact administrator to modify.
+                  </div>
                 </div>
                 
                 {/* Form Fee */}
@@ -1165,21 +1134,15 @@ export default function EditStudent() {
                     <input
                       type="text"
                       name="form_fee"
-                      value={formData.form_fee || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 focus:border-neutral-400 focus:ring-0 outline-none transition-all duration-200"
+                      value={financialData.form_fee || ''}
+                      disabled
+                      className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-400 bg-neutral-50 cursor-not-allowed"
+                      title="Financial data is managed separately. Contact administrator to modify."
                     />
                   </div>
-                  {errors.form_fee && (
-                    <div className="flex items-center mt-1.5 text-xs text-red-600">
-                      <svg className="h-3.5 w-3.5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
-                        <path d="M12 8V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                        <circle cx="12" cy="16" r="0.5" stroke="currentColor" strokeLinecap="round"/>
-                      </svg>
-                      {errors.form_fee}
-                    </div>
-                  )}
+                  <div className="text-xs text-neutral-500 mt-1">
+                    Financial data is read-only. Contact administrator to modify.
+                  </div>
                 </div>
                 
                 {/* Security Deposit */}
@@ -1190,21 +1153,15 @@ export default function EditStudent() {
                     <input
                       type="text"
                       name="security_deposit"
-                      value={formData.security_deposit || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 focus:border-neutral-400 focus:ring-0 outline-none transition-all duration-200"
+                      value={financialData.security_deposit || ''}
+                      disabled
+                      className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-400 bg-neutral-50 cursor-not-allowed"
+                      title="Financial data is managed separately. Contact administrator to modify."
                     />
                   </div>
-                  {errors.security_deposit && (
-                    <div className="flex items-center mt-1.5 text-xs text-red-600">
-                      <svg className="h-3.5 w-3.5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
-                        <path d="M12 8V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                        <circle cx="12" cy="16" r="0.5" stroke="currentColor" strokeLinecap="round"/>
-                      </svg>
-                      {errors.security_deposit}
-                    </div>
-                  )}
+                  <div className="text-xs text-neutral-500 mt-1">
+                    Financial data is read-only. Contact administrator to modify.
+                  </div>
                 </div>
                 
                 {/* Monthly Hostel Fee */}
@@ -1215,58 +1172,36 @@ export default function EditStudent() {
                     <input
                       type="text"
                       name="monthly_fee"
-                      value={formData.monthly_fee || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 focus:border-neutral-400 focus:ring-0 outline-none transition-all duration-200"
+                      value={financialData.monthly_fee || ''}
+                      onChange={(e) => setFinancialData(prev => ({ ...prev, monthly_fee: e.target.value }))}
+                      className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter monthly fee amount"
                     />
                   </div>
                   {errors.monthly_fee && (
-                    <div className="flex items-center mt-1.5 text-xs text-red-600">
-                      <svg className="h-3.5 w-3.5 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
-                        <path d="M12 8V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                        <circle cx="12" cy="16" r="0.5" stroke="currentColor" strokeLinecap="round"/>
-                      </svg>
+                    <div className="text-xs text-red-500 mt-1">
                       {errors.monthly_fee}
                     </div>
                   )}
                 </div>
               </div>
               
-              {/* Physical Copy Image */}
-              <div className="mt-4">
-                <h3 className="text-md font-medium text-gray-800 mb-3">Physical Copy Image (Optional)</h3>
-                <div className="w-full">
-                  <MultipleImageUploadEdit
-                    images={physicalCopyDocuments}
-                    existingImages={existingPhysicalCopyDoc}
-                    removedImageIds={removedPhysicalCopyDocIds}
-                    onAddImages={addPhysicalCopyDocuments}
-                    onRemoveImage={removePhysicalCopyImage}
-                    onRemoveExistingImage={(id) => {
-                      setRemovedPhysicalCopyDocIds(prev => [...prev, id]);
-                      setExistingPhysicalCopyDoc(prev => prev.filter(img => img.id !== id));
-                    }}
-                    error={errors.physical_copy_images}
-                    label="Upload Document"
-                    onImageClick={(imageUrl, alt) => {
-                      setSelectedImage({ url: imageUrl, alt });
-                      setImageModalOpen(true);
-                    }}
-                  />
-                </div>
-              </div>
-              
               {/* Joining Date */}
               <div className="mt-4">
-                <FormField
-                  name="joining_date"
-                  label="Joining Date"
-                  type="date"
-                  value={formData.joining_date || ''}
-                  onChange={handleInputChange}
-                  error={errors.joining_date}
-                />
+                <div className="form-field">
+                  <label className="block text-sm font-semibold text-neutral-900">Joining Date</label>
+                  <input
+                    type="date"
+                    name="joining_date"
+                    value={financialData.joining_date || ''}
+                    disabled
+                    className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-400 bg-neutral-50 cursor-not-allowed"
+                    title="Financial data is managed separately. Contact administrator to modify."
+                  />
+                  <div className="text-xs text-neutral-500 mt-1">
+                    Financial data is read-only. Contact administrator to modify.
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1330,45 +1265,44 @@ export default function EditStudent() {
                 </Button>
               </div>
               
-              {errors.amenities && (
-                <p className="text-red-600 text-sm mb-2">{errors.amenities}</p>
-              )}
-              
               <div className="space-y-4">
-                {amenities.map((amenity, index) => (
-                  <div key={index} className="flex space-x-4 items-start">
-                    <div className="flex-1">
-                      <FormField
-                        name={`amenity_name_${index}`}
-                        label={`Amenity ${index + 1} Name`}
-                        placeholder="Enter amenity name"
-                        value={amenity.name || ''}
-                        onChange={(e) => handleAmenityChange(index, 'name', e.target.value)}
-                      />
+                {amenities.length > 0 ? (
+                  amenities.map((amenity, index) => (
+                    <div key={index} className="flex space-x-4 items-start">
+                      <div className="flex-1">
+                        <FormField
+                          name={`amenity_name_${index}`}
+                          label={`Amenity ${index + 1} Name`}
+                          placeholder="Enter amenity name"
+                          value={amenity.name || ''}
+                          onChange={(e) => handleAmenityChange(index, 'name', e.target.value)}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <FormField
+                          name={`amenity_description_${index}`}
+                          label="Description (Optional)"
+                          placeholder="Enter description"
+                          value={amenity.description || ''}
+                          onChange={(e) => handleAmenityChange(index, 'description', e.target.value)}
+                        />
+                      </div>
+                      <div className="pt-8">
+                        <button
+                          type="button"
+                          onClick={() => removeAmenity(index)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <FormField
-                        name={`amenity_description_${index}`}
-                        label="Description (Optional)"
-                        placeholder="Enter description"
-                        value={amenity.description || ''}
-                        onChange={(e) => handleAmenityChange(index, 'description', e.target.value)}
-                      />
-                    </div>
-                    <div className="pt-8">
-                      <button
-                        type="button"
-                        onClick={() => removeAmenity(index)}
-                        className="text-red-600 hover:text-red-800"
-                        disabled={amenities.length === 1}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-sm italic">No amenities added. Click "Add Amenity" to add student amenities.</p>
+                )}
               </div>
             </div>
           </div>
