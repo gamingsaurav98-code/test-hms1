@@ -206,7 +206,6 @@ class StudentSeeder extends Seeder
                 'remark' => $faker->optional(0.6)->sentence(),
                 'payment_type_id' => $faker->optional(0.8)->numberBetween(1, 5), // Assuming payment types exist
                 'joining_date' => $joiningDate->format('Y-m-d'),
-                'physical_copy_image' => $faker->optional(0.5)->imageUrl(800, 600, 'business'),
                 'created_at' => $joiningDate,
                 'updated_at' => now(),
             ];

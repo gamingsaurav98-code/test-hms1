@@ -22,9 +22,10 @@ class DatabaseSeeder extends Seeder
 
         // Call the seeders in correct order
         $this->call([
-            BlockSeeder::class,      // Create blocks first
-            RoomSeeder::class,       // Then create rooms
-            StudentSeeder::class,    // Finally create students
+            BlockSeeder::class,         // Create blocks first
+            RoomSeeder::class,          // Then create rooms
+            StudentSeeder::class,       // Create students
+            CompleteStaffSeeder::class, // Create staff members
         ]);
     }
 }

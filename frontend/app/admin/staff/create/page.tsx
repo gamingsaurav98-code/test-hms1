@@ -2,10 +2,18 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { AlertCircle } from 'lucide-react';
 import { staffApi, type StaffFormData, type StaffAmenity } from '@/lib/api/staff.api';
 import { ApiError } from '@/lib/api/core';
-import { Button, FormField, CancelButton, SubmitButton, ImageModal } from '@/components/ui';
-import { AlertCircle } from 'lucide-react';
+import { 
+  Button, 
+  FormField, 
+  SubmitButton, 
+  CancelButton, 
+  SingleImageUploadCreate,
+  MultipleImageUploadCreate,
+  ImageModal
+} from '@/components/ui';
 
 export default function CreateStaff() {
   const router = useRouter();
@@ -124,48 +132,53 @@ export default function CreateStaff() {
       staff_image: file
     }));
 
-    // Create preview
+    // Create preview for images
     const reader = new FileReader();
     reader.onload = (e) => {
       setImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
 
-    // Clear any existing error
-    setErrors(prev => ({
-      ...prev,
-      staff_image: ''
-    }));
-  };
-
-  // Handle image file selection
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      processFile(file);
+    // Clear file error
+    if (errors.staff_image) {
+      setErrors(prev => ({
+        ...prev,
+        staff_image: ''
+      }));
     }
   };
 
-  // Validate citizenship file
+  // Remove staff image
+  const removeImage = () => {
+    setFormData(prev => ({
+      ...prev,
+      staff_image: null
+    }));
+    setImagePreview(null);
+  };
+
+  // Validate citizenship document file
   const validateCitizenshipFile = (file: File): boolean => {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
       setErrors(prev => ({
         ...prev,
-        staff_citizenship_image: 'Please select a valid image file (JPG, JPEG, PNG)'
+        staff_citizenship_image: 'Please select a valid file (JPG, JPEG, PNG, PDF)'
       }));
       return false;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
       setErrors(prev => ({
         ...prev,
-        staff_citizenship_image: 'File size must be less than 2MB'
+        staff_citizenship_image: 'File size must be less than 5MB'
       }));
       return false;
     }
 
-    // Clear citizenship error
+    // Clear file error
     if (errors.staff_citizenship_image) {
       setErrors(prev => ({
         ...prev,
@@ -184,31 +197,33 @@ export default function CreateStaff() {
     }
   };
 
-  // Remove citizenship image
+  // Remove citizenship document
   const removeCitizenshipImage = (index: number) => {
     setCitizenshipDocuments(prev => prev.filter((_, i) => i !== index));
   };
-
-  // Validate contract file
+  
+  // Validate contract form file
   const validateContractFile = (file: File): boolean => {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
       setErrors(prev => ({
         ...prev,
-        staff_contract_image: 'Please select a valid image file (JPG, JPEG, PNG)'
+        staff_contract_image: 'Please select a valid file (JPG, JPEG, PNG, PDF)'
       }));
       return false;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
       setErrors(prev => ({
         ...prev,
-        staff_contract_image: 'File size must be less than 2MB'
+        staff_contract_image: 'File size must be less than 5MB'
       }));
       return false;
     }
 
-    // Clear contract error
+    // Clear file error
     if (errors.staff_contract_image) {
       setErrors(prev => ({
         ...prev,
@@ -227,7 +242,7 @@ export default function CreateStaff() {
     }
   };
 
-  // Remove contract image
+  // Remove contract document
   const removeContractImage = (index: number) => {
     setContractDocuments(prev => prev.filter((_, i) => i !== index));
   };
@@ -363,7 +378,7 @@ export default function CreateStaff() {
         )}
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <form onSubmit={handleSubmit} className="p-4">
+          <form onSubmit={handleSubmit}>
           <div className="p-6">
             {/* Basic Information */}
             <div className="mb-8">
@@ -423,7 +438,6 @@ export default function CreateStaff() {
                   onChange={handleInputChange}
                   error={errors.blood_group}
                   options={[
-                    { value: '', label: 'Select Blood Group' },
                     { value: 'A+', label: 'A+' },
                     { value: 'A-', label: 'A-' },
                     { value: 'B+', label: 'B+' },
@@ -434,38 +448,6 @@ export default function CreateStaff() {
                     { value: 'O-', label: 'O-' }
                   ]}
                 />
-
-                {/* Staff Photo Upload */}
-                <div className="form-field">
-                  <label className="block text-sm font-semibold text-neutral-900 mb-2">
-                    Staff Photo
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {errors.staff_image && (
-                    <div className="flex items-center mt-1.5 text-xs text-red-600">
-                      <AlertCircle className="h-3.5 w-3.5 mr-2" />
-                      {errors.staff_image}
-                    </div>
-                  )}
-                  {imagePreview && (
-                    <div className="mt-2">
-                      <img
-                        src={imagePreview}
-                        alt="Staff Preview"
-                        className="h-20 w-20 object-cover rounded-lg border border-gray-200 cursor-pointer"
-                        onClick={() => {
-                          setSelectedImage({ url: imagePreview, alt: 'Staff Photo Preview' });
-                          setImageModalOpen(true);
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
 
                 {/* Active Status */}
                 <div className="flex items-center mt-4">
@@ -482,9 +464,357 @@ export default function CreateStaff() {
               </div>
             </div>
 
-            {/* Job Information */}
+            {/* Address Information */}
             <div className="mb-8 border-t border-gray-200 pt-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Job Information</h2>
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Address Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* District */}
+                <FormField
+                  name="district"
+                  label="District"
+                  value={formData.district || ''}
+                  onChange={handleInputChange}
+                  error={errors.district}
+                  placeholder="Enter district name"
+                />
+                
+                {/* City Name */}
+                <FormField
+                  name="city_name"
+                  label="City"
+                  value={formData.city_name || ''}
+                  onChange={handleInputChange}
+                  error={errors.city_name}
+                  placeholder="Enter city name"
+                />
+                
+                {/* Ward No */}
+                <FormField
+                  name="ward_no"
+                  label="Ward Number"
+                  value={formData.ward_no || ''}
+                  onChange={handleInputChange}
+                  error={errors.ward_no}
+                  placeholder="Enter ward number"
+                />
+                
+                {/* Street Name */}
+                <FormField
+                  name="street_name"
+                  label="Street Name"
+                  value={formData.street_name || ''}
+                  onChange={handleInputChange}
+                  error={errors.street_name}
+                  placeholder="Enter street name"
+                />
+              </div>
+            </div>
+
+            {/* Citizenship Information */}
+            <div className="mb-8 border-t border-gray-200 pt-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Citizenship Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Citizenship No */}
+                <FormField
+                  name="citizenship_no"
+                  label="Citizenship Number"
+                  value={formData.citizenship_no || ''}
+                  onChange={handleInputChange}
+                  error={errors.citizenship_no}
+                  placeholder="Enter citizenship number"
+                />
+                
+                {/* Date of Issue */}
+                <FormField
+                  name="date_of_issue"
+                  label="Date of Issue"
+                  type="date"
+                  value={formData.date_of_issue || ''}
+                  onChange={handleInputChange}
+                  error={errors.date_of_issue}
+                />
+                
+                {/* Citizenship Issued District */}
+                <FormField
+                  name="citizenship_issued_district"
+                  label="Issued District"
+                  value={formData.citizenship_issued_district || ''}
+                  onChange={handleInputChange}
+                  error={errors.citizenship_issued_district}
+                  placeholder="Enter district where citizenship was issued"
+                />
+              </div>
+            </div>
+
+            {/* Educational Information */}
+            <div className="mb-8 border-t border-gray-200 pt-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Educational Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Educational Institution */}
+                <FormField
+                  name="educational_institution"
+                  label="Educational Institution"
+                  value={formData.educational_institution || ''}
+                  onChange={handleInputChange}
+                  error={errors.educational_institution}
+                  placeholder="Enter school/college name"
+                />
+                
+                {/* Level of Study */}
+                <FormField
+                  name="level_of_study"
+                  label="Level of Study"
+                  value={formData.level_of_study || ''}
+                  onChange={handleInputChange}
+                  error={errors.level_of_study}
+                  placeholder="e.g., Bachelors, Masters"
+                />
+              </div>
+            </div>
+
+            {/* Health Information */}
+            <div className="mb-8 border-t border-gray-200 pt-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Health Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Food Preference */}
+                <FormField
+                  name="food"
+                  label="Food Preference"
+                  type="select"
+                  value={formData.food || ''}
+                  onChange={handleInputChange}
+                  error={errors.food}
+                  options={[
+                    { value: 'vegetarian', label: 'Vegetarian' },
+                    { value: 'non-vegetarian', label: 'Non-vegetarian' },
+                    { value: 'egg-only', label: 'Egg Only' }
+                  ]}
+                />
+                
+                {/* Disease/Health Issues */}
+                <div className="md:col-span-2">
+                  <FormField
+                    name="disease"
+                    label="Disease or Health Issues (if any)"
+                    type="textarea"
+                    value={formData.disease || ''}
+                    onChange={handleInputChange}
+                    error={errors.disease}
+                    placeholder="Enter any health conditions or allergies"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Family Information */}
+            <div className="mb-8 border-t border-gray-200 pt-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Family Information</h2>
+              <div className="grid grid-cols-1 gap-4">
+                {/* Father's Information */}
+                <div className="border-b border-gray-100 pb-4">
+                  <h3 className="text-md font-medium text-gray-800 mb-3">Father's Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      name="father_name"
+                      label="Father's Name"
+                      value={formData.father_name || ''}
+                      onChange={handleInputChange}
+                      error={errors.father_name}
+                      placeholder="Enter father's name"
+                    />
+                    <FormField
+                      name="father_contact"
+                      label="Father's Contact"
+                      value={formData.father_contact || ''}
+                      onChange={handleInputChange}
+                      error={errors.father_contact}
+                      placeholder="Enter father's phone number"
+                    />
+                    <FormField
+                      name="father_occupation"
+                      label="Father's Occupation"
+                      value={formData.father_occupation || ''}
+                      onChange={handleInputChange}
+                      error={errors.father_occupation}
+                      placeholder="Enter father's occupation"
+                    />
+                  </div>
+                </div>
+
+                {/* Mother's Information */}
+                <div className="border-b border-gray-100 py-4">
+                  <h3 className="text-md font-medium text-gray-800 mb-3">Mother's Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      name="mother_name"
+                      label="Mother's Name"
+                      value={formData.mother_name || ''}
+                      onChange={handleInputChange}
+                      error={errors.mother_name}
+                      placeholder="Enter mother's name"
+                    />
+                    <FormField
+                      name="mother_contact"
+                      label="Mother's Contact"
+                      value={formData.mother_contact || ''}
+                      onChange={handleInputChange}
+                      error={errors.mother_contact}
+                      placeholder="Enter mother's phone number"
+                    />
+                    <FormField
+                      name="mother_occupation"
+                      label="Mother's Occupation"
+                      value={formData.mother_occupation || ''}
+                      onChange={handleInputChange}
+                      error={errors.mother_occupation}
+                      placeholder="Enter mother's occupation"
+                    />
+                  </div>
+                </div>
+
+                {/* Spouse's Information */}
+                <div className="py-4">
+                  <h3 className="text-md font-medium text-gray-800 mb-3">Spouse's Details (if applicable)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      name="spouse_name"
+                      label="Spouse's Name"
+                      value={formData.spouse_name || ''}
+                      onChange={handleInputChange}
+                      error={errors.spouse_name}
+                      placeholder="Enter spouse's name"
+                    />
+                    <FormField
+                      name="spouse_contact"
+                      label="Spouse's Contact"
+                      value={formData.spouse_contact || ''}
+                      onChange={handleInputChange}
+                      error={errors.spouse_contact}
+                      placeholder="Enter spouse's phone number"
+                    />
+                    <FormField
+                      name="spouse_occupation"
+                      label="Spouse's Occupation"
+                      value={formData.spouse_occupation || ''}
+                      onChange={handleInputChange}
+                      error={errors.spouse_occupation}
+                      placeholder="Enter spouse's occupation"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Guardian Information */}
+            <div className="mb-8 border-t border-gray-200 pt-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Local Guardian Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  name="local_guardian_name"
+                  label="Guardian's Name"
+                  value={formData.local_guardian_name || ''}
+                  onChange={handleInputChange}
+                  error={errors.local_guardian_name}
+                  placeholder="Enter local guardian's name"
+                />
+                <FormField
+                  name="local_guardian_relation"
+                  label="Relation with Staff"
+                  value={formData.local_guardian_relation || ''}
+                  onChange={handleInputChange}
+                  error={errors.local_guardian_relation}
+                  placeholder="e.g., Uncle, Aunt"
+                />
+                <FormField
+                  name="local_guardian_contact"
+                  label="Guardian's Contact"
+                  value={formData.local_guardian_contact || ''}
+                  onChange={handleInputChange}
+                  error={errors.local_guardian_contact}
+                  placeholder="Enter guardian's phone number"
+                />
+                <FormField
+                  name="local_guardian_occupation"
+                  label="Guardian's Occupation"
+                  value={formData.local_guardian_occupation || ''}
+                  onChange={handleInputChange}
+                  error={errors.local_guardian_occupation}
+                  placeholder="Enter guardian's occupation"
+                />
+                <FormField
+                  name="local_guardian_address"
+                  label="Guardian's Address"
+                  value={formData.local_guardian_address || ''}
+                  onChange={handleInputChange}
+                  error={errors.local_guardian_address}
+                  placeholder="Enter guardian's address"
+                />
+              </div>
+            </div>
+
+            {/* Document Uploads */}
+            <div className="mb-8 border-t border-gray-200 pt-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Document Uploads</h2>
+              
+              {/* Staff Photo */}
+              <div className="mb-6">
+                <h3 className="text-md font-medium text-gray-800 mb-3">Staff Photo</h3>
+                <div className="w-full">
+                  <SingleImageUploadCreate
+                    imagePreview={imagePreview}
+                    onFileSelect={processFile}
+                    onRemove={removeImage}
+                    error={errors.staff_image}
+                    label="Staff Photo"
+                    onImageClick={(imageUrl, alt) => {
+                      setSelectedImage({ url: imageUrl, alt });
+                      setImageModalOpen(true);
+                    }}
+                  />
+                </div>
+              </div>
+              
+              {/* Citizenship Documents */}
+              <div className="mb-6 pt-4">
+                <h3 className="text-md font-medium text-gray-800 mb-3">Citizenship Documents</h3>
+                <div className="w-full">
+                  <MultipleImageUploadCreate
+                    images={citizenshipDocuments}
+                    onAddImages={addCitizenshipDocuments}
+                    onRemoveImage={removeCitizenshipImage}
+                    error={errors.staff_citizenship_image}
+                    label="Citizenship Documents"
+                    onImageClick={(imageUrl, alt) => {
+                      setSelectedImage({ url: imageUrl, alt });
+                      setImageModalOpen(true);
+                    }}
+                  />
+                </div>
+              </div>
+              
+              {/* Contract Documents */}
+              <div className="pt-4">
+                <h3 className="text-md font-medium text-gray-800 mb-3">Contract Documents</h3>
+                <div className="w-full">
+                  <MultipleImageUploadCreate
+                    images={contractDocuments}
+                    onAddImages={addContractDocuments}
+                    onRemoveImage={removeContractImage}
+                    error={errors.staff_contract_image}
+                    label="Contract Documents"
+                    onImageClick={(imageUrl, alt) => {
+                      setSelectedImage({ url: imageUrl, alt });
+                      setImageModalOpen(true);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Administrative Details */}
+            <div className="mb-8 border-t border-gray-200 pt-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Administrative Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Staff ID */}
                 <FormField
@@ -493,7 +823,6 @@ export default function CreateStaff() {
                   value={formData.staff_id || ''}
                   onChange={handleInputChange}
                   error={errors.staff_id}
-                  placeholder="Enter staff ID"
                 />
                 
                 {/* Position */}
@@ -555,389 +884,7 @@ export default function CreateStaff() {
               </div>
             </div>
 
-            {/* Address Information */}
-            <div className="mb-8 border-t border-gray-200 pt-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Address Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* District */}
-                <FormField
-                  name="district"
-                  label="District"
-                  value={formData.district || ''}
-                  onChange={handleInputChange}
-                  error={errors.district}
-                  placeholder="Enter district"
-                />
-                
-                {/* City */}
-                <FormField
-                  name="city_name"
-                  label="City"
-                  value={formData.city_name || ''}
-                  onChange={handleInputChange}
-                  error={errors.city_name}
-                  placeholder="Enter city name"
-                />
-                
-                {/* Ward No */}
-                <FormField
-                  name="ward_no"
-                  label="Ward No."
-                  value={formData.ward_no || ''}
-                  onChange={handleInputChange}
-                  error={errors.ward_no}
-                  placeholder="Enter ward number"
-                />
-                
-                {/* Street Name */}
-                <FormField
-                  name="street_name"
-                  label="Street Name"
-                  value={formData.street_name || ''}
-                  onChange={handleInputChange}
-                  error={errors.street_name}
-                  placeholder="Enter street name"
-                />
-              </div>
-            </div>
-
-            {/* Citizenship Information */}
-            <div className="mb-8 border-t border-gray-200 pt-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Citizenship Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Citizenship Number */}
-                <FormField
-                  name="citizenship_no"
-                  label="Citizenship Number"
-                  value={formData.citizenship_no || ''}
-                  onChange={handleInputChange}
-                  error={errors.citizenship_no}
-                  placeholder="Enter citizenship number"
-                />
-                
-                {/* Date of Issue */}
-                <FormField
-                  name="date_of_issue"
-                  label="Date of Issue"
-                  type="date"
-                  value={formData.date_of_issue || ''}
-                  onChange={handleInputChange}
-                  error={errors.date_of_issue}
-                />
-                
-                {/* Issued District */}
-                <FormField
-                  name="citizenship_issued_district"
-                  label="Issued District"
-                  value={formData.citizenship_issued_district || ''}
-                  onChange={handleInputChange}
-                  error={errors.citizenship_issued_district}
-                  placeholder="Enter district where citizenship was issued"
-                />
-              </div>
-            </div>
-
-            {/* Education Information */}
-            <div className="mb-8 border-t border-gray-200 pt-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Education Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Educational Institution */}
-                <FormField
-                  name="educational_institution"
-                  label="Educational Institution"
-                  value={formData.educational_institution || ''}
-                  onChange={handleInputChange}
-                  error={errors.educational_institution}
-                  placeholder="e.g., Tribhuvan University"
-                />
-                
-                {/* Level of Study */}
-                <FormField
-                  name="level_of_study"
-                  label="Level of Study"
-                  value={formData.level_of_study || ''}
-                  onChange={handleInputChange}
-                  error={errors.level_of_study}
-                  placeholder="e.g., Bachelors, Masters"
-                />
-              </div>
-            </div>
-
-            {/* Health Information */}
-            <div className="mb-8 border-t border-gray-200 pt-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Health Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Food Preference */}
-                <FormField
-                  name="food"
-                  label="Food Preference"
-                  type="select"
-                  value={formData.food || ''}
-                  onChange={handleInputChange}
-                  error={errors.food}
-                  options={[
-                    { value: 'vegetarian', label: 'Vegetarian' },
-                    { value: 'non-vegetarian', label: 'Non-vegetarian' },
-                    { value: 'egg-only', label: 'Egg Only' }
-                  ]}
-                />
-                
-                {/* Disease/Health Issues */}
-                <div className="md:col-span-2">
-                  <FormField
-                    name="disease"
-                    label="Disease or Health Issues (if any)"
-                    type="textarea"
-                    value={formData.disease || ''}
-                    onChange={handleInputChange}
-                    error={errors.disease}
-                    placeholder="Enter any health conditions or allergies"
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Family Information */}
-            <div className="mb-8 border-t border-gray-200 pt-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Family Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Father's Information */}
-                <FormField
-                  name="father_name"
-                  label="Father's Name"
-                  value={formData.father_name || ''}
-                  onChange={handleInputChange}
-                  error={errors.father_name}
-                  placeholder="Enter father's full name"
-                />
-                
-                <FormField
-                  name="father_contact"
-                  label="Father's Contact"
-                  value={formData.father_contact || ''}
-                  onChange={handleInputChange}
-                  error={errors.father_contact}
-                  placeholder="Enter father's phone number"
-                />
-                
-                <FormField
-                  name="father_occupation"
-                  label="Father's Occupation"
-                  value={formData.father_occupation || ''}
-                  onChange={handleInputChange}
-                  error={errors.father_occupation}
-                  placeholder="Enter father's occupation"
-                />
-
-                {/* Mother's Information */}
-                <FormField
-                  name="mother_name"
-                  label="Mother's Name"
-                  value={formData.mother_name || ''}
-                  onChange={handleInputChange}
-                  error={errors.mother_name}
-                  placeholder="Enter mother's full name"
-                />
-                
-                <FormField
-                  name="mother_contact"
-                  label="Mother's Contact"
-                  value={formData.mother_contact || ''}
-                  onChange={handleInputChange}
-                  error={errors.mother_contact}
-                  placeholder="Enter mother's phone number"
-                />
-                
-                <FormField
-                  name="mother_occupation"
-                  label="Mother's Occupation"
-                  value={formData.mother_occupation || ''}
-                  onChange={handleInputChange}
-                  error={errors.mother_occupation}
-                  placeholder="Enter mother's occupation"
-                />
-
-                {/* Spouse Information */}
-                <FormField
-                  name="spouse_name"
-                  label="Spouse's Name"
-                  value={formData.spouse_name || ''}
-                  onChange={handleInputChange}
-                  error={errors.spouse_name}
-                  placeholder="Enter spouse's full name (if applicable)"
-                />
-                
-                <FormField
-                  name="spouse_contact"
-                  label="Spouse's Contact"
-                  value={formData.spouse_contact || ''}
-                  onChange={handleInputChange}
-                  error={errors.spouse_contact}
-                  placeholder="Enter spouse's phone number"
-                />
-                
-                <FormField
-                  name="spouse_occupation"
-                  label="Spouse's Occupation"
-                  value={formData.spouse_occupation || ''}
-                  onChange={handleInputChange}
-                  error={errors.spouse_occupation}
-                  placeholder="Enter spouse's occupation"
-                />
-
-                {/* Local Guardian Information */}
-                <FormField
-                  name="local_guardian_name"
-                  label="Local Guardian's Name"
-                  value={formData.local_guardian_name || ''}
-                  onChange={handleInputChange}
-                  error={errors.local_guardian_name}
-                  placeholder="Enter local guardian's name"
-                />
-                
-                <FormField
-                  name="local_guardian_relation"
-                  label="Relation with Guardian"
-                  value={formData.local_guardian_relation || ''}
-                  onChange={handleInputChange}
-                  error={errors.local_guardian_relation}
-                  placeholder="e.g., Uncle, Friend, Colleague"
-                />
-                
-                <FormField
-                  name="local_guardian_contact"
-                  label="Local Guardian's Contact"
-                  value={formData.local_guardian_contact || ''}
-                  onChange={handleInputChange}
-                  error={errors.local_guardian_contact}
-                  placeholder="Enter guardian's phone number"
-                />
-                
-                <FormField
-                  name="local_guardian_occupation"
-                  label="Local Guardian's Occupation"
-                  value={formData.local_guardian_occupation || ''}
-                  onChange={handleInputChange}
-                  error={errors.local_guardian_occupation}
-                  placeholder="Enter guardian's occupation"
-                />
-                
-                <div className="md:col-span-2">
-                  <FormField
-                    name="local_guardian_address"
-                    label="Local Guardian's Address"
-                    type="textarea"
-                    value={formData.local_guardian_address || ''}
-                    onChange={handleInputChange}
-                    error={errors.local_guardian_address}
-                    placeholder="Enter complete address of local guardian"
-                    rows={2}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Document Uploads */}
-            <div className="mb-8 border-t border-gray-200 pt-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Document Uploads</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Citizenship Documents */}
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">Citizenship Documents</h3>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      addCitizenshipDocuments(files);
-                    }}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {errors.staff_citizenship_image && (
-                    <div className="flex items-center mt-1.5 text-xs text-red-600">
-                      <AlertCircle className="h-3.5 w-3.5 mr-2" />
-                      {errors.staff_citizenship_image}
-                    </div>
-                  )}
-                  
-                  {citizenshipDocuments.length > 0 && (
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      {citizenshipDocuments.map((file, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={`Citizenship ${index + 1}`}
-                            className="h-20 w-full object-cover rounded border cursor-pointer"
-                            onClick={() => {
-                              setSelectedImage({ url: URL.createObjectURL(file), alt: `Citizenship Document ${index + 1}` });
-                              setImageModalOpen(true);
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeCitizenshipImage(index)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Contract Documents */}
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">Contract Documents</h3>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      addContractDocuments(files);
-                    }}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  {errors.staff_contract_image && (
-                    <div className="flex items-center mt-1.5 text-xs text-red-600">
-                      <AlertCircle className="h-3.5 w-3.5 mr-2" />
-                      {errors.staff_contract_image}
-                    </div>
-                  )}
-                  
-                  {contractDocuments.length > 0 && (
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      {contractDocuments.map((file, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={`Contract ${index + 1}`}
-                            className="h-20 w-full object-cover rounded border cursor-pointer"
-                            onClick={() => {
-                              setSelectedImage({ url: URL.createObjectURL(file), alt: `Contract Document ${index + 1}` });
-                              setImageModalOpen(true);
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeContractImage(index)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Staff Amenities */}
+            {/* Amenities */}
             <div className="mb-8 border-t border-gray-200 pt-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-medium text-gray-900">Staff Amenities</h2>
@@ -967,22 +914,22 @@ export default function CreateStaff() {
                       <div className="flex-1">
                         <FormField
                           name={`amenity_description_${index}`}
-                          label={`Amenity ${index + 1} Description`}
-                          placeholder="Enter amenity description"
+                          label="Description (Optional)"
+                          placeholder="Enter description"
                           value={amenity.description || ''}
                           onChange={(e) => handleAmenityChange(index, 'description', e.target.value)}
                         />
                       </div>
-                      <div className="flex items-end">
-                        <Button
+                      <div className="pt-8">
+                        <button
                           type="button"
                           onClick={() => removeAmenity(index)}
-                          variant="secondary"
-                          size="sm"
-                          className="mb-2"
+                          className="text-red-600 hover:text-red-800"
                         >
-                          Remove
-                        </Button>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
                   ))
@@ -1007,7 +954,7 @@ export default function CreateStaff() {
                     onChange={handleInputChange}
                   />
                   <label htmlFor="declaration_agreed" className="ml-2 text-sm text-neutral-800">
-                    I declare that all information provided is correct and accurate.
+                    I hereby declare that all the information provided above is true and correct to the best of my knowledge.
                   </label>
                 </div>
                 

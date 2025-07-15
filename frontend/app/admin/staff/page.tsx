@@ -24,8 +24,6 @@ export default function StaffList() {
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('');
-  const [positionFilter, setPositionFilter] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -65,7 +63,7 @@ export default function StaffList() {
     fetchStaff();
   }, [currentPage]);
 
-  // Apply filters when searchTerm, statusFilter, departmentFilter, or positionFilter changes
+  // Apply filters when searchTerm or statusFilter changes
   useEffect(() => {
     if (!staff.length) return;
 
@@ -73,8 +71,6 @@ export default function StaffList() {
     
     console.log('Original staff:', staff.length);
     console.log('Status filter:', statusFilter);
-    console.log('Department filter:', departmentFilter);
-    console.log('Position filter:', positionFilter);
 
     // Filter by search term
     if (searchTerm) {
@@ -117,24 +113,10 @@ export default function StaffList() {
       
       console.log('Staff after status filtering:', result.length);
     }
-
-    // Filter by department
-    if (departmentFilter) {
-      result = result.filter(staffMember => 
-        staffMember.department && staffMember.department.toLowerCase() === departmentFilter.toLowerCase()
-      );
-    }
-
-    // Filter by position
-    if (positionFilter) {
-      result = result.filter(staffMember => 
-        staffMember.position && staffMember.position.toLowerCase() === positionFilter.toLowerCase()
-      );
-    }
     
     console.log('Filtered staff:', result.length);
     setFilteredStaff(result);
-  }, [searchTerm, statusFilter, departmentFilter, positionFilter, staff]);
+  }, [searchTerm, statusFilter, staff]);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -142,14 +124,6 @@ export default function StaffList() {
 
   const handleStatusFilterChange = (value: string) => {
     setStatusFilter(value);
-  };
-
-  const handleDepartmentFilterChange = (value: string) => {
-    setDepartmentFilter(value);
-  };
-
-  const handlePositionFilterChange = (value: string) => {
-    setPositionFilter(value);
   };
 
   const handlePageChange = (page: number) => {
@@ -200,26 +174,6 @@ export default function StaffList() {
         Inactive
       </span>
     );
-  };
-
-  // Get unique departments for filter
-  const getUniqueDepartments = () => {
-    const departments = staff
-      .map(s => s.department)
-      .filter(d => d && d.trim() !== '')
-      .filter((dept, index, arr) => arr.indexOf(dept) === index)
-      .sort();
-    return departments;
-  };
-
-  // Get unique positions for filter
-  const getUniquePositions = () => {
-    const positions = staff
-      .map(s => s.position)
-      .filter(p => p && p.trim() !== '')
-      .filter((pos, index, arr) => arr.indexOf(pos) === index)
-      .sort();
-    return positions;
   };
 
   if (isLoading) {
@@ -331,9 +285,9 @@ export default function StaffList() {
                 </div>
                 <div className="ml-4">
                   <p className="text-2xl font-semibold text-gray-900">
-                    {getUniqueDepartments().length}
+                    {staff.filter(s => s.position && s.position.trim() !== '').length}
                   </p>
-                  <p className="text-sm text-gray-500">Departments</p>
+                  <p className="text-sm text-gray-500">With Positions</p>
                 </div>
               </div>
             </div>
@@ -343,46 +297,22 @@ export default function StaffList() {
         {/* Search and Filter Bar */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="w-full md:w-1/3">
+            <div className="w-full md:w-1/2">
               <SearchBar
                 value={searchTerm}
                 onChange={handleSearch}
                 placeholder="Search by name, email, phone, ID, position, or department..."
               />
             </div>
-            <div className="w-full md:w-1/6">
+            <div className="w-full md:w-1/2 md:flex md:justify-end">
               <select
                 value={statusFilter}
                 onChange={(e) => handleStatusFilterChange(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-[#235999] focus:border-[#235999] outline-none transition-all duration-200"
+                className="w-full md:w-auto px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-[#235999] focus:border-[#235999] outline-none transition-all duration-200"
               >
                 <option value="">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
-              </select>
-            </div>
-            <div className="w-full md:w-1/6">
-              <select
-                value={departmentFilter}
-                onChange={(e) => handleDepartmentFilterChange(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-[#235999] focus:border-[#235999] outline-none transition-all duration-200"
-              >
-                <option value="">All Departments</option>
-                {getUniqueDepartments().map(dept => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
-            </div>
-            <div className="w-full md:w-1/6">
-              <select
-                value={positionFilter}
-                onChange={(e) => handlePositionFilterChange(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-[#235999] focus:border-[#235999] outline-none transition-all duration-200"
-              >
-                <option value="">All Positions</option>
-                {getUniquePositions().map(pos => (
-                  <option key={pos} value={pos}>{pos}</option>
-                ))}
               </select>
             </div>
           </div>
@@ -480,7 +410,7 @@ export default function StaffList() {
               </svg>
               <h3 className="mt-2 text-sm font-medium text-gray-900">No staff found</h3>
               <p className="mt-1 text-sm text-gray-500">
-                {searchTerm || statusFilter || departmentFilter || positionFilter ? 'Try adjusting your search or filter criteria.' : 'Get started by adding a new staff member.'}
+                {searchTerm || statusFilter ? 'Try adjusting your search or filter criteria.' : 'Get started by adding a new staff member.'}
               </p>
             </div>
           )}
