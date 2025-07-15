@@ -120,9 +120,12 @@ export default function StudentCheckinCheckoutList() {
     
     const checkin = new Date(checkinTime);
     const checkout = new Date(checkoutTime);
-    const diffMs = checkout.getTime() - checkin.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const diffMs = checkin.getTime() - checkout.getTime();
+    
+    // Handle negative duration (if checkout is after checkin)
+    const absDiffMs = Math.abs(diffMs);
+    const diffHours = Math.floor(absDiffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((absDiffMs % (1000 * 60 * 60)) / (1000 * 60));
     
     return `${diffHours}h ${diffMinutes}m`;
   };
@@ -143,12 +146,29 @@ export default function StudentCheckinCheckoutList() {
           Declined
         </span>
       );
+    } else if (record.checkout_time && record.checkin_time) {
+      // If both checkout and checkin exist but not approved/declined
+      if (record.status === 'pending') {
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+            <Clock className="w-3 h-3 mr-1" />
+            Pending
+          </span>
+        );
+      } else {
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <Check className="w-3 h-3 mr-1" />
+            Complete
+          </span>
+        );
+      }
     } else if (record.checkout_time) {
-      // If checkout exists but not approved/declined, show pending
+      // Only checkout exists
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
           <Clock className="w-3 h-3 mr-1" />
-          Pending
+          Checked Out
         </span>
       );
     } else if (record.checkin_time) {
@@ -258,7 +278,7 @@ export default function StudentCheckinCheckoutList() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <div className="text-sm text-gray-500">
-                          {formatDate(record.date)}
+                          {formatDate(record.checkout_time)}
                         </div>
                         <div className="text-sm font-medium text-gray-900">
                           {formatTime(record.checkout_time)}
@@ -268,7 +288,7 @@ export default function StudentCheckinCheckoutList() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <div className="text-sm text-gray-500">
-                          {formatDate(record.date)}
+                          {formatDate(record.checkin_time)}
                         </div>
                         <div className="text-sm font-medium text-gray-900">
                           {formatTime(record.checkin_time)}

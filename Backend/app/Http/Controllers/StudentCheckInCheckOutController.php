@@ -222,7 +222,7 @@ class StudentCheckInCheckOutController extends Controller
                 $checkoutTime = $data['checkout_time'] ?? $record->checkout_time;
                 
                 if ($checkinTime && $checkoutTime) {
-                    $data['status'] = 'checked_out';
+                    $data['status'] = 'pending'; // Checkout needs approval
                 } elseif ($checkinTime) {
                     $data['status'] = 'checked_in';
                 }

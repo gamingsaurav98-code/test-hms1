@@ -22,7 +22,7 @@ return new class extends Migration
             $table->foreignId('block_id');
             $table->foreignId('checkout_rule_id')->nullable();
             $table->text('remarks')->nullable();
-            $table->enum('status', ['present', 'absent', 'leave'])->default('present');
+            $table->enum('status', ['checked_in', 'checked_out', 'pending', 'approved', 'declined'])->default('checked_in');
             $table->string('checkout_duration')->nullable();
             $table->timestamps();
         });

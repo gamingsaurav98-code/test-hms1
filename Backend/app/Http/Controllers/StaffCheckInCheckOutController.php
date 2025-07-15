@@ -222,7 +222,7 @@ class StaffCheckInCheckOutController extends Controller
                 $checkoutTime = $data['checkout_time'] ?? $record->checkout_time;
                 
                 if ($checkinTime && $checkoutTime) {
-                    $data['status'] = 'checked_out';
+                    $data['status'] = 'pending'; // Checkout needs approval
                 } elseif ($checkinTime) {
                     $data['status'] = 'checked_in';
                 }
@@ -421,7 +421,7 @@ class StaffCheckInCheckOutController extends Controller
     }
 
     /**
-     * Approve a checkout request
+     * Approve checkout request
      */
     public function approveCheckout(Request $request, string $id)
     {
@@ -434,36 +434,40 @@ class StaffCheckInCheckOutController extends Controller
                 ], 404);
             }
 
-            if ($record->status !== 'pending') {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'This checkout request is not pending approval'
-                ], 422);
+            // Update record to approved status
+            $record->update([
+                'status' => 'approved'
+            ]);
+
+            // If checkout time is not set, set it now
+            if (!$record->checkout_time) {
+                $record->update([
+                    'checkout_time' => Carbon::now()
+                ]);
             }
 
-            $record->update(['status' => 'checked_out']);
             $record->load(['staff', 'block']);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Checkout approved successfully',
+                'message' => 'Checkout request approved successfully',
                 'data' => $record
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to approve checkout: ' . $e->getMessage()
+                'message' => 'Failed to approve checkout request: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Decline a checkout request
+     * Decline checkout request
      */
     public function declineCheckout(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'reason' => 'nullable|string',
+            'remarks' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -483,30 +487,23 @@ class StaffCheckInCheckOutController extends Controller
                 ], 404);
             }
 
-            if ($record->status !== 'pending') {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'This checkout request is not pending approval'
-                ], 422);
-            }
-
+            // Update status to declined and optionally update remarks
             $record->update([
-                'status' => 'checked_in',
-                'checkout_time' => null,
-                'remarks' => $record->remarks . ' [Checkout declined: ' . $request->reason . ']'
+                'status' => 'declined',
+                'remarks' => $request->remarks ?? $record->remarks
             ]);
-            
+
             $record->load(['staff', 'block']);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Checkout declined successfully',
+                'message' => 'Checkout request declined successfully',
                 'data' => $record
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to decline checkout: ' . $e->getMessage()
+                'message' => 'Failed to decline checkout request: ' . $e->getMessage()
             ], 500);
         }
     }

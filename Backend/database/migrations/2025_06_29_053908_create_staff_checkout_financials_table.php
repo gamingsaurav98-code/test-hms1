@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('staff_id');
             $table->foreignId('checkout_id');
+            $table->foreignId('checkout_rule_id')->nullable();
             $table->string('checkout_duration')->nullable();
             $table->string('deducted_amount')->nullable();
             $table->timestamps();

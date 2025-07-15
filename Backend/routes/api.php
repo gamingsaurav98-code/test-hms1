@@ -22,6 +22,8 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffFinancialController;
 use App\Http\Controllers\StaffCheckInCheckOutController;
 use App\Http\Controllers\StudentCheckInCheckOutController;
+use App\Http\Controllers\StudentCheckoutRuleController;
+use App\Http\Controllers\StaffCheckoutRuleController;
 
 Route::apiResource('blocks', BlockController::class);
 Route::apiResource('complains', ComplainController::class);
@@ -54,6 +56,12 @@ Route::get('student-checkincheckouts/today/attendance', [StudentCheckInCheckOutC
 Route::post('student-checkincheckouts/{id}/approve-checkout', [StudentCheckInCheckOutController::class, 'approveCheckout']);
 Route::post('student-checkincheckouts/{id}/decline-checkout', [StudentCheckInCheckOutController::class, 'declineCheckout']);
 
+// Student Checkout Rules routes
+Route::apiResource('student-checkout-rules', StudentCheckoutRuleController::class);
+Route::get('student-checkout-rules/student/{student_id}', [StudentCheckoutRuleController::class, 'getStudentRules']);
+Route::post('student-checkout-rules/{id}/toggle-status', [StudentCheckoutRuleController::class, 'toggleStatus']);
+Route::get('student-checkout-rules/preview/{student_id}', [StudentCheckoutRuleController::class, 'getRulePreview']);
+
 // Staff Check-in/Check-out routes
 Route::apiResource('staff-checkincheckouts', StaffCheckInCheckOutController::class);
 Route::post('staff-checkincheckouts/checkin', [StaffCheckInCheckOutController::class, 'checkIn']);
@@ -61,6 +69,12 @@ Route::post('staff-checkincheckouts/checkout', [StaffCheckInCheckOutController::
 Route::get('staff-checkincheckouts/today/attendance', [StaffCheckInCheckOutController::class, 'getTodayAttendance']);
 Route::post('staff-checkincheckouts/{id}/approve-checkout', [StaffCheckInCheckOutController::class, 'approveCheckout']);
 Route::post('staff-checkincheckouts/{id}/decline-checkout', [StaffCheckInCheckOutController::class, 'declineCheckout']);
+
+// Staff Checkout Rules routes
+Route::apiResource('staff-checkout-rules', StaffCheckoutRuleController::class);
+Route::get('staff-checkout-rules/staff/{staff_id}', [StaffCheckoutRuleController::class, 'getStaffRules']);
+Route::post('staff-checkout-rules/{id}/toggle-status', [StaffCheckoutRuleController::class, 'toggleStatus']);
+Route::get('staff-checkout-rules/preview/{staff_id}', [StaffCheckoutRuleController::class, 'getRulePreview']);
 
 Route::post('incomes/{id}/attachment', [IncomeController::class, 'uploadAttachment']);
 Route::post('suppliers/{id}/attachment', [SupplierController::class, 'uploadAttachment']);
