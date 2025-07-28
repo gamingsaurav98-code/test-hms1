@@ -6,6 +6,7 @@ use App\Models\Student;
 use App\Models\StudentAmenities;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
@@ -43,24 +44,38 @@ class StudentController extends Controller
             
             // Get all active students without pagination
             if ($request->has('all') && $request->all === 'true') {
-                $students = $query->where('is_active', true)->get();
+                $students = $query->where('is_active', true)
+                    ->with(['incomes' => function($q) {
+                        $q->where('due_amount', '>', 0);
+                    }])
+                    ->get();
                 
-                // Add monthly_fee to each student from their latest financial record
+                // Add calculated fields efficiently
                 $students->each(function ($student) {
-                    // Get due amount from income records
-                    $dueAmount = $student->incomes()
-                        ->where('due_amount', '>', 0)
-                        ->sum('due_amount');
-                    
+                    // Calculate due amount from loaded incomes
+                    $dueAmount = $student->incomes->sum('due_amount');
                     $student->due_amount = $dueAmount > 0 ? $dueAmount : 0;
-                    
-                    // Add room occupancy data
-                    if ($student->room) {
-                        $student->room->occupied_beds = $student->room->students()->count();
-                        $student->room->vacant_beds = max(0, $student->room->capacity - $student->room->occupied_beds);
-                    }
                 });
                 
+                // Load room occupancy data efficiently for all rooms at once
+                $roomIds = $students->pluck('room_id')->filter()->unique();
+                if ($roomIds->count() > 0) {
+                    $roomOccupancy = DB::table('students')
+                        ->select('room_id', DB::raw('count(*) as occupied_count'))
+                        ->whereIn('room_id', $roomIds)
+                        ->where('is_active', true)
+                        ->groupBy('room_id')
+                        ->pluck('occupied_count', 'room_id');
+                    
+                    $students->each(function ($student) use ($roomOccupancy) {
+                        if ($student->room) {
+                            $occupiedBeds = $roomOccupancy[$student->room_id] ?? 0;
+                            $student->room->occupied_beds = $occupiedBeds;
+                            $student->room->vacant_beds = max(0, $student->room->capacity - $occupiedBeds);
+                        }
+                    });
+                }
+
                 return response()->json($students);
             }
             

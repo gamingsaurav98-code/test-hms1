@@ -68,7 +68,7 @@ class Student extends Model
         'is_existing_student',
     ];
     
-    protected $appends = ['monthly_fee'];
+    // protected $appends = ['monthly_fee']; // Removed to prevent N+1 queries
 
     /**
      * The "booted" method of the model.

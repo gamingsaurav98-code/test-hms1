@@ -81,9 +81,9 @@ export default function LoginPage() {
   };
 
   const demoCredentials = [
-    { role: 'Admin', email: 'admin@hms.com', password: 'password' },
-    { role: 'Student', email: 'student@hms.com', password: 'password' },
-    { role: 'Staff', email: 'staff@hms.com', password: 'password' }
+    { role: 'Admin', email: 'admin@hms.com', password: 'password123' },
+    { role: 'Student', email: 'student@hms.com', password: 'password123' },
+    { role: 'Staff', email: 'staff@hms.com', password: 'password123' }
   ];
 
   const fillDemoCredentials = (email: string, password: string) => {

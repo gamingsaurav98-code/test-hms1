@@ -307,21 +307,22 @@ class RoomController extends Controller
         try {
             $room = Room::findOrFail($id);
             
-            // Load students with their financials
+            // Load students with their financials and incomes
             $students = $room->students()
-                ->with(['financials' => function($query) {
-                    $query->latest('created_at');
-                }])
+                ->with([
+                    'financials' => function($query) {
+                        $query->latest('created_at');
+                    },
+                    'incomes' => function($q) {
+                        $q->where('due_amount', '>', 0);
+                    }
+                ])
                 ->where('is_active', true)
                 ->get();
                 
-            // Add monthly fee to each student
+            // Add calculated due amount efficiently
             $students->each(function ($student) {
-                // Get due amount from income records
-                $dueAmount = $student->incomes()
-                    ->where('due_amount', '>', 0)
-                    ->sum('due_amount');
-                
+                $dueAmount = $student->incomes->sum('due_amount');
                 $student->due_amount = $dueAmount > 0 ? $dueAmount : 0;
             });
             

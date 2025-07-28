@@ -1,4 +1,5 @@
 import { API_BASE_URL, handleResponse, PaginatedResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 
 // Staff Check-in/Check-out interfaces
 export interface StaffCheckInCheckOut {
@@ -166,7 +167,9 @@ export const staffCheckInCheckOutApi = {
       )
     });
 
-    const response = await fetch(`${API_BASE_URL}/staff-checkincheckouts?${queryParams}`);
+    const response = await fetch(`${API_BASE_URL}/staff-checkincheckouts?${queryParams}`, {
+      headers: getAuthHeaders(),
+    });
     return handleResponse<PaginatedResponse<StaffCheckInCheckOut>>(response);
   },
 

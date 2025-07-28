@@ -1,4 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 import { Block, BlockFormData } from './types';
 import { PaginatedResponse } from './core';
 
@@ -8,10 +9,7 @@ export const blockApi = {
   async getBlocks(page: number = 1): Promise<PaginatedResponse<Block>> {
     const response = await fetch(`${API_BASE_URL}/blocks?page=${page}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<PaginatedResponse<Block>>(response);

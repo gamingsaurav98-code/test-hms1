@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/auth';
 import { studentApi } from '@/lib/api/student.api';
 import { roomApi } from '@/lib/api/room.api';
 import { staffApi } from '@/lib/api/staff.api';
@@ -47,6 +48,8 @@ interface DashboardStats {
 }
 
 export default function AdminDashboardPage() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  
   const [stats, setStats] = useState<DashboardStats>({
     totalStudentCapacity: 0,
     totalCurrentStudents: 0,
@@ -77,40 +80,60 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    // Only fetch data when user is authenticated and not loading auth
+    if (isAuthenticated && !authLoading) {
+      fetchDashboardData();
+    }
+  }, [isAuthenticated, authLoading]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       
-      // Fetch data from all APIs
+      // Fetch critical data first with shorter timeouts (8 seconds each)
+      const fetchWithTimeout = async (apiCall: any, fallback: any) => {
+        try {
+          return await Promise.race([
+            apiCall(),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Timeout after 8 seconds')), 8000)
+            )
+          ]);
+        } catch (error) {
+          console.warn('API call failed, using fallback:', error);
+          return fallback;
+        }
+      };
+
+      // Fetch essential data first (these are needed for the dashboard to show)
       const [
         studentsData,
         staffData,
         roomsData,
-        studentCheckInsData,
-        staffCheckInsData,
         incomesData,
         expensesData,
       ] = await Promise.all([
-        studentApi.getStudents(1).catch(() => ({ data: [], total: 0 })),
-        staffApi.getStaff(1).catch(() => ({ data: [], total: 0 })),
-        roomApi.getRooms(1).catch(() => ({ data: [], total: 0 })),
-        studentCheckInCheckOutApi.getCheckInCheckOuts(1).catch(() => ({ data: [] })),
-        staffCheckInCheckOutApi.getCheckInCheckOuts(1).catch(() => ({ data: [] })),
-        incomeApi.getIncomes(1).catch(() => ({ data: [] })),
-        expenseApi.getExpenses(1).catch(() => ({ data: [] })),
+        fetchWithTimeout(() => studentApi.getStudents(1), { data: [], total: 0 }),
+        fetchWithTimeout(() => staffApi.getStaff(1), { data: [], total: 0 }),
+        fetchWithTimeout(() => roomApi.getRooms(1), { data: [], total: 0 }),
+        fetchWithTimeout(() => incomeApi.getIncomes(1), { data: [] }),
+        fetchWithTimeout(() => expenseApi.getExpenses(1), { data: [] }),
       ]);
 
-      // Try to fetch complaint data separately with better error handling
+      // Initialize with fallback data for slower APIs
+      let studentCheckInsData: any = { data: [] };
+      let staffCheckInsData: any = { data: [] };
       let complainsData: any = { data: [], total: 0 };
-      try {
-        complainsData = await complainApi.getComplains(1);
-      } catch (error) {
-        console.warn('Complaints data not available:', error);
-        // Use fallback values - already initialized above
-      }
+
+      // Fetch slower APIs in background (don't wait for these)
+      fetchWithTimeout(() => studentCheckInCheckOutApi.getCheckInCheckOuts(1), { data: [] })
+        .then(data => { studentCheckInsData = data; });
+      
+      fetchWithTimeout(() => staffCheckInCheckOutApi.getCheckInCheckOuts(1), { data: [] })
+        .then(data => { staffCheckInsData = data; });
+      
+      fetchWithTimeout(() => complainApi.getComplains(1), { data: [], total: 0 })
+        .then(data => { complainsData = data; });
 
       // Set salary statistics to fallback values since the API endpoint may not be available
       const salaryStats = {
@@ -374,6 +397,30 @@ export default function AdminDashboardPage() {
           </div>
           <p className="mt-6 text-gray-600 font-medium">Loading dashboard data...</p>
           <p className="mt-2 text-sm text-gray-500">Please wait while we fetch the latest information</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state while authenticating
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-6 text-gray-600 font-medium">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    window.location.href = '/';
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 font-medium">Redirecting to login...</p>
         </div>
       </div>
     );

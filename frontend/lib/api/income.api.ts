@@ -1,4 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 import { Income, IncomeFormData, IncomeType, PaymentType, Student } from './types';
 import { PaginatedResponse } from './core';
 
@@ -8,10 +9,7 @@ export const incomeApi = {
   async getIncomes(page: number = 1): Promise<PaginatedResponse<Income>> {
     const response = await fetch(`${API_BASE_URL}/incomes?page=${page}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<PaginatedResponse<Income>>(response);
@@ -21,10 +19,7 @@ export const incomeApi = {
   async getIncome(id: string): Promise<Income> {
     const response = await fetch(`${API_BASE_URL}/incomes/${id}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<Income>(response);
@@ -152,10 +147,7 @@ export const incomeApi = {
   async getIncomeTypes(): Promise<IncomeType[]> {
     const response = await fetch(`${API_BASE_URL}/income-types?all=true`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     const data = await handleResponse<IncomeType[] | any>(response);
@@ -175,10 +167,7 @@ export const incomeApi = {
   async getPaymentTypes(): Promise<PaymentType[]> {
     const response = await fetch(`${API_BASE_URL}/payment-types?all=true`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     const data = await handleResponse<PaymentType[] | any>(response);
@@ -198,10 +187,7 @@ export const incomeApi = {
   async getStudents(): Promise<Student[]> {
     const response = await fetch(`${API_BASE_URL}/students?all=true`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     const data = await handleResponse<Student[] | any>(response);

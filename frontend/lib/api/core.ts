@@ -1,8 +1,11 @@
 // API configuration
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
 
+// Default timeout for API calls
+export const DEFAULT_API_TIMEOUT = 10000; // 10 seconds
+
 // Debug the API URL being used
-console.log('Using API URL:', API_BASE_URL);
+// console.log('Using API URL:', API_BASE_URL); // Removed for performance
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -79,4 +82,25 @@ export async function handleResponse<T>(response: Response): Promise<T> {
   
   console.log('API Data received:', responseData);
   return responseData as T;
+}
+
+// Helper function to create fetch with timeout
+export async function fetchWithTimeout(url: string, options: RequestInit = {}, timeout: number = DEFAULT_API_TIMEOUT): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new ApiError(0, `Request timed out after ${timeout/1000} seconds`);
+    }
+    throw error;
+  }
 }

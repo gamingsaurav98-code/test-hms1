@@ -1,4 +1,4 @@
-import { Block } from '../types';
+// Inquiry related types
 
 export interface Inquiry {
   id: string;

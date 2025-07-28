@@ -127,7 +127,8 @@ class AuthController extends Controller
     {
         try {
             $user = $request->user();
-            $userData = $this->authService->formatUserData($user);
+            // Don't include profile data for faster auth checks - profile can be fetched separately if needed
+            $userData = $this->authService->formatUserData($user, false);
             $permissions = $this->authService->getUserPermissions($user);
 
             return response()->json([

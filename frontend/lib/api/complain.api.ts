@@ -1,4 +1,5 @@
 import { API_BASE_URL, handleResponse, PaginatedResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 
 export interface Complain {
   id: number;
@@ -45,10 +46,7 @@ export const complainApi = {
   async getComplains(page: number = 1): Promise<PaginatedResponse<Complain>> {
     const response = await fetch(`${API_BASE_URL}/complains?page=${page}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<PaginatedResponse<Complain>>(response);

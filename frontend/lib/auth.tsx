@@ -34,10 +34,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Try to load cached user data first for faster initial load
+    const cachedUser = localStorage.getItem('hms_user');
+    if (cachedUser) {
+      try {
+        const userData = JSON.parse(cachedUser);
+        setUser(userData);
+        setIsLoading(false);
+        
+        // Verify token in background
+        verifyTokenInBackground();
+        return;
+      } catch (error) {
+        console.error('Invalid cached user data:', error);
+        localStorage.removeItem('hms_user');
+      }
+    }
+
+    // If no cached data, do full auth check
+    await verifyToken();
+  };
+
+  const verifyTokenInBackground = async () => {
     try {
       const response = await authApi.me();
       if (response.status === 'success') {
         setUser(response.data.user);
+        localStorage.setItem('hms_user', JSON.stringify(response.data.user));
+      } else {
+        // Invalid token
+        tokenStorage.remove();
+        localStorage.removeItem('hms_user');
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Background auth check failed:', error);
+      tokenStorage.remove();
+      localStorage.removeItem('hms_user');
+      setUser(null);
+    }
+  };
+
+  const verifyToken = async () => {
+    try {
+      const response = await authApi.me();
+      if (response.status === 'success') {
+        setUser(response.data.user);
+        localStorage.setItem('hms_user', JSON.stringify(response.data.user));
       } else {
         // Invalid token
         tokenStorage.remove();

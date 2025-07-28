@@ -40,20 +40,20 @@ class StaffController extends Controller
                 $query->where('position', $request->position);
             }
             
-            // Get all active staff without pagination
+            // Get all active staff without pagination with optimized loading
             if ($request->has('all') && $request->all === 'true') {
-                $staff = $query->where('is_active', true)->get();
+                $staff = $query->where('is_active', true)
+                    ->with(['salaries' => function($q) {
+                        $q->latest('created_at');
+                    }])
+                    ->get();
                 
-                // Add latest salary to each staff member
+                // Add latest salary efficiently
                 $staff->each(function ($staffMember) {
-                    // Get latest salary
-                    $latestSalary = $staffMember->salaries()
-                        ->latest('created_at')
-                        ->first();
-                    
+                    $latestSalary = $staffMember->salaries->first(); // Already ordered by latest
                     $staffMember->latest_salary = $latestSalary ? $latestSalary->amount : null;
                 });
-                
+
                 return response()->json($staff);
             }
             

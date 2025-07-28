@@ -19,6 +19,12 @@ return new class extends Migration
             $table->year('year');
             $table->string('status')->nullable();
             $table->timestamps();
+            
+            // Add indexes for better query performance
+            $table->index(['staff_id']);
+            $table->index(['year', 'month']);
+            $table->index(['status']);
+            $table->index(['year', 'month', 'staff_id'], 'salaries_year_month_staff_idx');
         });
     }
 

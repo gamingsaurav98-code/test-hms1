@@ -8,6 +8,9 @@ use App\Models\Attachment;
 
 class Salary extends Model
 {
+    // Prevent automatic loading of relationships to improve performance
+    protected $with = [];
+
     protected $fillable = [
         'staff_id',
         'amount',
@@ -22,7 +25,8 @@ class Salary extends Model
         'year' => 'integer',
     ];
 
-    protected $appends = ['month_name', 'formatted_amount'];
+    // Remove appends to improve performance - compute these on demand instead
+    // protected $appends = ['month_name', 'formatted_amount'];
 
     public function staff()
     {

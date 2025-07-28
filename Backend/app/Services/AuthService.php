@@ -37,7 +37,7 @@ class AuthService
         $token = $user->createToken('auth_token', $abilities)->plainTextToken;
         
         return [
-            'user' => $this->formatUserData($user),
+            'user' => $this->formatUserData($user, true), // Include profile data on login
             'token' => $token,
             'token_type' => 'Bearer'
         ];
@@ -78,7 +78,7 @@ class AuthService
     /**
      * Format user data for response
      */
-    public function formatUserData(User $user): array
+    public function formatUserData(User $user, bool $includeProfile = false): array
     {
         $userData = [
             'id' => $user->id,
@@ -92,10 +92,12 @@ class AuthService
             'updated_at' => $user->updated_at,
         ];
         
-        // Add profile data based on role
-        $profileData = $this->getUserProfileData($user);
-        if ($profileData) {
-            $userData['profile'] = $profileData;
+        // Only add profile data if explicitly requested
+        if ($includeProfile) {
+            $profileData = $this->getUserProfileData($user);
+            if ($profileData) {
+                $userData['profile'] = $profileData;
+            }
         }
         
         return $userData;

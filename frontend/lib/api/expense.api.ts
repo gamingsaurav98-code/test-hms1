@@ -1,4 +1,5 @@
 import { API_BASE_URL, handleResponse, PaginatedResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 import { Expense, ExpenseFormData, ExpenseCategory, ExpenseCategoryFormData } from './types/expense.types';
 
 // Expense API functions
@@ -7,10 +8,7 @@ export const expenseApi = {
   async getExpenses(page: number = 1): Promise<PaginatedResponse<Expense>> {
     const response = await fetch(`${API_BASE_URL}/expenses?page=${page}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<PaginatedResponse<Expense>>(response);

@@ -1,4 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 import { Room, RoomFormData, Block, Student } from './types';
 import { PaginatedResponse } from './core';
 
@@ -21,10 +22,7 @@ export const roomApi = {
     const url = `${API_BASE_URL}/rooms?${queryParams.toString()}`;
     const response = await fetch(url, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<PaginatedResponse<Room>>(response);

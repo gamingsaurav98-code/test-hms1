@@ -18,7 +18,12 @@ class SalaryController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Salary::with(['staff']);
+            // Use select to limit fields and improve performance
+            $query = Salary::select([
+                'id', 'staff_id', 'amount', 'month', 'year', 'status', 'created_at', 'updated_at'
+            ])->with(['staff' => function($query) {
+                $query->select('id', 'staff_name', 'position', 'department', 'contact_number', 'email');
+            }]);
 
             // Apply filters
             if ($request->has('staff_id')) {
@@ -37,15 +42,16 @@ class SalaryController extends Controller
                 $query->where('status', $request->status);
             }
 
-            // Order by latest
+            // Order by latest and limit results for better performance
             $query->orderBy('year', 'desc')->orderBy('month', 'desc');
 
-            // Return paginated or all results
-            if ($request->has('paginate') && $request->paginate === 'true') {
-                $perPage = $request->get('per_page', 15);
-                $salaries = $query->paginate($perPage);
+            // Return paginated results by default for better performance
+            if ($request->has('paginate') && $request->paginate === 'false') {
+                // Only get all if explicitly requested and limit to recent records
+                $salaries = $query->limit(1000)->get();
             } else {
-                $salaries = $query->get();
+                $perPage = min($request->get('per_page', 15), 100); // Cap at 100 per page
+                $salaries = $query->paginate($perPage);
             }
 
             return response()->json($salaries);
@@ -107,7 +113,7 @@ class SalaryController extends Controller
             ]);
 
             // Load relationships and return
-            $salary->load(['staff']);
+            $salary->load(['staff:id,staff_name,position,department']);
             
             return response()->json($salary, 201);
         } catch (\Exception $e) {
@@ -124,7 +130,10 @@ class SalaryController extends Controller
     public function show(string $id): JsonResponse
     {
         try {
-            $salary = Salary::with(['staff', 'attachments'])->findOrFail($id);
+            $salary = Salary::select([
+                'id', 'staff_id', 'amount', 'month', 'year', 'status', 'created_at', 'updated_at'
+            ])->with(['staff:id,staff_name,position,department,contact_number,email'])
+              ->findOrFail($id);
             return response()->json($salary);
         } catch (ModelNotFoundException $e) {
             return response()->json([
@@ -187,7 +196,7 @@ class SalaryController extends Controller
             $salary->update($request->only(['staff_id', 'amount', 'month', 'year', 'status']));
 
             // Load relationships and return
-            $salary->load(['staff']);
+            $salary->load(['staff:id,staff_name,position,department']);
             
             return response()->json($salary);
         } catch (ModelNotFoundException $e) {
@@ -230,11 +239,14 @@ class SalaryController extends Controller
     public function getStaffSalaries(string $staffId): JsonResponse
     {
         try {
-            $staff = Staff::findOrFail($staffId);
-            $salaries = Salary::where('staff_id', $staffId)
-                ->with(['staff'])
+            $staff = Staff::select('id', 'staff_name')->findOrFail($staffId);
+            $salaries = Salary::select([
+                'id', 'staff_id', 'amount', 'month', 'year', 'status', 'created_at', 'updated_at'
+            ])->where('staff_id', $staffId)
+                ->with(['staff:id,staff_name,position,department'])
                 ->orderBy('year', 'desc')
                 ->orderBy('month', 'desc')
+                ->limit(100) // Limit to recent 100 records
                 ->get();
                 
             return response()->json($salaries);

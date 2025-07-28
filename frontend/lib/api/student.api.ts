@@ -1,4 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 import { Student } from './types';
 import { PaginatedResponse } from './core';
 
@@ -151,10 +152,7 @@ export const studentApi = {
     try {
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
       });
       
       console.log(`Student API response status: ${response.status}`);

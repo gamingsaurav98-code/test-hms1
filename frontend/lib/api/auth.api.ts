@@ -1,4 +1,4 @@
-import { API_BASE_URL, handleResponse, ApiError } from './core';
+import { API_BASE_URL, handleResponse } from './core';
 
 export interface User {
   id: number;
@@ -80,22 +80,7 @@ export interface RegisterRequest {
   user_type_id?: number;
 }
 
-export interface ActiveSession {
-  id: number;
-  name: string;
-  abilities: string[];
-  last_used_at: string;
-  created_at: string;
-  expires_at?: string;
-}
-
-export interface ActiveSessionsResponse {
-  status: 'success';
-  data: {
-    active_sessions: ActiveSession[];
-    total_sessions: number;
-  };
-}
+// Cleaned up - removed unused interfaces: ActiveSession, ActiveSessionsResponse
 
 // Auth token management
 const TOKEN_KEY = 'auth_token';
@@ -142,6 +127,7 @@ export const authApi = {
         'Accept': 'application/json',
       },
       body: JSON.stringify(credentials),
+      signal: AbortSignal.timeout(30000), // 30 second timeout for login
     });
 
     const data = await handleResponse<LoginResponse>(response);
@@ -223,6 +209,7 @@ export const authApi = {
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
       method: 'GET',
       headers: getAuthHeaders(),
+      signal: AbortSignal.timeout(15000), // 15 second timeout
     });
 
     return handleResponse<UserMeResponse>(response);
@@ -250,43 +237,7 @@ export const authApi = {
     return handleResponse(response);
   },
 
-  // Refresh token
-  async refreshToken(): Promise<{ status: 'success'; message: string; data: { token: string; token_type: 'Bearer' } }> {
-    const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-    });
-
-    const data = await handleResponse<{ status: 'success'; message: string; data: { token: string; token_type: 'Bearer' } }>(response);
-    
-    // Update stored token
-    if (data.status === 'success' && data.data.token) {
-      tokenStorage.set(data.data.token);
-    }
-    
-    return data;
-  },
-
-  // Check user permission
-  async checkPermission(permission: string): Promise<{ status: 'success'; data: { has_permission: boolean; permission: string; user_role: string } }> {
-    const response = await fetch(`${API_BASE_URL}/auth/check-permission`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ permission }),
-    });
-
-    return handleResponse(response);
-  },
-
-  // Get active sessions
-  async getActiveSessions(): Promise<ActiveSessionsResponse> {
-    const response = await fetch(`${API_BASE_URL}/auth/active-sessions`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-
-    return handleResponse<ActiveSessionsResponse>(response);
-  },
+  // Note: refreshToken, checkPermission, and getActiveSessions methods removed as they are not used in the frontend
 
   // Check if user is authenticated
   isAuthenticated(): boolean {

@@ -1,4 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 import { PaginatedResponse } from './core';
 
 // StaffAmenity interface
@@ -207,10 +208,7 @@ export const staffApi = {
     
     const response = await fetch(`${API_BASE_URL}/staff?${params.toString()}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<PaginatedResponse<StaffWithAmenities>>(response);
