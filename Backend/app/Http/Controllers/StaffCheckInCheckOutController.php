@@ -507,4 +507,40 @@ class StaffCheckInCheckOutController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get the authenticated staff's check-in/checkout records (staff-specific)
+     */
+    public function getMyRecords()
+    {
+        try {
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Get staff record for the authenticated user
+            $staff = \App\Models\Staff::where('email', $user->email)->first();
+            
+            if (!$staff) {
+                return response()->json(['error' => 'Staff record not found'], 404);
+            }
+
+            $records = StaffCheckInCheckOut::where('staff_id', $staff->id)
+                ->with(['staff', 'block'])
+                ->orderBy('date', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+                
+            return response()->json([
+                'data' => $records
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch your check-in/checkout records',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

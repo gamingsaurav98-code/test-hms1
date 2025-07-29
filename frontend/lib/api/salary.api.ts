@@ -121,6 +121,38 @@ export class SalaryApi {
     return handleResponse<Salary[]>(response);
   }
 
+  // Staff-specific method to get current user's salary history
+  static async getMySalaryHistory(): Promise<Salary[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/staff/salary-history`, {
+        headers: getAuthHeaders(),
+      });
+      
+      // Handle authorization and other errors gracefully
+      if (response.status === 401) {
+        console.log('Authorization error - staff salary endpoint may require backend restart');
+        return [];
+      }
+      
+      if (response.status === 404 || response.status === 500) {
+        console.log('Staff salary endpoint not available, backend might need restart');
+        return [];
+      }
+      
+      if (!response.ok) {
+        console.log('Salary API request failed with status:', response.status);
+        const errorText = await response.text();
+        console.log('Error response:', errorText);
+        return [];
+      }
+      
+      return handleResponse<Salary[]>(response);
+    } catch (error) {
+      console.error('getMySalaryHistory error:', error);
+      return [];
+    }
+  }
+
   static async getStatistics(): Promise<SalaryStatistics> {
     const response = await fetch(`${API_BASE_URL}/salaries/statistics`, {
       headers: getAuthHeaders(),

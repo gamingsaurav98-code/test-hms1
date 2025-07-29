@@ -70,6 +70,8 @@ export default function StaffStructure({ children }: { children: React.ReactNode
       'checkin-checkout': 'Check-In/Out',
       'notice': 'Notices',
       'salary': 'Salary',
+      'payment-history': 'Payment History',
+      'complain': 'Complains',
     };
 
     if (segments.length === 1) {
@@ -123,7 +125,6 @@ export default function StaffStructure({ children }: { children: React.ReactNode
   // Sidebar items for staff
   const sidebarItems = [
     {
-      category: 'core',
       label: 'Dashboard',
       href: '/staff',
       icon: (
@@ -133,7 +134,6 @@ export default function StaffStructure({ children }: { children: React.ReactNode
       ),
     },
     {
-      category: 'operations',
       label: 'Check-In/Out',
       href: '/staff/checkin-checkout',
       icon: (
@@ -143,7 +143,6 @@ export default function StaffStructure({ children }: { children: React.ReactNode
       ),
     },
     {
-      category: 'financial',
       label: 'Salary',
       href: '/staff/salary',
       icon: (
@@ -153,7 +152,24 @@ export default function StaffStructure({ children }: { children: React.ReactNode
       ),
     },
     {
-      category: 'communication',
+      label: 'Payment History',
+      href: '/staff/payment-history',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 8h6m-5 0a3 3 0 110 6H9l3 3m-3-6h6m6 1a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Complains',
+      href: '/staff/complain',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      ),
+    },
+    {
       label: 'Notices',
       href: '/staff/notice',
       icon: (
@@ -164,29 +180,13 @@ export default function StaffStructure({ children }: { children: React.ReactNode
     },
   ];
 
-  // Group sidebar items by category
-  const groupedSidebarItems = sidebarItems.reduce((acc, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = [];
-    }
-    acc[item.category].push(item);
-    return acc;
-  }, {} as Record<string, typeof sidebarItems>);
-
-  const categoryLabels = {
-    core: "Dashboard",
-    operations: "Work Activities", 
-    financial: "Financial",
-    communication: "Communication",
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-indigo-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
       {/* Topbar */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-200/50 h-16 shadow-lg">
         <div className="flex items-center h-full">
           {/* Left side - Title area */}
-          <div className="flex items-center w-64 px-6 border-r border-gray-200/50 h-full bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] relative overflow-hidden">
+          <div className="flex items-center w-64 px-6 border-r border-gray-200/50 h-full bg-gradient-to-r from-blue-600 to-blue-700 relative overflow-hidden">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
@@ -238,13 +238,13 @@ export default function StaffStructure({ children }: { children: React.ReactNode
               {/* Page Title */}
               <div className="flex items-center">
                 <h2 className="text-xl font-bold text-gray-800 tracking-tight">{currentPageName}</h2>
-                <div className="w-2 h-2 bg-[#7c3aed] rounded-full ml-3 animate-pulse"></div>
+                <div className="w-2 h-2 bg-blue-600 rounded-full ml-3 animate-pulse"></div>
               </div>
             </div>
             
             {/* Time display with enhanced design */}
             <div className="hidden md:flex items-center space-x-3 text-sm text-gray-600 bg-gradient-to-r from-white to-gray-50 px-4 py-2.5 rounded-xl border border-gray-200/50 shadow-sm">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#7c3aed] to-[#6d28d9] rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -260,7 +260,7 @@ export default function StaffStructure({ children }: { children: React.ReactNode
           <div className="flex items-center px-6 space-x-3">
             {/* Notification bell */}
             <button className="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-all duration-200 group">
-              <svg className="w-5 h-5 text-gray-600 group-hover:text-[#7c3aed] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-3.5-5.5.5-3.5V7a6 6 0 00-12 0v1.5l.5 3.5L2 17h5m8 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
               <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
@@ -275,14 +275,14 @@ export default function StaffStructure({ children }: { children: React.ReactNode
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
               >
-                <div className="w-9 h-9 bg-gradient-to-br from-[#7c3aed] to-[#6d28d9] rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
                   <span className="text-sm font-bold text-white">S</span>
                 </div>
                 <div className="hidden md:flex flex-col items-start">
-                  <span className="text-sm font-semibold text-gray-800 group-hover:text-[#7c3aed] transition-colors duration-200">Staff Member</span>
+                  <span className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors duration-200">Staff Member</span>
                   <span className="text-xs text-gray-500">staff@hms.com</span>
                 </div>
-                <svg className="w-4 h-4 text-gray-400 group-hover:text-[#7c3aed] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
@@ -296,7 +296,7 @@ export default function StaffStructure({ children }: { children: React.ReactNode
                   {/* User info section */}
                   <div className="px-4 py-4 border-b border-gray-100">
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-[#7c3aed] to-[#6d28d9] rounded-xl flex items-center justify-center shadow-lg">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
                         <span className="text-lg font-bold text-white">S</span>
                       </div>
                       <div className="flex-1">
@@ -305,7 +305,7 @@ export default function StaffStructure({ children }: { children: React.ReactNode
                           <p className="text-xs text-gray-500">staff@hms.com</p>
                           <button
                             onClick={handleEmailCopy}
-                            className="text-xs text-[#7c3aed] hover:text-[#6d28d9] transition-colors duration-200"
+                            className="text-xs text-blue-600 hover:text-blue-700 transition-colors duration-200"
                           >
                             {emailCopied ? 'Copied!' : 'Copy'}
                           </button>
@@ -369,61 +369,37 @@ export default function StaffStructure({ children }: { children: React.ReactNode
       <div className={`fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white/95 backdrop-blur-xl border-r border-gray-200/50 transform transition-transform duration-300 z-40 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 shadow-2xl`}>
         <div className="flex flex-col h-full">
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-8">
-            {Object.entries(groupedSidebarItems).map(([category, items]) => (
-              <div key={category}>
-                <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  {categoryLabels[category as keyof typeof categoryLabels]}
-                </h3>
-                <div className="space-y-1">
-                  {items.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`flex items-center px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                          isActive
-                            ? 'bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] text-white shadow-lg'
-                            : 'text-gray-700 hover:bg-gray-50 hover:text-[#7c3aed]'
-                        }`}
-                      >
-                        <span className={`mr-3 transition-colors duration-200 ${
-                          isActive ? 'text-white' : 'text-gray-400 group-hover:text-[#7c3aed]'
-                        }`}>
-                          {item.icon}
-                        </span>
-                        {item.label}
-                        {isActive && (
-                          <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+          <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent hover:scrollbar-thumb-blue-300">
+            {sidebarItems.map((item, index) => {
+              const isActive = pathname === item.href || (item.href !== "/staff" && pathname.startsWith(item.href) && !sidebarItems.some(otherItem => 
+                otherItem.href !== item.href && 
+                otherItem.href !== "/staff" && 
+                pathname.startsWith(otherItem.href) && 
+                otherItem.href.length > item.href.length
+              ));
+              
+              return (
+                <Link
+                  key={index}
+                  href={item.href}
+                  className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md shadow-blue-200/60"
+                      : "text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-600"
+                  }`}
+                >
+                  <div className={`mr-3 flex-shrink-0 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}>
+                    {item.icon}
+                  </div>
+                  <span className="tracking-tight text-xs font-semibold">{item.label}</span>
+                  {isActive && (
+                    <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full opacity-90"></div>
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
-          {/* Bottom section */}
-          <div className="p-4 border-t border-gray-200/50">
-            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-100">
-              <div className="flex items-center space-x-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-[#7c3aed] to-[#6d28d9] rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">Need Help?</p>
-                  <p className="text-xs text-gray-500">Contact admin support</p>
-                </div>
-              </div>
-              <button className="w-full text-xs bg-[#7c3aed] text-white px-3 py-2 rounded-lg hover:bg-[#6d28d9] transition-colors duration-200">
-                Get Support
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 

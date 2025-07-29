@@ -37,13 +37,11 @@ export default function StaffSalaryPage() {
       setLoading(true);
       setError(null);
       
-      const response = await SalaryApi.getAll();
-      const salariesArray = Array.isArray(response) ? response : (response.data || []);
+      const response = await SalaryApi.getMySalaryHistory();
+      const salariesArray = Array.isArray(response) ? response : [];
       
-      // Filter salaries for current staff (staff_id = 1, should come from auth context)
-      const mySalaries = salariesArray.filter((salary: Salary) => 
-        String(salary.staff_id) === '1'
-      );
+      // No need to filter since getMySalaryHistory() already returns only current staff's salaries
+      const mySalaries = salariesArray;
       
       setSalaries(mySalaries);
       setFilteredSalaries(mySalaries);
@@ -202,8 +200,8 @@ export default function StaffSalaryPage() {
                 Rs.{Math.round(stats.totalEarnings).toLocaleString()}
               </p>
             </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Search className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Search className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>

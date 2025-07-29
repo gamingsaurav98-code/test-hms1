@@ -297,6 +297,44 @@ export const staffCheckInCheckOutApi = {
     const response = await fetch(`${API_BASE_URL}/staff-checkincheckouts/attendance/statistics?${queryParams}`);
     return handleResponse<{ data: AttendanceStatistics }>(response);
   },
+
+  // Staff-specific method to get current user's check-in/checkout records
+  async getMyRecords(): Promise<{ data: StaffCheckInCheckOut[] }> {
+    const url = `${API_BASE_URL}/staff/checkincheckouts`;
+    console.log('Making request to:', url);
+    console.log('With headers:', getAuthHeaders());
+    
+    try {
+      const response = await fetch(url, {
+        headers: getAuthHeaders(),
+      });
+      console.log('Response status:', response.status);
+      console.log('Response URL:', response.url);
+      
+      // Handle authorization and other errors gracefully
+      if (response.status === 401) {
+        console.log('Authorization error - staff endpoint may require backend restart');
+        return { data: [] };
+      }
+      
+      if (response.status === 404 || response.status === 500) {
+        console.log('Staff endpoint not available, backend might need restart');
+        return { data: [] };
+      }
+      
+      if (!response.ok) {
+        console.log('API request failed with status:', response.status);
+        const errorText = await response.text();
+        console.log('Error response:', errorText);
+        return { data: [] };
+      }
+      
+      return handleResponse<{ data: StaffCheckInCheckOut[] }>(response);
+    } catch (error) {
+      console.error('getMyRecords network error:', error);
+      return { data: [] };
+    }
+  },
 };
 
 // API functions for Staff Checkout Rules

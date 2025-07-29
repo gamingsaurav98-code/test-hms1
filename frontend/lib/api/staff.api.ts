@@ -379,5 +379,25 @@ export const staffApi = {
     });
     
     return handleResponse<any>(response);
+  },
+
+  // Get staff complains (staff-specific endpoint)
+  async getStaffComplains(): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/staff/complains`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    
+    return handleResponse<any>(response);
+  },
+
+  // Get staff payments (staff-specific endpoint)
+  async getStaffPayments(): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/staff/payments`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    
+    return handleResponse<any>(response);
   }
 };

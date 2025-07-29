@@ -114,4 +114,72 @@ class StaffFinancialController extends Controller
             'note' => 'Financial records are separate from staff records. Staff basic info is handled via /api/staff endpoints'
         ]);
     }
+
+    /**
+     * Get the authenticated staff's financial records (staff-specific)
+     */
+    public function getMyFinancials(): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Get staff record for the authenticated user
+            $staff = Staff::where('email', $user->email)->first();
+            
+            if (!$staff) {
+                return response()->json(['error' => 'Staff record not found'], 404);
+            }
+
+            $financials = StaffFinancial::where('staff_id', $staff->id)
+                ->with(['staff', 'paymentType'])
+                ->orderBy('payment_date', 'desc')
+                ->get();
+                
+            return response()->json($financials);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch your financial records',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get the authenticated staff's salary history (staff-specific)
+     */
+    public function getMySalaryHistory(): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Get staff record for the authenticated user
+            $staff = Staff::where('email', $user->email)->first();
+            
+            if (!$staff) {
+                return response()->json(['error' => 'Staff record not found'], 404);
+            }
+
+            // Get salary records from the Salary model
+            $salaries = \App\Models\Salary::where('staff_id', $staff->id)
+                ->with(['staff:id,staff_name,position,department'])
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->get();
+                
+            return response()->json($salaries);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch your salary history',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

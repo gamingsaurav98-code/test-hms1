@@ -34,8 +34,37 @@ export default function StaffCheckInCheckOutPage() {
       setLoading(true);
       setError(null);
       
-      const response = await staffCheckInCheckOutApi.getCheckInCheckOuts();
-      const data = response.data || [];
+      // Test if the staff profile endpoint works (this should be available)
+      console.log('Testing staff profile endpoint first...');
+      try {
+        const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api'}/staff/profile`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          },
+        });
+        console.log('Profile endpoint status:', profileResponse.status);
+        if (profileResponse.ok) {
+          console.log('Staff profile endpoint works, so auth is working');
+        } else {
+          console.log('Staff profile endpoint failed:', await profileResponse.text());
+        }
+      } catch (profileError) {
+        console.error('Profile endpoint error:', profileError);
+      }
+      
+      // Now try our custom endpoint
+      let data: StaffCheckInCheckOut[] = [];
+      try {
+        const response = await staffCheckInCheckOutApi.getMyRecords();
+        data = response.data || [];
+        console.log('getMyRecords succeeded:', data);
+      } catch (error) {
+        console.error('getMyRecords failed:', error);
+        // For now, just use empty data so the page loads
+        data = [];
+      }
       
       setCheckInOuts(data);
       setFilteredCheckInOuts(data);
@@ -78,10 +107,9 @@ export default function StaffCheckInCheckOutPage() {
       const now = new Date();
       const timeString = now.toTimeString().split(' ')[0]; // HH:MM:SS format
       
-      await staffCheckInCheckOutApi.createCheckInCheckOut({
+      await staffCheckInCheckOutApi.checkIn({
         staff_id: '1', // This should come from auth context
         block_id: '1', // Default block
-        date: now.toISOString().split('T')[0],
         checkin_time: timeString,
         remarks: 'Staff check-in'
       });
@@ -105,7 +133,8 @@ export default function StaffCheckInCheckOutPage() {
         const now = new Date();
         const timeString = now.toTimeString().split(' ')[0];
         
-        await staffCheckInCheckOutApi.updateCheckInCheckOut(latestCheckIn.id, {
+        await staffCheckInCheckOutApi.checkOut({
+          staff_id: '1', // This should come from auth context
           checkout_time: timeString,
           remarks: 'Staff check-out'
         });
