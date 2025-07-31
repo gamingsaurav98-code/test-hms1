@@ -44,7 +44,7 @@ export default function StudentCheckinCheckoutPage() {
       
       // Determine current status
       const activeRecord = todaysRecords.find(record => 
-        record.status === 'checked_in' || record.status === 'pending'
+        record.status === 'checked_in' || record.status === 'pending' || record.status === 'approved'
       );
       
       setCurrentStatus(activeRecord || null);
@@ -193,10 +193,8 @@ export default function StudentCheckinCheckoutPage() {
           </div>
         )}
 
-        {/* Current Status Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Current Status</h2>
-          
+        {/* Status Card */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
           {currentStatus ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -237,9 +235,7 @@ export default function StudentCheckinCheckoutPage() {
                     className="bg-orange-600 hover:bg-orange-700 text-white"
                     icon={checkingOut ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                    ) : (
-                      <ArrowLeft className="w-4 h-4" />
-                    )}
+                    ) : undefined}
                   >
                     {checkingOut ? 'Requesting...' : 'Request Checkout'}
                   </Button>
@@ -256,72 +252,52 @@ export default function StudentCheckinCheckoutPage() {
                       <ArrowRight className="w-4 h-4" />
                     )}
                   >
-                    {checkingIn ? 'Checking In...' : 'Check In Again'}
+                    {checkingIn ? 'Checking In...' : 'Check In to Hostel'}
                   </Button>
+                )}
+
+                {currentStatus.status === 'pending' && (
+                  <div className="text-center w-full">
+                    <p className="text-sm text-gray-600 mb-2">Your checkout request is waiting for admin approval.</p>
+                    <p className="text-xs text-gray-500">You will be able to check back in once approved.</p>
+                  </div>
+                )}
+
+                {currentStatus.status === 'declined' && (
+                  <div className="text-center w-full">
+                    <p className="text-sm text-red-600 mb-2">Your checkout request was declined.</p>
+                    <p className="text-xs text-gray-500">You remain checked in to the hostel.</p>
+                  </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ArrowRight className="w-8 h-8 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Not Checked In</h3>
-              <p className="text-gray-600 mb-4">You are not currently checked in to the hostel.</p>
+            <div className="text-center py-4">
+              <p className="text-gray-600 text-sm mb-3">Checkout when you are not available at hostel.</p>
               <Button
-                onClick={handleQuickCheckin}
-                disabled={checkingIn}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                icon={checkingIn ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                ) : (
-                  <ArrowRight className="w-4 h-4" />
-                )}
+                onClick={handleQuickCheckout}
+                disabled={checkingOut}
+                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 text-sm"
+                icon={checkingOut ? (
+                  <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent" />
+                ) : undefined}
               >
-                {checkingIn ? 'Checking In...' : 'Check In Now'}
+                {checkingOut ? 'Requesting...' : 'Request Checkout'}
               </Button>
             </div>
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Link href="/student/checkin-checkout/create">
-              <div className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                  <Plus className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">Create Manual Record</h3>
-                  <p className="text-sm text-gray-600">Add a custom check-in/checkout record</p>
-                </div>
-              </div>
-            </Link>
-            
-            <div className="flex items-center p-4 border border-gray-200 rounded-lg bg-gray-50">
-              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
-                <Calendar className="w-5 h-5 text-gray-600" />
-              </div>
-              <div>
-                <h3 className="font-medium text-gray-900">View History</h3>
-                <p className="text-sm text-gray-600">Check your previous records below</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Records */}
+        {/* Checkout History */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Checkout History</h2>
           </div>
           
           {records.length > 0 ? (
             <div className="divide-y divide-gray-200">
               {records.slice(0, 10).map((record) => (
-                <div key={record.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div key={record.id} className="p-4 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between mb-3">
                     <div>{getStatusBadge(record)}</div>
                     <div className="text-sm text-gray-500">{formatDate(record.date)}</div>
@@ -368,17 +344,12 @@ export default function StudentCheckinCheckoutPage() {
               ))}
             </div>
           ) : (
-            <div className="p-12 text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Calendar className="w-8 h-8 text-gray-400" />
+            <div className="p-8 text-center">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Calendar className="w-6 h-6 text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Records Found</h3>
-              <p className="text-gray-600 mb-4">You haven't created any check-in/checkout records yet.</p>
-              <Link href="/student/checkin-checkout/create">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Create Your First Record
-                </Button>
-              </Link>
+              <h3 className="text-base font-medium text-gray-900 mb-2">No Records Found</h3>
+              <p className="text-gray-600 text-sm">You haven't created any check-in/checkout records yet.</p>
             </div>
           )}
         </div>

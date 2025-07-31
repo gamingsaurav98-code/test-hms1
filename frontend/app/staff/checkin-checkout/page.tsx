@@ -1,374 +1,344 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Button, 
-  SearchBar, 
-  TableSkeleton 
-} from '@/components/ui';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { staffCheckInCheckOutApi, StaffCheckInCheckOut } from '@/lib/api/staff-checkincheckout.api';
+import { Button } from '@/components/ui';
 import { 
-  Calendar, 
-  Clock,
-  User,
-  Check,
-  X,
+  Plus, 
+  Clock, 
+  Check, 
+  X, 
   AlertCircle,
-  Plus
+  ArrowRight,
+  ArrowLeft,
+  Calendar,
+  User,
+  Home
 } from 'lucide-react';
 
-export default function StaffCheckInCheckOutPage() {
-  const [checkInOuts, setCheckInOuts] = useState<StaffCheckInCheckOut[]>([]);
-  const [filteredCheckInOuts, setFilteredCheckInOuts] = useState<StaffCheckInCheckOut[]>([]);
+export default function StaffCheckinCheckoutPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [records, setRecords] = useState<StaffCheckInCheckOut[]>([]);
+  const [currentStatus, setCurrentStatus] = useState<StaffCheckInCheckOut | null>(null);
+  const [checkingIn, setCheckingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentStatus, setCurrentStatus] = useState<'checked-in' | 'checked-out'>('checked-out');
 
   useEffect(() => {
-    fetchCheckInOuts();
+    fetchStaffRecords();
   }, []);
 
-  const fetchCheckInOuts = async () => {
+  const fetchStaffRecords = async () => {
     try {
       setLoading(true);
-      setError(null);
+      const response = await staffCheckInCheckOutApi.getMyRecords();
       
-      // Test if the staff profile endpoint works (this should be available)
-      console.log('Testing staff profile endpoint first...');
-      try {
-        const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api'}/staff/profile`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          },
-        });
-        console.log('Profile endpoint status:', profileResponse.status);
-        if (profileResponse.ok) {
-          console.log('Staff profile endpoint works, so auth is working');
-        } else {
-          console.log('Staff profile endpoint failed:', await profileResponse.text());
-        }
-      } catch (profileError) {
-        console.error('Profile endpoint error:', profileError);
-      }
+      // Find the most recent record for today or pending status
+      const today = new Date().toISOString().split('T')[0];
+      const todaysRecords = response.data.filter(record => 
+        record.date === today || record.status === 'pending'
+      );
       
-      // Now try our custom endpoint
-      let data: StaffCheckInCheckOut[] = [];
-      try {
-        const response = await staffCheckInCheckOutApi.getMyRecords();
-        data = response.data || [];
-        console.log('getMyRecords succeeded:', data);
-      } catch (error) {
-        console.error('getMyRecords failed:', error);
-        // For now, just use empty data so the page loads
-        data = [];
-      }
+      setRecords(response.data);
       
-      setCheckInOuts(data);
-      setFilteredCheckInOuts(data);
+      // Determine current status
+      const activeRecord = todaysRecords.find(record => 
+        record.status === 'checked_in' || record.status === 'pending' || record.status === 'approved'
+      );
       
-      // Determine current status based on latest record
-      const latestRecord = data[0];
-      if (latestRecord && latestRecord.checkin_time && !latestRecord.checkout_time) {
-        setCurrentStatus('checked-in');
-      } else {
-        setCurrentStatus('checked-out');
-      }
+      setCurrentStatus(activeRecord || null);
     } catch (err) {
-      console.error('Error fetching check-in/out data:', err);
-      setError('Failed to load check-in/checkout data. Please try again.');
+      console.error('Failed to fetch records:', err);
+      setError('Failed to load check-in/checkout data');
     } finally {
       setLoading(false);
     }
   };
 
-  // Filter check-ins based on search query
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredCheckInOuts(checkInOuts);
-    } else {
-      const filtered = checkInOuts.filter(record =>
-        record.date.includes(searchQuery) ||
-        record.remarks?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        record.block?.block_name?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredCheckInOuts(filtered);
-    }
-  }, [searchQuery, checkInOuts]);
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
-
-  const handleCheckIn = async () => {
+  const handleQuickCheckin = async () => {
     try {
-      const now = new Date();
-      const timeString = now.toTimeString().split(' ')[0]; // HH:MM:SS format
+      setCheckingIn(true);
+      setError(null);
       
+      // For demo purposes, using a default block_id
+      // In a real app, this would come from the staff's work assignment
       await staffCheckInCheckOutApi.checkIn({
-        staff_id: '1', // This should come from auth context
-        block_id: '1', // Default block
-        checkin_time: timeString,
-        remarks: 'Staff check-in'
+        block_id: "1", // This should come from staff's assignment data
+        remarks: "Staff self check-in"
       });
       
-      setCurrentStatus('checked-in');
-      fetchCheckInOuts();
-    } catch (error) {
-      console.error('Error checking in:', error);
-      setError('Failed to check in. Please try again.');
-    }
-  };
-
-  const handleCheckOut = async () => {
-    try {
-      // Find the latest check-in record without checkout
-      const latestCheckIn = checkInOuts.find(record => 
-        record.checkin_time && !record.checkout_time
-      );
+      await fetchStaffRecords();
+    } catch (err: any) {
+      console.error('Check-in failed:', err);
       
-      if (latestCheckIn) {
-        const now = new Date();
-        const timeString = now.toTimeString().split(' ')[0];
-        
-        await staffCheckInCheckOutApi.checkOut({
-          staff_id: '1', // This should come from auth context
-          checkout_time: timeString,
-          remarks: 'Staff check-out'
-        });
-        
-        setCurrentStatus('checked-out');
-        fetchCheckInOuts();
+      // If staff is already checked in, refresh the records to get updated status
+      if (err.message && err.message.includes('already checked in')) {
+        await fetchStaffRecords();
+        return;
       }
-    } catch (error) {
-      console.error('Error checking out:', error);
-      setError('Failed to check out. Please try again.');
+      
+      setError(err.message || 'Failed to check in');
+    } finally {
+      setCheckingIn(false);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      approved: 'bg-green-100 text-green-800 border-green-200',
-      checked_out: 'bg-green-100 text-green-800 border-green-200',
-      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      checked_in: 'bg-blue-100 text-blue-800 border-blue-200',
-      rejected: 'bg-red-100 text-red-800 border-red-200'
-    };
-    return colors[status as keyof typeof colors] || colors.pending;
+  const handleQuickCheckout = () => {
+    // Navigate to checkout request form
+    router.push('/staff/checkin-checkout/create');
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (record: StaffCheckInCheckOut) => {
+    switch (record.status) {
+      case 'pending':
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+            <Clock className="w-4 h-4 mr-1" />
+            Checkout Pending Approval
+          </span>
+        );
       case 'approved':
-      case 'checked_out':
-        return <Check className="w-4 h-4" />;
-      case 'rejected':
-        return <X className="w-4 h-4" />;
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+            <Check className="w-4 h-4 mr-1" />
+            Checkout Approved
+          </span>
+        );
+      case 'declined':
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 border border-red-200">
+            <X className="w-4 h-4 mr-1" />
+            Checkout Declined
+          </span>
+        );
+      case 'checked_in':
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+            <ArrowRight className="w-4 h-4 mr-1" />
+            Checked In
+          </span>
+        );
       default:
-        return <AlertCircle className="w-4 h-4" />;
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 border border-gray-200">
+            <AlertCircle className="w-4 h-4 mr-1" />
+            Unknown
+          </span>
+        );
     }
   };
 
-  const calculateHoursWorked = (checkinTime: string, checkoutTime: string): string => {
-    try {
-      const checkin = new Date(`2000-01-01 ${checkinTime}`);
-      const checkout = new Date(`2000-01-01 ${checkoutTime}`);
-      const diffMs = checkout.getTime() - checkin.getTime();
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      return `${diffHours}h ${diffMinutes}m`;
-    } catch (error) {
-      return 'N/A';
-    }
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
-  if (loading && filteredCheckInOuts.length === 0) {
-    return (
-      <div className="p-6 w-full">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Check-In/Check-Out Management</h1>
-          <p className="text-gray-600">Manage your attendance and view check-in/checkout history</p>
-        </div>
-        <TableSkeleton />
-      </div>
-    );
-  }
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
 
-  if (error) {
+  if (loading) {
     return (
-      <div className="p-6 w-full">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Check-In/Check-Out Management</h1>
-          <p className="text-gray-600">Manage your attendance and view check-in/checkout history</p>
-        </div>
-        
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <AlertCircle className="w-5 h-5 text-red-400 mr-2" />
-            <p className="text-red-800">{error}</p>
+      <div className="min-h-screen bg-gray-50 px-4 py-6">
+        <div className="w-full">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-64 mb-6"></div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
           </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-3 bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded text-sm"
-          >
-            Retry
-          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 w-full">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Check-In/Check-Out Management</h1>
-            <p className="text-gray-600">Manage your attendance and view check-in/checkout history</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm text-gray-500">Current Status</p>
-              <p className={`font-semibold ${currentStatus === 'checked-in' ? 'text-green-600' : 'text-red-600'}`}>
-                {currentStatus === 'checked-in' ? 'On Duty' : 'Off Duty'}
-              </p>
+    <div className="min-h-screen bg-gray-50 px-4 py-6">
+      <div className="w-full">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Check-in / Checkout</h1>
+          <p className="text-gray-600">Manage your work attendance and view check-in/checkout history</p>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+              <span className="text-red-800">{error}</span>
             </div>
-            {currentStatus === 'checked-out' ? (
-              <Button
-                onClick={handleCheckIn}
-                variant="primary"
-                size="lg"
-                className="flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Check In
-              </Button>
-            ) : (
-              <Button
-                onClick={handleCheckOut}
-                variant="danger"
-                size="lg"
-                className="flex items-center gap-2"
-              >
-                <X className="w-4 h-4" />
-                Check Out
-              </Button>
-            )}
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* Search */}
-      <div className="mb-6">
-        <SearchBar
-          value={searchQuery}
-          onChange={handleSearch}
-          placeholder="Search by date, block, or remarks..."
-        />
-      </div>
-
-      {/* Check-In/Out History */}
-      {filteredCheckInOuts.length === 0 ? (
-        <div className="text-center py-12">
-          <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No check-in records found</h3>
-          <p className="text-gray-500">
-            {searchQuery 
-              ? 'Try adjusting your search criteria' 
-              : 'Your attendance history will appear here'
-            }
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredCheckInOuts.map((record) => {
-            const hoursWorked = record.checkin_time && record.checkout_time
-              ? calculateHoursWorked(record.checkin_time, record.checkout_time)
-              : 'In Progress';
-
-            return (
-              <div
-                key={record.id}
-                className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      {/* Record Header */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-5 h-5 text-blue-600" />
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            Work Shift - {record.block?.block_name || 'General'}
-                          </h3>
-                        </div>
-                        
-                        {/* Status Badge */}
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(record.status)}`}>
-                          {getStatusIcon(record.status)}
-                          <span className="ml-1">{record.status}</span>
-                        </span>
-                      </div>
-
-                      {/* Times */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Check className="w-4 h-4 text-green-600" />
-                          <span className="text-gray-600">Check-in:</span>
-                          <span className="font-medium">
-                            {record.checkin_time || 'Not checked in'}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 text-sm">
-                          <X className="w-4 h-4 text-red-600" />
-                          <span className="text-gray-600">Check-out:</span>
-                          <span className="font-medium">
-                            {record.checkout_time || 'Not checked out'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Remarks */}
-                      {record.remarks && (
-                        <div className="mb-4">
-                          <p className="text-sm text-gray-600">
-                            <span className="font-medium">Remarks:</span> {record.remarks}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Meta Information */}
-                      <div className="flex items-center gap-6 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>Date: {new Date(record.date).toLocaleDateString()}</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-1">
-                          <User className="w-4 h-4" />
-                          <span>Block: {record.block?.block_name || 'N/A'}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Duration */}
-                    <div className="ml-4 text-right">
-                      <p className="text-sm text-gray-500">Hours Worked</p>
-                      <p className={`font-semibold ${hoursWorked === 'In Progress' ? 'text-blue-600' : 'text-green-600'}`}>
-                        {hoursWorked}
-                      </p>
-                    </div>
-                  </div>
+        {/* Status Card */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+          {currentStatus ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  {getStatusBadge(currentStatus)}
+                </div>
+                <div className="text-sm text-gray-500">
+                  {formatDate(currentStatus.date)}
                 </div>
               </div>
-            );
-          })}
+
+              {currentStatus.checkin_time && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                  <span>Checked in at: {formatTime(currentStatus.checkin_time)}</span>
+                </div>
+              )}
+
+              {currentStatus.checkout_time && (
+                <div className="flex items-center text-sm text-gray-600">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  <span>Checkout requested at: {formatTime(currentStatus.checkout_time)}</span>
+                </div>
+              )}
+
+              {currentStatus.remarks && (
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-sm text-gray-700">{currentStatus.remarks}</p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t border-gray-100">
+                {currentStatus.status === 'checked_in' && (
+                  <Button
+                    onClick={handleQuickCheckout}
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                  >
+                    Request Checkout
+                  </Button>
+                )}
+
+                {currentStatus.status === 'approved' && (
+                  <Button
+                    onClick={handleQuickCheckin}
+                    disabled={checkingIn}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    icon={checkingIn ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    ) : (
+                      <ArrowRight className="w-4 h-4" />
+                    )}
+                  >
+                    {checkingIn ? 'Checking In...' : 'Check In to Work'}
+                  </Button>
+                )}
+
+                {currentStatus.status === 'pending' && (
+                  <div className="text-center w-full">
+                    <p className="text-sm text-gray-600 mb-2">Your checkout request is waiting for admin approval.</p>
+                    <p className="text-xs text-gray-500">You will be able to check back in once approved.</p>
+                  </div>
+                )}
+
+                {currentStatus.status === 'declined' && (
+                  <div className="text-center w-full">
+                    <p className="text-sm text-red-600 mb-2">Your checkout request was declined.</p>
+                    <p className="text-xs text-gray-500">You remain checked in for work.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-gray-600 text-sm mb-3">Checkout when you are not available at hostel.</p>
+              <Button
+                onClick={handleQuickCheckout}
+                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 text-sm"
+              >
+                Request Checkout
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Checkout History */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Checkout History</h2>
+          </div>
+          
+          {records.length > 0 ? (
+            <div className="divide-y divide-gray-200">
+              {records.slice(0, 10).map((record) => (
+                <div key={record.id} className="p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>{getStatusBadge(record)}</div>
+                    <div className="text-sm text-gray-500">{formatDate(record.date)}</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    {record.checkin_time && (
+                      <div className="flex items-center text-gray-600">
+                        <ArrowRight className="w-4 h-4 mr-2" />
+                        <span>In: {formatTime(record.checkin_time)}</span>
+                      </div>
+                    )}
+                    
+                    {record.checkout_time && (
+                      <div className="flex items-center text-gray-600">
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        <span>Out: {formatTime(record.checkout_time)}</span>
+                      </div>
+                    )}
+                    
+                    {record.block && (
+                      <div className="flex items-center text-gray-600">
+                        <Home className="w-4 h-4 mr-2" />
+                        <span>{record.block.block_name}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {record.remarks && (
+                    <div className="mt-3 text-sm text-gray-600 bg-gray-50 rounded p-2">
+                      {record.remarks}
+                    </div>
+                  )}
+                  
+                  <div className="mt-3 text-right">
+                    <Link 
+                      href={`/staff/checkin-checkout/${record.id}`}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      View Details →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Calendar className="w-6 h-6 text-gray-400" />
+              </div>
+              <h3 className="text-base font-medium text-gray-900 mb-2">No Records Found</h3>
+              <p className="text-gray-600 text-sm">You haven't created any check-in/checkout records yet.</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

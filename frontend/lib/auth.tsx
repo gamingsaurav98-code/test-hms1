@@ -34,15 +34,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Try to load cached user data first for faster initial load
+    // Try to load cached user data first for instant load
     const cachedUser = localStorage.getItem('hms_user');
     if (cachedUser) {
       try {
         const userData = JSON.parse(cachedUser);
         setUser(userData);
-        setIsLoading(false);
+        setIsLoading(false); // Set loading to false immediately with cached data
         
-        // Verify token in background
+        // Verify token in background without showing loading
         verifyTokenInBackground();
         return;
       } catch (error) {
@@ -51,8 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // If no cached data, do full auth check
-    await verifyToken();
+    // If no cached data, do quick auth check
+    await verifyTokenQuick();
   };
 
   const verifyTokenInBackground = async () => {
@@ -72,6 +72,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       tokenStorage.remove();
       localStorage.removeItem('hms_user');
       setUser(null);
+    }
+  };
+
+  const verifyTokenQuick = async () => {
+    try {
+      const response = await authApi.me();
+      if (response.status === 'success') {
+        setUser(response.data.user);
+        localStorage.setItem('hms_user', JSON.stringify(response.data.user));
+      } else {
+        // Invalid token
+        tokenStorage.remove();
+        localStorage.removeItem('hms_user');
+      }
+    } catch (error) {
+      console.error('Quick auth check failed:', error);
+      tokenStorage.remove();
+      localStorage.removeItem('hms_user');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -183,50 +203,46 @@ export function withAuth<P extends object>(
     const router = useRouter();
 
     useEffect(() => {
-      if (!isLoading) {
-        if (!isAuthenticated) {
-          router.push('/');
-          return;
-        }
+      // Don't wait for loading - redirect immediately if not authenticated
+      if (!isLoading && !isAuthenticated) {
+        router.push('/');
+        return;
+      }
 
-        if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-          // Redirect to appropriate dashboard if user doesn't have access
-          switch (user.role) {
-            case 'admin':
-              router.push('/admin');
-              break;
-            case 'student':
-              router.push('/student');
-              break;
-            case 'staff':
-              router.push('/staff');
-              break;
-            default:
-              router.push('/');
-          }
-          return;
+      // If we have a user but loading is still true, and we have cached data, proceed anyway
+      if (user && allowedRoles && !allowedRoles.includes(user.role)) {
+        // Redirect to appropriate dashboard if user doesn't have access
+        switch (user.role) {
+          case 'admin':
+            router.push('/admin');
+            break;
+          case 'student':
+            router.push('/student');
+            break;
+          case 'staff':
+            router.push('/staff');
+            break;
+          default:
+            router.push('/');
         }
+        return;
       }
     }, [isAuthenticated, isLoading, user, router]);
 
-    if (isLoading) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-          <div className="text-center">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
-              <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-transparent border-t-blue-300 mx-auto animate-ping"></div>
-            </div>
-            <p className="mt-6 text-gray-600 font-medium">Checking authentication...</p>
-          </div>
-        </div>
-      );
+    // If we have cached user data, show the component immediately
+    if (user && (isAuthenticated || localStorage.getItem('hms_user'))) {
+      if (allowedRoles && !allowedRoles.includes(user.role)) {
+        return null; // Will redirect in useEffect
+      }
+      return <WrappedComponent {...props} />;
     }
 
-    if (!isAuthenticated || (allowedRoles && user && !allowedRoles.includes(user.role))) {
-      return null; // Will redirect in useEffect
+    // Only show loading for very brief moments or if no cached data
+    if (isLoading && !user) {
+      return null; // Return nothing instead of loading screen for faster experience
     }
 
-    return <WrappedComponent {...props} />;
+    // If not authenticated and not loading, redirect will happen in useEffect
+    return null;
   };
 }

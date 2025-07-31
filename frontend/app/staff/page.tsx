@@ -161,7 +161,7 @@ export default function StaffDashboardPage() {
       recentActivities.push(
         {
           type: 'maintenance' as const,
-          message: `Work shift: ${stats.workShift}`,
+          message: `Current work shift active`,
           time: 'Current',
           status: 'active',
         }
@@ -240,10 +240,6 @@ export default function StaffDashboardPage() {
                 <h1 className="text-3xl font-bold mb-2">Welcome back, Staff Member!</h1>
                 <p className="text-blue-100 text-lg flex items-center gap-4">
                   <span className="flex items-center gap-2">
-                    <Clock className="w-5 h-5" />
-                    {stats.workShift}
-                  </span>
-                  <span className="flex items-center gap-2">
                     <Home className="w-5 h-5" />
                     {stats.department}
                   </span>
@@ -253,61 +249,12 @@ export default function StaffDashboardPage() {
                   </span>
                 </p>
               </div>
-              <div className="flex gap-3">
-                <Button 
-                  onClick={() => window.location.href = '/staff/checkin-checkout'}
-                  size="lg"
-                  className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white px-6 py-3"
-                >
-                  <Clock className="w-5 h-5 mr-2" />
-                  {stats.currentStatus === 'checked-in' ? 'Check Out' : 'Check In'}
-                </Button>
-                <Button 
-                  onClick={() => window.location.href = '/staff/salary'}
-                  size="lg"
-                  className="bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white px-6 py-3"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
-                  Salary
-                </Button>
-              </div>
             </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className={`p-2 rounded-lg ${
-                    stats.currentStatus === 'checked-in' 
-                      ? 'bg-emerald-100 text-emerald-600' 
-                      : 'bg-red-100 text-red-600'
-                  }`}>
-                    {stats.currentStatus === 'checked-in' ? (
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    ) : (
-                      <Clock className="w-6 h-6" />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Work Status</h3>
-                    <p className="text-sm text-gray-500">{stats.workShift}</p>
-                  </div>
-                </div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats.currentStatus === 'checked-in' ? 'On Duty' : 'Off Duty'}
-                </p>
-              </div>
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
@@ -348,7 +295,7 @@ export default function StaffDashboardPage() {
                 <div className="flex items-center gap-3 mb-3">
                   <div className="bg-emerald-100 text-emerald-600 p-2 rounded-lg">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div>
@@ -399,7 +346,7 @@ export default function StaffDashboardPage() {
                     }`}>
                       {activity.type === 'salary' ? (
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       ) : activity.type === 'checkin' ? (
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -449,38 +396,6 @@ export default function StaffDashboardPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Pending Tasks */}
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Pending Tasks</h3>
-                <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                  {stats.pendingTasks.length}
-                </span>
-              </div>
-              
-              <div className="space-y-3">
-                {stats.pendingTasks.map((task, index) => (
-                  <div key={index} className="p-3 border border-gray-200 rounded-lg">
-                    <p className="text-sm font-medium text-gray-900 mb-2">{task.task}</p>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        task.priority === 'high' 
-                          ? 'bg-red-100 text-red-800'
-                          : task.priority === 'medium'
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {task.priority}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(task.dueDate).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Quick Actions */}
             <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
@@ -499,7 +414,7 @@ export default function StaffDashboardPage() {
                   className="w-full justify-start"
                 >
                   <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Salary Details
                 </Button>

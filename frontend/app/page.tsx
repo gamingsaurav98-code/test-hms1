@@ -91,24 +91,14 @@ export default function LoginPage() {
     setError('');
   };
 
-  if (!mounted || authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+  // Show loading only on mount, not for auth loading
+  if (!mounted) {
+    return null; // Return nothing during hydration
   }
 
-  // Don't render login form if already authenticated
+  // Don't render login form if already authenticated - redirect immediately
   if (isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirecting to your dashboard...</p>
-        </div>
-      </div>
-    );
+    return null; // Let useEffect handle redirect without showing loading
   }
 
   return (

@@ -277,26 +277,38 @@ class StaffCheckInCheckOutController extends Controller
      */
     public function checkIn(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'staff_id' => 'required|exists:staff,id',
-            'block_id' => 'required|exists:blocks,id',
-            'checkin_time' => 'nullable|date',
-            'remarks' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         try {
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Get staff record for the authenticated user
+            $staff = \App\Models\Staff::where('email', $user->email)->first();
+            
+            if (!$staff) {
+                return response()->json(['error' => 'Staff record not found'], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'block_id' => 'required|exists:blocks,id',
+                'checkin_time' => 'nullable|date',
+                'remarks' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
             $today = Carbon::today()->toDateString();
             
             // Check if staff is already checked in today
-            $existingRecord = StaffCheckInCheckOut::where('staff_id', $request->staff_id)
+            $existingRecord = StaffCheckInCheckOut::where('staff_id', $staff->id)
                 ->whereDate('date', $today)
                 ->whereNotNull('checkin_time')
                 ->whereNull('checkout_time')
@@ -310,7 +322,7 @@ class StaffCheckInCheckOutController extends Controller
             }
 
             $data = [
-                'staff_id' => $request->staff_id,
+                'staff_id' => $staff->id,
                 'block_id' => $request->block_id,
                 'date' => $today,
                 'checkin_time' => $request->checkin_time ?? Carbon::now(),
@@ -339,25 +351,40 @@ class StaffCheckInCheckOutController extends Controller
      */
     public function checkOut(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'staff_id' => 'required|exists:staff,id',
-            'checkout_time' => 'nullable|date',
-            'remarks' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         try {
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Get staff record for the authenticated user
+            $staff = \App\Models\Staff::where('email', $user->email)->first();
+
+            if (!$staff) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Staff record not found for authenticated user'
+                ], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'checkout_time' => 'nullable|date',
+                'remarks' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
             $today = Carbon::today()->toDateString();
             
-            // Find the check-in record for today
-            $record = StaffCheckInCheckOut::where('staff_id', $request->staff_id)
+            // Find the check-in record for today for the authenticated staff
+            $record = StaffCheckInCheckOut::where('staff_id', $staff->id)
                 ->whereDate('date', $today)
                 ->whereNotNull('checkin_time')
                 ->whereNull('checkout_time')
@@ -366,7 +393,7 @@ class StaffCheckInCheckOutController extends Controller
             if (!$record) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'No active check-in record found for this staff member today'
+                    'message' => 'No active check-in record found for today'
                 ], 422);
             }
 
