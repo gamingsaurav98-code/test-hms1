@@ -108,12 +108,16 @@ export default function StaffStructure({ children }: { children: React.ReactNode
   };
 
   const formatDateTime = (date: Date) => {
-    return date.toLocaleString('en-US', {
+    const options: Intl.DateTimeFormatOptions = {
       weekday: 'short',
-      hour: '2-digit',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
       minute: '2-digit',
       hour12: true
-    });
+    };
+    return date.toLocaleDateString('en-US', options);
   };
 
   const handleEmailCopy = () => {
@@ -128,8 +132,8 @@ export default function StaffStructure({ children }: { children: React.ReactNode
       label: 'Dashboard',
       href: '/staff',
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
         </svg>
       ),
     },
@@ -137,8 +141,8 @@ export default function StaffStructure({ children }: { children: React.ReactNode
       label: 'Check-In/Out',
       href: '/staff/checkin-checkout',
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
         </svg>
       ),
     },
@@ -146,17 +150,18 @@ export default function StaffStructure({ children }: { children: React.ReactNode
       label: 'Salary',
       href: '/staff/salary',
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
         </svg>
       ),
     },
     {
-      label: 'Complains',
+      label: 'Complaints',
       href: '/staff/complain',
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
         </svg>
       ),
     },
@@ -164,8 +169,8 @@ export default function StaffStructure({ children }: { children: React.ReactNode
       label: 'Notices',
       href: '/staff/notice',
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M18 3a1 1 0 00-1.447-.894L8.763 6H5a3 3 0 000 6h.28l1.771 5.316A1 1 0 008 18h1a1 1 0 001-1v-4.382l6.553 3.276A1 1 0 0018 15V3z" clipRule="evenodd" />
         </svg>
       ),
     },
@@ -177,7 +182,7 @@ export default function StaffStructure({ children }: { children: React.ReactNode
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-200/50 h-16 shadow-lg">
         <div className="flex items-center h-full">
           {/* Left side - Title area */}
-          <div className="flex items-center w-64 px-6 border-r border-gray-200/50 h-full bg-gradient-to-r from-blue-600 to-blue-700 relative overflow-hidden">
+          <div className="flex items-center w-64 px-6 border-r border-gray-200/50 h-full bg-gradient-to-r from-[#235999] to-[#1e4d87] relative overflow-hidden">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16"></div>
@@ -228,14 +233,14 @@ export default function StaffStructure({ children }: { children: React.ReactNode
               
               {/* Page Title */}
               <div className="flex items-center">
-                <h2 className="text-xl font-bold text-gray-800 tracking-tight">{currentPageName}</h2>
-                <div className="w-2 h-2 bg-blue-600 rounded-full ml-3 animate-pulse"></div>
+                <h1 className="text-xl font-bold text-gray-800 tracking-tight">{currentPageName}</h1>
+                <div className="w-2 h-2 bg-[#235999] rounded-full ml-3 animate-pulse"></div>
               </div>
             </div>
             
             {/* Time display with enhanced design */}
             <div className="hidden md:flex items-center space-x-3 text-sm text-gray-600 bg-gradient-to-r from-white to-gray-50 px-4 py-2.5 rounded-xl border border-gray-200/50 shadow-sm">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#235999] to-[#1e4d87] rounded-lg flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -251,11 +256,11 @@ export default function StaffStructure({ children }: { children: React.ReactNode
           <div className="flex items-center px-6 space-x-3">
             {/* Notification bell */}
             <button className="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-all duration-200 group">
-              <svg className="w-5 h-5 text-gray-600 group-hover:text-blue-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-gray-600 group-hover:text-[#235999] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-3.5-5.5.5-3.5V7a6 6 0 00-12 0v1.5l.5 3.5L2 17h5m8 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
               <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-xs font-bold text-white">1</span>
+                <span className="text-xs font-bold text-white">3</span>
               </div>
             </button>
 
@@ -263,92 +268,133 @@ export default function StaffStructure({ children }: { children: React.ReactNode
             <div className="relative">
               <button
                 data-button="user"
-                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setUserDropdownOpen(!userDropdownOpen);
+                }}
                 className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
               >
-                <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-sm font-bold text-white">S</span>
+                <div className="w-9 h-9 bg-gradient-to-br from-[#235999] to-[#1e4d87] rounded-xl flex items-center justify-center shadow-lg ring-2 ring-white">
+                  <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 </div>
-                <div className="hidden md:flex flex-col items-start">
-                  <span className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors duration-200">Staff Member</span>
-                  <span className="text-xs text-gray-500">{user?.email || 'No email'}</span>
+                <div className="hidden lg:block text-left">
+                  <div className="text-sm font-semibold text-gray-800">Staff</div>
                 </div>
-                <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="hidden lg:block w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
               {/* User dropdown menu */}
               {userDropdownOpen && (
-                <div
+                <div 
                   data-dropdown="user"
-                  className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 py-2 z-50 animate-in slide-in-from-top-2 duration-200"
+                  className="absolute right-0 mt-3 w-80 bg-white/95 backdrop-blur-xl border border-gray-200/50 shadow-2xl rounded-2xl py-3 z-50 animate-in slide-in-from-top-2 duration-200"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  {/* User info section */}
-                  <div className="px-4 py-4 border-b border-gray-100">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-                        <span className="text-lg font-bold text-white">S</span>
+                  <div className="px-5 py-4 border-b border-gray-100/50">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-9 h-9 bg-gradient-to-br from-[#235999] to-[#1e4d87] rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                        <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-gray-900">Staff Member</p>
-                        <div className="flex items-center space-x-2">
-                          <p className="text-xs text-gray-500">{user?.email || 'No email'}</p>
-                          <button
-                            onClick={handleEmailCopy}
-                            className="text-xs text-blue-600 hover:text-blue-700 transition-colors duration-200"
-                          >
-                            {emailCopied ? 'Copied!' : 'Copy'}
-                          </button>
-                        </div>
-                        <div className="flex items-center mt-1">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                          <span className="text-xs text-green-600 font-medium">Online</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-base font-bold text-gray-800 mb-1">Staff</div>
+                        <div 
+                          className={`text-sm break-all cursor-pointer transition-all duration-200 hover:text-[#235999] ${
+                            emailCopied ? 'text-green-600' : 'text-gray-500'
+                          }`}
+                          title={emailCopied ? "Email copied to clipboard!" : "Click to copy email"}
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              await navigator.clipboard.writeText(user?.email || 'staff@hms.com');
+                              setEmailCopied(true);
+                              setTimeout(() => setEmailCopied(false), 1500);
+                            } catch (err) {
+                              console.error('Failed to copy email:', err);
+                            }
+                          }}
+                        >
+                          {emailCopied ? (
+                            <div className="flex items-center space-x-1">
+                              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span>Email copied!</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-1 group">
+                              <span>{user?.email || 'staff@hms.com'}</span>
+                              <svg className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
-
-                  {/* Menu items */}
                   <div className="py-2">
                     <Link
                       href="/staff/profile"
-                      className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                      className="flex items-center px-5 py-3.5 text-sm font-medium text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-[#235999] transition-all duration-200 group"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      View Profile
+                      <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center mr-4 group-hover:bg-blue-100 transition-colors duration-200">
+                        <svg className="h-4 w-4 text-gray-500 group-hover:text-[#235999]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-sm">Profile</div>
+                        <div className="text-xs text-gray-500">Manage your account</div>
+                      </div>
                     </Link>
                     <Link
                       href="/staff/settings"
-                      className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                      className="flex items-center px-5 py-3.5 text-sm font-medium text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-[#235999] transition-all duration-200 group"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <svg className="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      Settings
+                      <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center mr-4 group-hover:bg-blue-100 transition-colors duration-200">
+                        <svg className="h-4 w-4 text-gray-500 group-hover:text-[#235999]" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-sm">Settings</div>
+                        <div className="text-xs text-gray-500">Preferences & configuration</div>
+                      </div>
                     </Link>
                   </div>
-
-                  {/* Logout button */}
-                  <div className="border-t border-gray-100 pt-2">
-                    <button
-                      onClick={handleLogout}
-                      disabled={authLoading}
-                      className="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 disabled:opacity-50"
-                    >
+                  <div className="border-t border-gray-200/50 my-2"></div>
+                  <button 
+                    className="flex items-center w-full px-5 py-3.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleLogout}
+                    disabled={authLoading}
+                  >
+                    <div className="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center mr-4 group-hover:bg-red-200 transition-colors duration-200">
                       {authLoading ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-3"></div>
+                        <svg className="h-4 w-4 text-red-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
                       ) : (
-                        <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
                       )}
-                      {authLoading ? 'Signing out...' : 'Sign out'}
-                    </button>
-                  </div>
+                    </div>
+                    <div className="text-left">
+                      <div className="font-semibold text-sm">
+                        {authLoading ? 'Signing out...' : 'Sign out'}
+                      </div>
+                      <div className="text-xs text-gray-500">End current session</div>
+                    </div>
+                  </button>
                 </div>
               )}
             </div>
@@ -357,10 +403,14 @@ export default function StaffStructure({ children }: { children: React.ReactNode
       </header>
 
       {/* Sidebar */}
-      <div className={`fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white/95 backdrop-blur-xl border-r border-gray-200/50 transform transition-transform duration-300 z-40 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 shadow-2xl`}>
-        <div className="flex flex-col h-full">
-          {/* Navigation */}
-          <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent hover:scrollbar-thumb-blue-300">
+      <aside
+        className={`fixed top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] bg-white/95 backdrop-blur-xl border-r border-gray-200/50 transition-transform duration-300 ease-out shadow-2xl ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0`}
+      >
+        {/* Sidebar content */}
+        <div className="h-full overflow-y-auto py-3 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent hover:scrollbar-thumb-blue-300">
+          <nav className="px-2 space-y-0.5">
             {sidebarItems.map((item, index) => {
               const isActive = pathname === item.href || (item.href !== "/staff" && pathname.startsWith(item.href) && !sidebarItems.some(otherItem => 
                 otherItem.href !== item.href && 
@@ -375,8 +425,8 @@ export default function StaffStructure({ children }: { children: React.ReactNode
                   href={item.href}
                   className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md shadow-blue-200/60"
-                      : "text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-600"
+                      ? "bg-gradient-to-r from-[#235999] to-[#1e4d87] text-white shadow-md shadow-blue-200/60"
+                      : "text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-[#235999]"
                   }`}
                 >
                   <div className={`mr-3 flex-shrink-0 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}>
@@ -390,21 +440,24 @@ export default function StaffStructure({ children }: { children: React.ReactNode
               );
             })}
           </nav>
-
         </div>
-      </div>
+      </aside>
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+        <div 
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden transition-all duration-300" 
+          onClick={() => setSidebarOpen(false)} 
         />
       )}
 
       {/* Main content */}
-      <main className={`transition-all duration-300 pt-16 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-64'}`}>
-        {children}
+      <main className="pt-16 lg:pl-64 min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
+        </div>
       </main>
     </div>
   );
