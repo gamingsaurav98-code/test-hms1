@@ -1,4 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 
 export interface ChatMessage {
   id: number;
@@ -58,10 +59,7 @@ export const chatApi = {
   async getComplaintChats(complainId: number): Promise<ChatResponse> {
     const response = await fetch(`${API_BASE_URL}/chats/complaint/${complainId}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     const result = await handleResponse<{ data: ChatResponse }>(response);
@@ -74,10 +72,7 @@ export const chatApi = {
   async sendMessage(data: SendMessageRequest): Promise<ChatMessage> {
     const response = await fetch(`${API_BASE_URL}/chats/send`, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
     
@@ -91,10 +86,7 @@ export const chatApi = {
   async editMessage(chatId: number, data: EditMessageRequest): Promise<ChatMessage> {
     const response = await fetch(`${API_BASE_URL}/chats/${chatId}/edit`, {
       method: 'PUT',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
     
@@ -108,10 +100,7 @@ export const chatApi = {
   async deleteMessage(chatId: number): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/chats/${chatId}`, {
       method: 'DELETE',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<void>(response);
@@ -123,10 +112,7 @@ export const chatApi = {
   async markAsRead(data: MarkAsReadRequest): Promise<{ marked_count: number }> {
     const response = await fetch(`${API_BASE_URL}/chats/mark-read`, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
     
@@ -148,10 +134,7 @@ export const chatApi = {
 
     const response = await fetch(`${API_BASE_URL}/chats/unread-count?${params.toString()}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<{ unread_count: number }>(response);
@@ -167,7 +150,9 @@ export const chatApi = {
     const response = await fetch(`${API_BASE_URL}/chats/upload-attachment`, {
       method: 'POST',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
+        // Don't set Content-Type for FormData - let browser set it with boundary
       },
       body: formData,
     });

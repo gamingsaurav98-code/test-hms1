@@ -1,4 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 
 export interface SupplierFinancial {
   id: string;
@@ -32,6 +33,7 @@ export const supplierFinancialApi = {
     const response = await fetch(`${API_BASE_URL}/suppliers/${supplierId}/financials`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -46,6 +48,7 @@ export const supplierFinancialApi = {
     const response = await fetch(`${API_BASE_URL}/supplier-financials/${id}`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -60,6 +63,7 @@ export const supplierFinancialApi = {
     const response = await fetch(`${API_BASE_URL}/supplier-financials`, {
       method: 'POST',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -75,6 +79,7 @@ export const supplierFinancialApi = {
     const response = await fetch(`${API_BASE_URL}/supplier-financials/${id}`, {
       method: 'PUT',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -90,6 +95,7 @@ export const supplierFinancialApi = {
     const response = await fetch(`${API_BASE_URL}/supplier-financials/${id}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },

@@ -1,4 +1,5 @@
 import { API_BASE_URL, handleResponse, PaginatedResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 import { Inquiry, InquiryFormData } from './types/inquiry.types';
 
 // Inquiry API functions
@@ -8,6 +9,7 @@ export const inquiryApi = {
     const response = await fetch(`${API_BASE_URL}/inquiries?page=${page}`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -21,6 +23,7 @@ export const inquiryApi = {
     const response = await fetch(`${API_BASE_URL}/inquiries/block/${blockId}?page=${page}`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -37,6 +40,7 @@ export const inquiryApi = {
     const response = await fetch(`${API_BASE_URL}/inquiries/${id}`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
@@ -65,6 +69,7 @@ export const inquiryApi = {
       const response = await fetch(`${API_BASE_URL}/inquiries`, {
         method: 'POST',
         headers: {
+          ...getAuthHeaders(),
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',
@@ -91,6 +96,7 @@ export const inquiryApi = {
     const response = await fetch(`${API_BASE_URL}/inquiries/${id}`, {
       method: 'PUT',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -105,6 +111,7 @@ export const inquiryApi = {
     const response = await fetch(`${API_BASE_URL}/inquiries/${id}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -118,6 +125,7 @@ export const inquiryApi = {
     const response = await fetch(`${API_BASE_URL}/inquiries/${inquiryId}/attachments/${attachmentId}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },

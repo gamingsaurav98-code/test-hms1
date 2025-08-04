@@ -1,5 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
-import { getAuthHeaders } from './auth.api';
+import { getAuthHeaders, getAuthHeadersForFormData } from './auth.api';
 import { Block, BlockFormData } from './types';
 import { PaginatedResponse } from './core';
 
@@ -19,10 +19,7 @@ export const blockApi = {
   async getBlock(id: string): Promise<Block> {
     const response = await fetch(`${API_BASE_URL}/blocks/${id}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<Block>(response);
@@ -37,7 +34,7 @@ export const blockApi = {
     formData.append('location', data.location);
     formData.append('manager_name', data.manager_name);
     formData.append('manager_contact', data.manager_contact);
-    formData.append('remarks', data.remarks);
+    formData.append('remarks', data.remarks || '');
     
     // Append file if present
     if (data.block_attachment) {
@@ -46,9 +43,7 @@ export const blockApi = {
 
     const response = await fetch(`${API_BASE_URL}/blocks`, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -67,7 +62,7 @@ export const blockApi = {
     formData.append('location', data.location);
     formData.append('manager_name', data.manager_name);
     formData.append('manager_contact', data.manager_contact);
-    formData.append('remarks', data.remarks);
+    formData.append('remarks', data.remarks || '');
     
     // Append file if present
     if (data.block_attachment) {
@@ -76,9 +71,7 @@ export const blockApi = {
 
     const response = await fetch(`${API_BASE_URL}/blocks/${id}`, {
       method: 'POST', // Using POST with _method override for file uploads
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -89,10 +82,7 @@ export const blockApi = {
   async deleteBlock(id: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/blocks/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<void>(response);

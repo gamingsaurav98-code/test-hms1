@@ -1,5 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
-import { getAuthHeaders } from './auth.api';
+import { getAuthHeaders, getAuthHeadersForFormData } from './auth.api';
 import { Student } from './types';
 import { PaginatedResponse } from './core';
 
@@ -111,6 +111,7 @@ export const studentApi = {
     const response = await fetch(`${API_BASE_URL}/student-amenities`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -124,6 +125,7 @@ export const studentApi = {
     const response = await fetch(`${API_BASE_URL}/rooms/${roomId}/students`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -137,6 +139,7 @@ export const studentApi = {
     const response = await fetch(`${API_BASE_URL}/students?all=true`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -168,6 +171,7 @@ export const studentApi = {
     const response = await fetch(`${API_BASE_URL}/students/${id}`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -216,9 +220,7 @@ export const studentApi = {
 
     const response = await fetch(`${API_BASE_URL}/students`, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -292,9 +294,7 @@ export const studentApi = {
 
     const response = await fetch(`${API_BASE_URL}/students/${id}`, {
       method: 'POST', // Using POST with _method override for file uploads
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -306,6 +306,7 @@ export const studentApi = {
     const response = await fetch(`${API_BASE_URL}/students/${id}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -373,6 +374,7 @@ export const studentApi = {
     const response = await fetch(`${API_BASE_URL}/students/${id}/image`, {
       method: 'POST',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
       },
       body: formData,
@@ -454,6 +456,7 @@ export const studentFinancialApi = {
     const response = await fetch(`${API_BASE_URL}/student-financials/${id}`, {
       method: 'POST', // Using POST with _method override for file uploads
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
       },
       body: formData,
@@ -467,6 +470,7 @@ export const studentFinancialApi = {
     const response = await fetch(`${API_BASE_URL}/students/${studentId}/financials`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -480,6 +484,7 @@ export const studentFinancialApi = {
     const response = await fetch(`${API_BASE_URL}/student-financials/${id}`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -493,6 +498,7 @@ export const studentFinancialApi = {
     const response = await fetch(`${API_BASE_URL}/student-financials/${id}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },

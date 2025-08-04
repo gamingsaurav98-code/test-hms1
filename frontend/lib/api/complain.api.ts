@@ -1,5 +1,5 @@
 import { API_BASE_URL, handleResponse, PaginatedResponse } from './core';
-import { getAuthHeaders } from './auth.api';
+import { getAuthHeaders, getAuthHeadersForFormData } from './auth.api';
 
 export interface Complain {
   id: number;
@@ -58,6 +58,7 @@ export const complainApi = {
     const response = await fetch(`${API_BASE_URL}/complains?all=true`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -71,6 +72,7 @@ export const complainApi = {
     const response = await fetch(`${API_BASE_URL}/complains/${id}`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -93,9 +95,7 @@ export const complainApi = {
 
     const response = await fetch(`${API_BASE_URL}/complains`, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -119,9 +119,7 @@ export const complainApi = {
 
     const response = await fetch(`${API_BASE_URL}/complains/${id}`, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -133,6 +131,7 @@ export const complainApi = {
     const response = await fetch(`${API_BASE_URL}/complains/${id}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },

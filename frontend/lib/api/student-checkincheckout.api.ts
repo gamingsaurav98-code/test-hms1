@@ -186,6 +186,7 @@ export const studentCheckInCheckOutApi = {
     const response = await fetch(`${API_BASE_URL}/student-checkincheckouts`, {
       method: 'POST',
       headers: {
+        ...getAuthHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
@@ -198,6 +199,7 @@ export const studentCheckInCheckOutApi = {
     const response = await fetch(`${API_BASE_URL}/student-checkincheckouts/${id}`, {
       method: 'PUT',
       headers: {
+        ...getAuthHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
@@ -209,6 +211,9 @@ export const studentCheckInCheckOutApi = {
   async deleteCheckInCheckOut(id: string): Promise<{ message: string }> {
     const response = await fetch(`${API_BASE_URL}/student-checkincheckouts/${id}`, {
       method: 'DELETE',
+      headers: {
+        ...getAuthHeaders(),
+      },
     });
     return handleResponse<{ message: string }>(response);
   },
@@ -218,6 +223,7 @@ export const studentCheckInCheckOutApi = {
     const response = await fetch(`${API_BASE_URL}/student-checkincheckouts/checkin`, {
       method: 'POST',
       headers: {
+        ...getAuthHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
@@ -230,6 +236,7 @@ export const studentCheckInCheckOutApi = {
     const response = await fetch(`${API_BASE_URL}/student-checkincheckouts/checkout`, {
       method: 'POST',
       headers: {
+        ...getAuthHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
@@ -240,7 +247,11 @@ export const studentCheckInCheckOutApi = {
   // Get today's attendance
   async getTodayAttendance(blockId?: string): Promise<{ data: StudentCheckInCheckOut[]; date: string }> {
     const queryParams = blockId ? `?block_id=${blockId}` : '';
-    const response = await fetch(`${API_BASE_URL}/student-checkincheckouts/today/attendance${queryParams}`);
+    const response = await fetch(`${API_BASE_URL}/student-checkincheckouts/today/attendance${queryParams}`, {
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
     return handleResponse<{ data: StudentCheckInCheckOut[]; date: string }>(response);
   },
 
@@ -249,6 +260,7 @@ export const studentCheckInCheckOutApi = {
     const response = await fetch(`${API_BASE_URL}/student-checkincheckouts/${id}/approve-checkout`, {
       method: 'POST',
       headers: {
+        ...getAuthHeaders(),
         'Content-Type': 'application/json',
       },
     });
@@ -260,6 +272,7 @@ export const studentCheckInCheckOutApi = {
     const response = await fetch(`${API_BASE_URL}/student-checkincheckouts/${id}/decline-checkout`, {
       method: 'POST',
       headers: {
+        ...getAuthHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -353,7 +366,11 @@ export const studentCheckoutRuleApi = {
 
   // Get specific checkout rule
   async getCheckoutRule(id: string): Promise<{ data: StudentCheckoutRule }> {
-    const response = await fetch(`${API_BASE_URL}/student-checkout-rules/${id}`);
+    const response = await fetch(`${API_BASE_URL}/student-checkout-rules/${id}`, {
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
     return handleResponse<{ data: StudentCheckoutRule }>(response);
   },
 
@@ -362,6 +379,7 @@ export const studentCheckoutRuleApi = {
     const response = await fetch(`${API_BASE_URL}/student-checkout-rules`, {
       method: 'POST',
       headers: {
+        ...getAuthHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
@@ -374,6 +392,7 @@ export const studentCheckoutRuleApi = {
     const response = await fetch(`${API_BASE_URL}/student-checkout-rules/${id}`, {
       method: 'PUT',
       headers: {
+        ...getAuthHeaders(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),

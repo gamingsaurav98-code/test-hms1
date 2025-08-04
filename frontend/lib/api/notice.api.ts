@@ -1,4 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 import { PaginatedResponse } from './core';
 
 export interface NoticeFormData {
@@ -94,10 +95,7 @@ export const noticeApi = {
   async getNotices(page: number = 1): Promise<PaginatedResponse<Notice>> {
     const response = await fetch(`${API_BASE_URL}/notices?page=${page}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<PaginatedResponse<Notice>>(response);
@@ -111,10 +109,7 @@ export const noticeApi = {
     
     const response = await fetch(`${API_BASE_URL}/notices-create/students?${params.toString()}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<PaginatedResponse<StudentForNotice>>(response);
@@ -128,10 +123,7 @@ export const noticeApi = {
     
     const response = await fetch(`${API_BASE_URL}/notices-create/staff?${params.toString()}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<PaginatedResponse<StaffForNotice>>(response);
@@ -145,10 +137,7 @@ export const noticeApi = {
     
     const response = await fetch(`${API_BASE_URL}/notices-create/blocks?${params.toString()}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<PaginatedResponse<BlockForNotice>>(response);
@@ -158,10 +147,7 @@ export const noticeApi = {
   async getNotice(id: string): Promise<Notice> {
     const response = await fetch(`${API_BASE_URL}/notices/${id}`, {
       method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<Notice>(response);
@@ -225,10 +211,7 @@ export const noticeApi = {
   async deleteNotice(id: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/notices/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<void>(response);
@@ -238,10 +221,7 @@ export const noticeApi = {
   async deleteAttachment(noticeId: string, attachmentId: number): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/notices/${noticeId}/attachments/${attachmentId}`, {
       method: 'DELETE',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
     });
     
     return handleResponse<void>(response);

@@ -1,5 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
-import { getAuthHeaders } from './auth.api';
+import { getAuthHeaders, getAuthHeadersForFormData } from './auth.api';
 import { Room, RoomFormData, Block, Student } from './types';
 import { PaginatedResponse } from './core';
 
@@ -40,8 +40,9 @@ export const roomApi = {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json', 
       },
     });
     
@@ -53,6 +54,7 @@ export const roomApi = {
     const response = await fetch(`${API_BASE_URL}/rooms?block_id=${blockId}`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -66,6 +68,7 @@ export const roomApi = {
     const response = await fetch(`${API_BASE_URL}/rooms/${roomId}/students`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -97,9 +100,7 @@ export const roomApi = {
 
     const response = await fetch(`${API_BASE_URL}/rooms`, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -132,9 +133,7 @@ export const roomApi = {
 
     const response = await fetch(`${API_BASE_URL}/rooms/${id}`, {
       method: 'POST', // Using POST with _method override for file uploads
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -146,6 +145,7 @@ export const roomApi = {
     const response = await fetch(`${API_BASE_URL}/rooms/${id}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -159,6 +159,7 @@ export const roomApi = {
     const response = await fetch(`${API_BASE_URL}/blocks?all=true`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },

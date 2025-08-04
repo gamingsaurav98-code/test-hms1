@@ -1,5 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
-import { getAuthHeaders } from './auth.api';
+import { getAuthHeaders, getAuthHeadersForFormData } from './auth.api';
 import { PaginatedResponse } from './core';
 
 // StaffAmenity interface
@@ -163,6 +163,7 @@ export const staffApi = {
     const response = await fetch(`${API_BASE_URL}/staff-amenities`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -176,6 +177,7 @@ export const staffApi = {
     const response = await fetch(`${API_BASE_URL}/staff?all=true`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -219,6 +221,7 @@ export const staffApi = {
     const response = await fetch(`${API_BASE_URL}/staff/${id}`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -267,9 +270,7 @@ export const staffApi = {
 
     const response = await fetch(`${API_BASE_URL}/staff`, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -343,9 +344,7 @@ export const staffApi = {
 
     const response = await fetch(`${API_BASE_URL}/staff/${id}`, {
       method: 'POST', // Using POST with _method override for file uploads
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -357,6 +356,7 @@ export const staffApi = {
     const response = await fetch(`${API_BASE_URL}/staff/${id}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -373,6 +373,7 @@ export const staffApi = {
     const response = await fetch(`${API_BASE_URL}/staff/fields`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },

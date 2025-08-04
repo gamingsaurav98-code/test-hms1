@@ -1,5 +1,5 @@
 import { API_BASE_URL, handleResponse } from './core';
-import { getAuthHeaders } from './auth.api';
+import { getAuthHeaders, getAuthHeadersForFormData } from './auth.api';
 import { Income, IncomeFormData, IncomeType, PaymentType, Student } from './types';
 import { PaginatedResponse } from './core';
 
@@ -59,9 +59,7 @@ export const incomeApi = {
 
     const response = await fetch(`${API_BASE_URL}/incomes`, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -105,9 +103,7 @@ export const incomeApi = {
 
     const response = await fetch(`${API_BASE_URL}/incomes/${id}`, {
       method: 'POST', // Using POST with _method override for file uploads
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -119,6 +115,7 @@ export const incomeApi = {
     const response = await fetch(`${API_BASE_URL}/incomes/${id}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -134,9 +131,7 @@ export const incomeApi = {
     
     const response = await fetch(`${API_BASE_URL}/incomes/${id}/attachment`, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     

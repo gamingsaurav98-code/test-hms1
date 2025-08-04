@@ -132,6 +132,20 @@ export function getAuthHeaders(): Record<string, string> {
   return headers;
 }
 
+// Get auth headers for FormData requests (without Content-Type)
+export function getAuthHeadersForFormData(): Record<string, string> {
+  const token = tokenStorage.get();
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+  };
+  
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
+
 export const authApi = {
   // Login user
   async login(credentials: LoginRequest): Promise<LoginResponse> {

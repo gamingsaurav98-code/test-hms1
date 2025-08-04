@@ -1,5 +1,5 @@
 import { API_BASE_URL, handleResponse, PaginatedResponse } from './core';
-import { getAuthHeaders } from './auth.api';
+import { getAuthHeaders, getAuthHeadersForFormData } from './auth.api';
 import { Expense, ExpenseFormData, ExpenseCategory, ExpenseCategoryFormData } from './types/expense.types';
 
 // Expense API functions
@@ -19,7 +19,8 @@ export const expenseApi = {
     const response = await fetch(`${API_BASE_URL}/expenses/category/${categoryId}?page=${page}`, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
+        ...getAuthHeaders(),
+        'Accept': 'application/json',  
         'Content-Type': 'application/json',
       },
     });
@@ -32,6 +33,7 @@ export const expenseApi = {
     const response = await fetch(`${API_BASE_URL}/expenses/date-range?start_date=${startDate}&end_date=${endDate}&page=${page}`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -45,6 +47,7 @@ export const expenseApi = {
     const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -108,9 +111,7 @@ export const expenseApi = {
 
     const response = await fetch(`${API_BASE_URL}/expenses`, {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-      },
+      headers: getAuthHeadersForFormData(),
       body: formData,
     });
     
@@ -201,9 +202,7 @@ export const expenseApi = {
     try {
       const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
         method: 'POST', // Using POST with _method override for file uploads
-        headers: {
-          'Accept': 'application/json',
-        },
+        headers: getAuthHeadersForFormData(),
         body: formData,
       });
       
@@ -219,6 +218,7 @@ export const expenseApi = {
     const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -235,6 +235,7 @@ export const expenseCategoryApi = {
     const response = await fetch(`${API_BASE_URL}/expense-categories`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -248,6 +249,7 @@ export const expenseCategoryApi = {
     const response = await fetch(`${API_BASE_URL}/expense-categories/${id}`, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -261,6 +263,7 @@ export const expenseCategoryApi = {
     const response = await fetch(`${API_BASE_URL}/expense-categories`, {
       method: 'POST',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -275,6 +278,7 @@ export const expenseCategoryApi = {
     const response = await fetch(`${API_BASE_URL}/expense-categories/${id}`, {
       method: 'PUT',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -289,6 +293,7 @@ export const expenseCategoryApi = {
     const response = await fetch(`${API_BASE_URL}/expense-categories/${id}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },

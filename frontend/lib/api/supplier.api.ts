@@ -1,6 +1,7 @@
 import { API_BASE_URL, handleResponse } from './core';
 import { Supplier, SupplierFormData } from './types';
 import { PaginatedResponse } from './core';
+import { getAuthHeaders } from './auth.api';
 
 // Supplier API functions
 export const supplierApi = {
@@ -10,6 +11,7 @@ export const supplierApi = {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -34,6 +36,7 @@ export const supplierApi = {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -48,6 +51,7 @@ export const supplierApi = {
     const response = await fetch(`${API_BASE_URL}/suppliers`, {
       method: 'POST',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -63,6 +67,7 @@ export const supplierApi = {
     const response = await fetch(`${API_BASE_URL}/suppliers/${id}`, {
       method: 'PUT',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -78,6 +83,7 @@ export const supplierApi = {
     const response = await fetch(`${API_BASE_URL}/suppliers/${id}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
@@ -96,6 +102,9 @@ export const supplierApi = {
     
     const response = await fetch(`${API_BASE_URL}/suppliers/${id}/attachment`, {
       method: 'POST',
+      headers: {
+        ...getAuthHeaders(),
+      },
       body: formData,
     });
     
@@ -121,6 +130,9 @@ export const supplierApi = {
     
     const response = await fetch(`${API_BASE_URL}/suppliers/${supplierId}/attachment/${attachmentId}`, {
       method: 'POST',
+      headers: {
+        ...getAuthHeaders(),
+      },
       body: formData,
     });
     
@@ -133,6 +145,7 @@ export const supplierApi = {
     const response = await fetch(`${API_BASE_URL}/suppliers/${supplierId}/attachment/${attachmentId}`, {
       method: 'DELETE',
       headers: {
+        ...getAuthHeaders(),
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
