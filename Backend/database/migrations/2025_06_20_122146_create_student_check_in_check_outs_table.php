@@ -21,6 +21,7 @@ return new class extends Migration
             $table->date('date');
             $table->timestamp('checkin_time')->nullable();
             $table->timestamp('checkout_time')->nullable();
+            $table->date('estimated_checkin_date')->nullable();
             $table->string('checkout_duration')->nullable();
             $table->enum('status', ['checked_in', 'checked_out', 'pending', 'approved', 'declined'])->default('checked_in');
             $table->text('remarks')->nullable();

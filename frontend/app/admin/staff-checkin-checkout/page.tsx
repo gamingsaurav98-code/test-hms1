@@ -115,19 +115,23 @@ export default function StaffCheckinCheckoutList() {
     });
   };
 
-  const calculateDuration = (checkinTime: string | null | undefined, checkoutTime: string | null | undefined) => {
-    if (!checkinTime || !checkoutTime) return '-';
+  const calculateDuration = (estimatedCheckinDate: string | null | undefined, checkoutTime: string | null | undefined) => {
+    if (!estimatedCheckinDate || !checkoutTime) return '-';
     
-    const checkin = new Date(checkinTime);
+    const estimated = new Date(estimatedCheckinDate);
     const checkout = new Date(checkoutTime);
-    const diffMs = checkin.getTime() - checkout.getTime();
+    const diffMs = estimated.getTime() - checkout.getTime();
     
-    // Handle negative duration (if checkout is after checkin)
+    // Handle negative duration (if checkout is after estimated checkin)
     const absDiffMs = Math.abs(diffMs);
-    const diffHours = Math.floor(absDiffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor((absDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const diffDays = Math.floor(absDiffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor((absDiffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     
-    return `${diffHours}h ${diffMinutes}m`;
+    if (diffDays > 0) {
+      return `${diffDays}d ${diffHours}h`;
+    } else {
+      return `${diffHours}h`;
+    }
   };
 
   const getStatusBadge = (record: StaffCheckInCheckOut) => {
@@ -146,23 +150,21 @@ export default function StaffCheckinCheckoutList() {
           Declined
         </span>
       );
+    } else if (record.status === 'pending') {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <Clock className="w-3 h-3 mr-1" />
+          Pending
+        </span>
+      );
     } else if (record.checkout_time && record.checkin_time) {
-      // If both checkout and checkin exist but not approved/declined
-      if (record.status === 'pending') {
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            <Clock className="w-3 h-3 mr-1" />
-            Pending
-          </span>
-        );
-      } else {
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <Check className="w-3 h-3 mr-1" />
-            Complete
-          </span>
-        );
-      }
+      // If both checkout and checkin exist and status is not pending/approved/declined
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <Check className="w-3 h-3 mr-1" />
+          Complete
+        </span>
+      );
     } else if (record.checkout_time) {
       // Only checkout exists
       return (
@@ -242,6 +244,9 @@ export default function StaffCheckinCheckoutList() {
                   Checkout Time
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Est. Check-in Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Check-in Time
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -258,7 +263,7 @@ export default function StaffCheckinCheckoutList() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                     {searchTerm ? `No staff found matching "${searchTerm}"` : 'No check-in/check-out records found.'}
                   </td>
                 </tr>
@@ -286,6 +291,11 @@ export default function StaffCheckinCheckoutList() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {record.estimated_checkin_date ? formatDate(record.estimated_checkin_date) : 'Not set'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <div className="text-sm text-gray-500">
                           {formatDate(record.checkin_time)}
@@ -297,7 +307,7 @@ export default function StaffCheckinCheckoutList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {calculateDuration(record.checkin_time, record.checkout_time)}
+                        {calculateDuration(record.estimated_checkin_date, record.checkout_time)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

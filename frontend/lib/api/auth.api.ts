@@ -38,7 +38,7 @@ export interface UserPermissions {
 }
 
 export interface LoginRequest {
-  email: string;
+  user_id: string;
   password: string;
 }
 

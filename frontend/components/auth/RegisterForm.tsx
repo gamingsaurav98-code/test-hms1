@@ -98,7 +98,7 @@ export default function RegisterForm({ onSuccess, onBackToLogin }: RegisterFormP
             dashboardName = 'Dashboard';
         }
         
-        setSuccess(`Account created successfully! You will be redirected to ${dashboardName} in 3 seconds...`);
+        setSuccess(`Account created successfully! Please use your Student ID or Staff ID to login to ${dashboardName}.`);
         setFormData({
           name: '',
           email: '',
@@ -106,23 +106,9 @@ export default function RegisterForm({ onSuccess, onBackToLogin }: RegisterFormP
           password_confirmation: ''
         });
         
-        // Auto login and redirect after account creation
-        setTimeout(async () => {
-          try {
-            // Login with the same credentials using auth context
-            const result = await login(formData.email, formData.password);
-            
-            if (!result.success) {
-              // If auto-login fails, redirect to login page
-              setSuccess('Account created successfully! Please login with your credentials.');
-              setTimeout(() => onSuccess(), 2000);
-            }
-            // If successful, login function handles redirect automatically
-          } catch (loginError) {
-            // Handle any unexpected errors
-            setSuccess('Account created successfully! Please login with your credentials.');
-            setTimeout(() => onSuccess(), 2000);
-          }
+        // Redirect to login after 3 seconds without auto-login
+        setTimeout(() => {
+          onSuccess();
         }, 3000);
       }
     } catch (error: any) {

@@ -181,23 +181,21 @@ export default function StaffCheckinCheckoutPage() {
           Declined
         </span>
       );
+    } else if (record.status === 'pending') {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <Clock className="w-3 h-3 mr-1" />
+          Pending Approval
+        </span>
+      );
     } else if (record.checkout_time && record.checkin_time) {
-      // If both checkout and checkin exist but not approved/declined
-      if (record.status === 'pending') {
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-            <Clock className="w-3 h-3 mr-1" />
-            Pending Approval
-          </span>
-        );
-      } else {
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            <Check className="w-3 h-3 mr-1" />
-            Complete
-          </span>
-        );
-      }
+      // If both checkout and checkin exist and status is not pending/approved/declined
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <Check className="w-3 h-3 mr-1" />
+          Complete
+        </span>
+      );
     } else if (record.checkout_time) {
       // Only checkout exists
       return (

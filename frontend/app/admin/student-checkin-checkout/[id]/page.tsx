@@ -91,19 +91,23 @@ export default function StudentCheckinCheckoutDetail() {
     });
   };
 
-  const calculateDuration = (checkinTime: string | null | undefined, checkoutTime: string | null | undefined) => {
-    if (!checkinTime || !checkoutTime) return 'N/A';
+  const calculateDuration = (estimatedCheckinDate: string | null | undefined, checkoutTime: string | null | undefined) => {
+    if (!estimatedCheckinDate || !checkoutTime) return 'N/A';
     
-    const checkin = new Date(checkinTime);
+    const estimated = new Date(estimatedCheckinDate);
     const checkout = new Date(checkoutTime);
-    const diffMs = checkin.getTime() - checkout.getTime();
+    const diffMs = estimated.getTime() - checkout.getTime();
     
-    // Handle negative duration (if checkout is after checkin)
+    // Handle negative duration (if checkout is after estimated checkin)
     const absDiffMs = Math.abs(diffMs);
-    const diffHours = Math.floor(absDiffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor((absDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const diffDays = Math.floor(absDiffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor((absDiffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     
-    return `${diffHours} hours ${diffMinutes} minutes`;
+    if (diffDays > 0) {
+      return `${diffDays} days ${diffHours} hours`;
+    } else {
+      return `${diffHours} hours`;
+    }
   };
 
   const getStatusBadge = () => {
@@ -124,24 +128,21 @@ export default function StudentCheckinCheckoutDetail() {
           Declined
         </span>
       );
+    } else if (record.status === 'pending') {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+          <Clock className="w-4 h-4 mr-2" />
+          Pending Approval
+        </span>
+      );
     } else if (record.checkout_time && record.checkin_time) {
-      // If both checkout and checkin exist but not approved/declined, determine if it needs approval
-      if (record.status === 'pending') {
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-            <Clock className="w-4 h-4 mr-2" />
-            Pending Approval
-          </span>
-        );
-      } else {
-        // Complete cycle without requiring approval
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-            <Check className="w-4 h-4 mr-2" />
-            Complete
-          </span>
-        );
-      }
+      // If both checkout and checkin exist and status is not pending/approved/declined
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+          <Check className="w-4 h-4 mr-2" />
+          Complete
+        </span>
+      );
     } else if (record.checkout_time) {
       // Only checkout exists, waiting for checkin
       return (
@@ -168,9 +169,8 @@ export default function StudentCheckinCheckoutDetail() {
   };
 
   const needsApproval = () => {
-    // Only show approval actions if both checkout and checkin exist and status is pending
+    // Show approval actions if checkout exists and status is pending
     return record?.checkout_time && 
-           record?.checkin_time && 
            record?.status === 'pending';
   };
 
@@ -271,10 +271,16 @@ export default function StudentCheckinCheckoutDetail() {
                 <label className="text-sm font-medium text-gray-500">Check-in Time</label>
                 <p className="mt-1 text-sm text-gray-900">{formatDateTime(record.checkin_time)}</p>
               </div>
+              {record.estimated_checkin_date && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Estimated Check-in Date</label>
+                  <p className="mt-1 text-sm text-gray-900">{formatDate(record.estimated_checkin_date)}</p>
+                </div>
+              )}
               <div>
                 <label className="text-sm font-medium text-gray-500">Duration</label>
                 <p className="mt-1 text-sm text-gray-900">
-                  {calculateDuration(record.checkin_time, record.checkout_time)}
+                  {calculateDuration(record.estimated_checkin_date, record.checkout_time)}
                 </p>
               </div>
               {record.remarks && (

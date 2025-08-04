@@ -87,6 +87,7 @@ class StudentCheckInCheckOutController extends Controller
             'date' => 'required|date',
             'checkin_time' => 'nullable|date',
             'checkout_time' => 'nullable|date',
+            'estimated_checkin_date' => 'nullable|date',
             'remarks' => 'nullable|string',
         ]);
 
@@ -121,6 +122,7 @@ class StudentCheckInCheckOutController extends Controller
                 'date',
                 'checkin_time',
                 'checkout_time',
+                'estimated_checkin_date',
                 'remarks'
             ]);
 
@@ -187,6 +189,7 @@ class StudentCheckInCheckOutController extends Controller
             'date' => 'sometimes|date',
             'checkin_time' => 'nullable|date',
             'checkout_time' => 'nullable|date',
+            'estimated_checkin_date' => 'nullable|date',
             'remarks' => 'nullable|string',
         ]);
 
@@ -213,6 +216,7 @@ class StudentCheckInCheckOutController extends Controller
                 'date',
                 'checkin_time',
                 'checkout_time',
+                'estimated_checkin_date',
                 'remarks'
             ]);
 
@@ -328,6 +332,7 @@ class StudentCheckInCheckOutController extends Controller
         $validator = Validator::make($request->all(), [
             'student_id' => 'required|exists:students,id',
             'checkout_time' => 'nullable|date',
+            'estimated_checkin_date' => 'nullable|date',
             'remarks' => 'nullable|string',
         ]);
 
@@ -361,6 +366,7 @@ class StudentCheckInCheckOutController extends Controller
 
             $record->update([
                 'checkout_time' => $checkoutTime,
+                'estimated_checkin_date' => $request->estimated_checkin_date,
                 'status' => 'pending', // Checkout needs admin approval
                 'remarks' => $request->remarks ?? $record->remarks,
             ]);

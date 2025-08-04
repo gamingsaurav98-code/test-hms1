@@ -127,8 +127,8 @@ class StaffFinancialController extends Controller
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            // Get staff record for the authenticated user
-            $staff = Staff::where('email', $user->email)->first();
+            // Get staff record for the authenticated user using user_id relationship
+            $staff = Staff::where('user_id', $user->id)->first();
             
             if (!$staff) {
                 return response()->json(['error' => 'Staff record not found'], 404);
@@ -160,8 +160,8 @@ class StaffFinancialController extends Controller
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            // Get staff record for the authenticated user
-            $staff = Staff::where('email', $user->email)->first();
+            // Get staff record for the authenticated user using user_id relationship
+            $staff = Staff::where('user_id', $user->id)->first();
             
             if (!$staff) {
                 return response()->json(['error' => 'Staff record not found'], 404);

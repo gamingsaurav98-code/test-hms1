@@ -20,9 +20,8 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => [
+            'user_id' => [
                 'required',
-                'email',
                 'string',
                 'max:255'
             ],
@@ -44,8 +43,8 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required' => 'Email address is required.',
-            'email.email' => 'Please provide a valid email address.',
+            'user_id.required' => 'User ID is required.',
+            'user_id.string' => 'Please provide a valid user ID.',
             'password.required' => 'Password is required.',
             'password.min' => 'Password must be at least 6 characters long.',
         ];

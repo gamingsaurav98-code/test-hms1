@@ -27,7 +27,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'user_id' => 'required|string',
             'password' => 'required',
         ]);
 
@@ -40,7 +40,7 @@ class AuthController extends Controller
         }
 
         try {
-            $credentials = $request->only('email', 'password');
+            $credentials = $request->only('user_id', 'password');
             $authData = $this->authService->authenticate($credentials);
 
             return response()->json([
@@ -385,7 +385,7 @@ class AuthController extends Controller
             $request->user()->currentAccessToken()->delete();
             
             // Create new token
-            $credentials = ['email' => $user->email, 'password' => null]; // We don't have password here
+            $credentials = ['user_id' => $user->email, 'password' => null]; // We don't have password here
             $abilities = $this->authService->getTokenAbilities($user->role);
             $token = $user->createToken('auth_token', $abilities)->plainTextToken;
             

@@ -16,19 +16,40 @@ class AuthService
      */
     public function authenticate(array $credentials): array
     {
-        // Find user by email
-        $user = User::where('email', $credentials['email'])->first();
+        $user = null;
+        
+        // Find user by student_id or staff_id based on the provided user_id
+        $userId = $credentials['user_id'];
+        
+        // First try to find student with matching student_id
+        $student = Student::where('student_id', $userId)->first();
+        if ($student && $student->user_id) {
+            $user = User::find($student->user_id);
+        }
+        
+        // If not found in students, try staff with matching staff_id
+        if (!$user) {
+            $staff = Staff::where('staff_id', $userId)->first();
+            if ($staff && $staff->user_id) {
+                $user = User::find($staff->user_id);
+            }
+        }
+        
+        // If still not found, check if it's an email (for admin users)
+        if (!$user && filter_var($userId, FILTER_VALIDATE_EMAIL)) {
+            $user = User::where('email', $userId)->first();
+        }
         
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Username or password is incorrect.'],
+                'user_id' => ['User ID or password is incorrect.'],
             ]);
         }
         
         // Check if user is active
         if (!$user->is_active) {
             throw ValidationException::withMessages([
-                'email' => ['Your account has been deactivated.'],
+                'user_id' => ['Your account has been deactivated.'],
             ]);
         }
         

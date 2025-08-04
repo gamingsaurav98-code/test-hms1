@@ -8,13 +8,13 @@ import RegisterForm from '@/components/auth/RegisterForm';
 import Image from "next/image";
 
 interface LoginFormData {
-  email: string;
+  user_id: string;
   password: string;
 }
 
 export default function LoginPage() {
   const [formData, setFormData] = useState<LoginFormData>({
-    email: '',
+    user_id: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
@@ -67,7 +67,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const result = await login(formData.email, formData.password);
+      const result = await login(formData.user_id, formData.password);
       if (!result.success && result.message) {
         setError(result.message);
       }
@@ -164,19 +164,19 @@ export default function LoginPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
+                    <label htmlFor="user_id" className="block text-sm font-medium text-gray-700 mb-2">
+                      User ID
                     </label>
                     <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      autoComplete="email"
+                      id="user_id"
+                      name="user_id"
+                      type="text"
+                      autoComplete="username"
                       required
-                      value={formData.email}
+                      value={formData.user_id}
                       onChange={handleInputChange}
                       className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                      placeholder="Enter your email"
+                      placeholder="Enter your user ID"
                     />
                   </div>
 

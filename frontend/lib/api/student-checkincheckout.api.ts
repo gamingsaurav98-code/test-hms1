@@ -10,6 +10,7 @@ export interface StudentCheckInCheckOut {
   date: string;
   checkin_time?: string;
   checkout_time?: string;
+  estimated_checkin_date?: string;
   checkout_duration?: string;
   status: 'pending' | 'approved' | 'declined' | 'checked_in' | 'checked_out';
   remarks?: string;
@@ -92,6 +93,7 @@ export interface StudentCheckInCheckOutFormData {
   date: string;
   checkin_time?: string;
   checkout_time?: string;
+  estimated_checkin_date?: string;
   remarks?: string;
 }
 
@@ -105,6 +107,7 @@ export interface CheckInFormData {
 export interface CheckOutFormData {
   student_id: string;
   checkout_time?: string;
+  estimated_checkin_date?: string;
   remarks?: string;
 }
 

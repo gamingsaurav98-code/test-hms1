@@ -16,6 +16,7 @@ class StudentCheckInCheckOut extends Model
         'requested_checkout_time',
         'checkin_time',
         'checkout_time',
+        'estimated_checkin_date',
         'checkout_duration',
         'date',
         'remarks',
