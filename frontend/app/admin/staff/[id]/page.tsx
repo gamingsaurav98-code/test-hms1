@@ -387,50 +387,78 @@ export default function StaffDetail() {
               {/* Family Information */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <h3 className="text-base font-medium text-gray-700 mb-3 pb-2 border-b border-gray-200">Family Information</h3>
-                <dl className="divide-y divide-gray-100">
-                  {staff.father_name && (
-                    <div className="py-2 flex justify-between">
-                      <dt className="text-sm font-medium text-gray-600">Father's Name</dt>
-                      <dd className="text-sm text-gray-900">{staff.father_name}</dd>
-                    </div>
-                  )}
-                  {staff.father_contact && (
-                    <div className="py-2 flex justify-between">
-                      <dt className="text-sm font-medium text-gray-600">Father's Contact</dt>
-                      <dd className="text-sm text-gray-900">{staff.father_contact}</dd>
-                    </div>
-                  )}
-                  {staff.father_occupation && (
-                    <div className="py-3 flex justify-between">
-                      <dt className="text-sm font-medium text-gray-500">Father's Occupation</dt>
-                      <dd className="text-sm text-gray-900">{staff.father_occupation}</dd>
-                    </div>
-                  )}
-                  {staff.mother_name && (
-                    <div className="py-3 flex justify-between">
-                      <dt className="text-sm font-medium text-gray-500">Mother's Name</dt>
-                      <dd className="text-sm text-gray-900">{staff.mother_name}</dd>
-                    </div>
-                  )}
-                  {staff.mother_contact && (
-                    <div className="py-3 flex justify-between">
-                      <dt className="text-sm font-medium text-gray-500">Mother's Contact</dt>
-                      <dd className="text-sm text-gray-900">{staff.mother_contact}</dd>
-                    </div>
-                  )}
-                  {staff.mother_occupation && (
-                    <div className="py-3 flex justify-between">
-                      <dt className="text-sm font-medium text-gray-500">Mother's Occupation</dt>
-                      <dd className="text-sm text-gray-900">{staff.mother_occupation}</dd>
-                    </div>
-                  )}
-                </dl>
+                {(staff.father_name || staff.father_contact || staff.father_occupation || 
+                  staff.mother_name || staff.mother_contact || staff.mother_occupation) ? (
+                  <dl className="divide-y divide-gray-100">
+                    {/* Father's Information */}
+                    {(staff.father_name || staff.father_contact || staff.father_occupation) && (
+                      <>
+                        <div className="py-2">
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">Father's Details</h4>
+                        </div>
+                        {staff.father_name && (
+                          <div className="py-2 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-600">Father's Name</dt>
+                            <dd className="text-sm text-gray-900">{staff.father_name}</dd>
+                          </div>
+                        )}
+                        {staff.father_contact && (
+                          <div className="py-2 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-600">Father's Contact</dt>
+                            <dd className="text-sm text-gray-900">{staff.father_contact}</dd>
+                          </div>
+                        )}
+                        {staff.father_occupation && (
+                          <div className="py-2 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-600">Father's Occupation</dt>
+                            <dd className="text-sm text-gray-900">{staff.father_occupation}</dd>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Mother's Information */}
+                    {(staff.mother_name || staff.mother_contact || staff.mother_occupation) && (
+                      <>
+                        <div className="py-2 pt-4">
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">Mother's Details</h4>
+                        </div>
+                        {staff.mother_name && (
+                          <div className="py-2 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-600">Mother's Name</dt>
+                            <dd className="text-sm text-gray-900">{staff.mother_name}</dd>
+                          </div>
+                        )}
+                        {staff.mother_contact && (
+                          <div className="py-2 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-600">Mother's Contact</dt>
+                            <dd className="text-sm text-gray-900">{staff.mother_contact}</dd>
+                          </div>
+                        )}
+                        {staff.mother_occupation && (
+                          <div className="py-2 flex justify-between">
+                            <dt className="text-sm font-medium text-gray-600">Mother's Occupation</dt>
+                            <dd className="text-sm text-gray-900">{staff.mother_occupation}</dd>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </dl>
+                ) : (
+                  <div className="text-center py-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No family information</h3>
+                    <p className="mt-1 text-sm text-gray-500">No family details have been provided for this staff member.</p>
+                  </div>
+                )}
               </div>
 
-              {/* Spouse Information (if available) */}
-              {(staff.spouse_name || staff.spouse_contact || staff.spouse_occupation) && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <h3 className="text-base font-medium text-gray-700 mb-3 pb-2 border-b border-gray-200">Spouse Information</h3>
+              {/* Spouse Information */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <h3 className="text-base font-medium text-gray-700 mb-3 pb-2 border-b border-gray-200">Spouse Information</h3>
+                {(staff.spouse_name || staff.spouse_contact || staff.spouse_occupation) ? (
                   <dl className="divide-y divide-gray-100">
                     {staff.spouse_name && (
                       <div className="py-2 flex justify-between">
@@ -439,25 +467,33 @@ export default function StaffDetail() {
                       </div>
                     )}
                     {staff.spouse_contact && (
-                      <div className="py-3 flex justify-between">
-                        <dt className="text-sm font-medium text-gray-500">Spouse's Contact</dt>
+                      <div className="py-2 flex justify-between">
+                        <dt className="text-sm font-medium text-gray-600">Spouse's Contact</dt>
                         <dd className="text-sm text-gray-900">{staff.spouse_contact}</dd>
                       </div>
                     )}
                     {staff.spouse_occupation && (
-                      <div className="py-3 flex justify-between">
-                        <dt className="text-sm font-medium text-gray-500">Spouse's Occupation</dt>
+                      <div className="py-2 flex justify-between">
+                        <dt className="text-sm font-medium text-gray-600">Spouse's Occupation</dt>
                         <dd className="text-sm text-gray-900">{staff.spouse_occupation}</dd>
                       </div>
                     )}
                   </dl>
-                </div>
-              )}
+                ) : (
+                  <div className="text-center py-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No spouse information</h3>
+                    <p className="mt-1 text-sm text-gray-500">No spouse details have been provided for this staff member.</p>
+                  </div>
+                )}
+              </div>
 
               {/* Local Guardian Information */}
-              {(staff.local_guardian_name || staff.local_guardian_contact || staff.local_guardian_address) && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <h3 className="text-base font-medium text-gray-700 mb-3 pb-2 border-b border-gray-200">Local Guardian Information</h3>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <h3 className="text-base font-medium text-gray-700 mb-3 pb-2 border-b border-gray-200">Local Guardian Information</h3>
+                {(staff.local_guardian_name || staff.local_guardian_contact || staff.local_guardian_address || staff.local_guardian_occupation || staff.local_guardian_relation) ? (
                   <dl className="divide-y divide-gray-100">
                     {staff.local_guardian_name && (
                       <div className="py-2 flex justify-between">
@@ -466,32 +502,40 @@ export default function StaffDetail() {
                       </div>
                     )}
                     {staff.local_guardian_relation && (
-                      <div className="py-3 flex justify-between">
-                        <dt className="text-sm font-medium text-gray-500">Relation</dt>
+                      <div className="py-2 flex justify-between">
+                        <dt className="text-sm font-medium text-gray-600">Relation</dt>
                         <dd className="text-sm text-gray-900">{staff.local_guardian_relation}</dd>
                       </div>
                     )}
                     {staff.local_guardian_contact && (
-                      <div className="py-3 flex justify-between">
-                        <dt className="text-sm font-medium text-gray-500">Contact</dt>
+                      <div className="py-2 flex justify-between">
+                        <dt className="text-sm font-medium text-gray-600">Contact</dt>
                         <dd className="text-sm text-gray-900">{staff.local_guardian_contact}</dd>
                       </div>
                     )}
                     {staff.local_guardian_address && (
-                      <div className="py-3 flex justify-between">
-                        <dt className="text-sm font-medium text-gray-500">Address</dt>
+                      <div className="py-2 flex justify-between">
+                        <dt className="text-sm font-medium text-gray-600">Address</dt>
                         <dd className="text-sm text-gray-900 text-right">{staff.local_guardian_address}</dd>
                       </div>
                     )}
                     {staff.local_guardian_occupation && (
-                      <div className="py-3 flex justify-between">
-                        <dt className="text-sm font-medium text-gray-500">Occupation</dt>
+                      <div className="py-2 flex justify-between">
+                        <dt className="text-sm font-medium text-gray-600">Occupation</dt>
                         <dd className="text-sm text-gray-900">{staff.local_guardian_occupation}</dd>
                       </div>
                     )}
                   </dl>
-                </div>
-              )}
+                ) : (
+                  <div className="text-center py-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0121 12a8.966 8.966 0 00-2.037-5.725M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No guardian information</h3>
+                    <p className="mt-1 text-sm text-gray-500">No local guardian details have been provided for this staff member.</p>
+                  </div>
+                )}
+              </div>
 
               {/* Financial Information */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">

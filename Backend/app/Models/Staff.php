@@ -20,27 +20,6 @@ use App\Models\StaffAmenities;
 
 class Staff extends Model
 {
-    // Hidden attributes to reduce memory usage
-    protected $hidden = [
-        'staff_contract_image',
-        'staff_image', 
-        'staff_citizenship_image',
-        'father_name',
-        'father_contact',
-        'father_occupation',
-        'mother_name',
-        'mother_contact',
-        'mother_occupation',
-        'spouse_name',
-        'spouse_contact',
-        'spouse_occupation',
-        'local_guardian_name',
-        'local_guardian_contact',
-        'local_guardian_occupation',
-        'local_guardian_relation',
-        'local_guardian_address',
-    ];
-
     protected $fillable = [
         'staff_id',
         'user_id',

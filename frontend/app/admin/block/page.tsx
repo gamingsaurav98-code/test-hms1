@@ -74,10 +74,16 @@ export default function BlockList() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
       month: 'short',
-      day: '2-digit'
+      day: '2-digit',
+      year: 'numeric'
     });
+  };
+
+  const truncateText = (text: string, maxLength: number = 30) => {
+    if (!text) return 'No description';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   };
 
   const handleDeleteBlock = async (blockId: string) => {
@@ -217,11 +223,11 @@ export default function BlockList() {
         </div>
       )}
 
-      {/* Minimal Header */}
-      <div className="flex justify-between items-center mb-6">
+      {/* Header with balanced spacing */}
+      <div className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-xl font-medium text-gray-900">Blocks</h1>
-          <p className="text-sm text-gray-500 mt-1">{blocks.length} total blocks</p>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Blocks</h1>
+          <p className="text-sm text-gray-600">{blocks.length} total blocks</p>
         </div>
         <Button
           onClick={() => router.push('/admin/block/create')}
@@ -270,13 +276,13 @@ export default function BlockList() {
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {/* Table Header */}
           <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
-            <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <div className="col-span-3">Block Details</div>
+            <div className="grid grid-cols-12 gap-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <div className="col-span-2">Block Details</div>
               <div className="col-span-2">Manager</div>
               <div className="col-span-2">Contact</div>
               <div className="col-span-3">Description</div>
-              <div className="col-span-1 text-center pr-2">Created</div>
-              <div className="col-span-1 text-center pl-2">Actions</div>
+              <div className="col-span-2 text-center">Created</div>
+              <div className="col-span-1 text-center">Actions</div>
             </div>
           </div>
 
@@ -284,46 +290,48 @@ export default function BlockList() {
           <div className="divide-y divide-gray-100">
             {filteredBlocks.map((block) => (
               <div key={block.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                <div className="grid grid-cols-12 gap-2 items-center">
+                <div className="grid grid-cols-12 gap-3 items-center">
                   {/* Block Details */}
-                  <div className="col-span-3">
+                  <div className="col-span-2">
                     <div className="font-medium text-sm text-gray-900">{block.block_name}</div>
                     <div className="flex items-center text-xs text-gray-500 mt-1">
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      {block.location}
+                      <span className="truncate">{block.location}</span>
                     </div>
                   </div>
 
                   {/* Manager */}
                   <div className="col-span-2">
-                    <div className="text-sm text-gray-900">{block.manager_name}</div>
+                    <div className="text-sm text-gray-900 truncate">{block.manager_name}</div>
                   </div>
 
                   {/* Contact */}
                   <div className="col-span-2">
-                    <div className="text-sm text-gray-700">{block.manager_contact}</div>
+                    <div className="text-sm text-gray-700 truncate">{block.manager_contact}</div>
                   </div>
 
                   {/* Description */}
                   <div className="col-span-3">
-                    <div className="text-xs text-gray-600 line-clamp-2">
-                      {block.remarks || 'No description'}
+                    <div className="text-sm text-gray-600" title={block.remarks || 'No description'}>
+                      {truncateText(block.remarks)}
                     </div>
                   </div>
 
                   {/* Created Date */}
-                  <div className="col-span-1">
-                    <div className="text-xs text-gray-500 text-center pr-2">
-                      {formatDate(block.created_at)}
+                  <div className="col-span-2">
+                    <div className="text-xs text-gray-500 text-center">
+                      <div className="whitespace-nowrap">
+                        {formatDate(block.created_at)}
+                      </div>
                     </div>
                   </div>
 
                   {/* Actions */}
                   <div className="col-span-1">
-                    <div className="pl-2">
+                    <div className="flex justify-center">
                       <ActionButtons 
                         viewUrl={`/admin/block/${block.id}`}
                         editUrl={`/admin/block/${block.id}/edit`}

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { blockApi, BlockFormData, Block, ApiError } from '@/lib/api/index';
+import { getImageUrl } from '@/lib/utils';
 import { 
   Button, 
   FormField, 
@@ -56,9 +57,7 @@ export default function EditBlock() {
 
         // Set existing image preview if available
         if (block.block_attachment) {
-          const imageUrl = block.block_attachment.startsWith('http') 
-            ? block.block_attachment 
-            : `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace('/api', '')}/storage/${block.block_attachment}`;
+          const imageUrl = getImageUrl(block.block_attachment);
           setImagePreview(imageUrl);
         }
         
@@ -349,9 +348,7 @@ export default function EditBlock() {
               <div className="lg:col-span-2 space-y-1">
                 <SingleImageUploadEdit
                   imagePreview={imagePreview}
-                  existingImageUrl={currentBlock?.block_attachment?.startsWith('http') 
-                    ? currentBlock.block_attachment 
-                    : currentBlock?.block_attachment ? `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace('/api', '')}/storage/${currentBlock.block_attachment}` : null}
+                  existingImageUrl={getImageUrl(currentBlock?.block_attachment)}
                   onFileSelect={processFile}
                   onRemove={removeImage}
                   error={errors.block_attachment}

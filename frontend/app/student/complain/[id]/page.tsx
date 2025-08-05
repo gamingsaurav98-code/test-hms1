@@ -318,9 +318,9 @@ export default function StudentComplainDetail() {
                         <span className="text-gray-700 font-medium">Messages</span>
                         <span className="text-gray-900 font-semibold">
                           {complain.total_messages || 0} total
-                          {complain.unread_student_messages > 0 && (
+                          {(complain.unread_student_messages ?? 0) > 0 && (
                             <span className="ml-2 bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full">
-                              {complain.unread_student_messages} unread
+                              {complain.unread_student_messages ?? 0} unread
                             </span>
                           )}
                         </span>

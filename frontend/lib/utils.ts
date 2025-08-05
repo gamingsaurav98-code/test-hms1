@@ -81,8 +81,8 @@ export function getImageUrl(path: string | null | undefined): string {
   }
   
   // Otherwise, assume it's a relative path from the backend
-  // Adjust this URL based on your API configuration
-  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
+  // Use the API base URL and remove /api suffix if present
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace('/api', '') || "http://localhost:8000"
   return `${baseUrl}/storage/${path}`
 }
 
