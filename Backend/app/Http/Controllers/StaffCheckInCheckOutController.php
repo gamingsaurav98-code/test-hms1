@@ -606,4 +606,42 @@ class StaffCheckInCheckOutController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get the authenticated staff's today's attendance record (staff-specific)
+     */
+    public function getMyTodayAttendance()
+    {
+        try {
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Get staff record for the authenticated user using user_id relationship
+            $staff = \App\Models\Staff::where('user_id', $user->id)->first();
+            
+            if (!$staff) {
+                return response()->json(['error' => 'Staff record not found'], 404);
+            }
+
+            $today = Carbon::today()->toDateString();
+            
+            $record = StaffCheckInCheckOut::where('staff_id', $staff->id)
+                ->whereDate('date', $today)
+                ->with(['staff', 'block'])
+                ->latest()
+                ->first();
+                
+            return response()->json([
+                'data' => $record
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch your today\'s attendance',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -347,4 +347,194 @@ class ComplainController extends Controller
             return response()->json(['message' => 'Failed to update complaint: ' . $e->getMessage()], 500);
         }
     }
+
+    // ========== STAFF-SPECIFIC METHODS ==========
+
+    /**
+     * Get complaints created by the authenticated staff member
+     */
+    public function getMyStaffComplaints()
+    {
+        try {
+            $user = auth()->user();
+            if (!$user || $user->role !== 'staff') {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+
+            // Get staff record
+            $staff = \App\Models\Staff::where('user_id', $user->id)->first();
+            
+            if (!$staff) {
+                return response()->json(['message' => 'Staff record not found'], 404);
+            }
+
+            $complaints = Complain::where('staff_id', $staff->id)
+                ->with(['student', 'staff'])
+                ->withCount(['chats as total_messages'])
+                ->withCount(['chats as unread_messages' => function($query) {
+                    $query->where('is_read', false);
+                }])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'data' => $complaints,
+                'total' => $complaints->count()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to fetch your complaints: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Create a new complaint by the authenticated staff member to admin
+     */
+    public function createStaffComplaint(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string|max:1000',
+            'complain_attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
+        ]);
+
+        try {
+            $user = auth()->user();
+            if (!$user || $user->role !== 'staff') {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+
+            // Get staff record
+            $staff = \App\Models\Staff::where('user_id', $user->id)->first();
+            if (!$staff) {
+                return response()->json(['message' => 'Staff record not found'], 404);
+            }
+
+            $complainData = $request->except('complain_attachment');
+            $complainData['staff_id'] = $staff->id;
+            $complainData['status'] = 'pending';
+            $complainData['created_at'] = $this->dateService->getCurrentDateTime();
+            
+            // Handle file upload if present
+            if ($request->hasFile('complain_attachment')) {
+                $complainData['complain_attachment'] = $this->imageService->processImageAsync(
+                    $request->file('complain_attachment'),
+                    'complains',
+                    null,
+                    Complain::class,
+                    null, // ID will be available after creation
+                    'complain_attachment'
+                );
+            }
+            
+            $complain = Complain::create($complainData);
+            $complain->load(['student', 'staff']);
+            
+            return response()->json($complain, 201);
+            
+        } catch (\Exception $e) {
+            // Delete the uploaded file if complain creation fails
+            if (isset($complainData['complain_attachment'])) {
+                Storage::disk('public')->delete($complainData['complain_attachment']);
+            }
+            return response()->json(['message' => 'Failed to create complaint: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get a specific complaint created by the authenticated staff member
+     */
+    public function getMyStaffComplaint(string $id)
+    {
+        try {
+            $user = auth()->user();
+            if (!$user || $user->role !== 'staff') {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+
+            // Get staff record
+            $staff = \App\Models\Staff::where('user_id', $user->id)->first();
+            if (!$staff) {
+                return response()->json(['message' => 'Staff record not found'], 404);
+            }
+
+            $complain = Complain::where('id', $id)
+                ->where('staff_id', $staff->id)
+                ->with(['student', 'staff', 'chats'])
+                ->withCount(['chats', 'unreadChats'])
+                ->first();
+
+            if (!$complain) {
+                return response()->json(['message' => 'Complaint not found'], 404);
+            }
+
+            return response()->json($complain);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to fetch complaint: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update a specific complaint created by the authenticated staff member
+     */
+    public function updateMyStaffComplaint(Request $request, string $id)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string|max:1000',
+            'complain_attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf',
+        ]);
+
+        try {
+            $user = auth()->user();
+            if (!$user || $user->role !== 'staff') {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+
+            // Get staff record
+            $staff = \App\Models\Staff::where('user_id', $user->id)->first();
+            if (!$staff) {
+                return response()->json(['message' => 'Staff record not found'], 404);
+            }
+
+            $complain = Complain::where('id', $id)
+                ->where('staff_id', $staff->id)
+                ->first();
+
+            if (!$complain) {
+                return response()->json(['message' => 'Complaint not found'], 404);
+            }
+
+            // Only allow editing if complaint is still pending
+            if ($complain->status !== 'pending') {
+                return response()->json(['message' => 'Cannot edit complaint that is no longer pending'], 403);
+            }
+
+            $complainData = $request->except('complain_attachment');
+            $complainData['updated_at'] = $this->dateService->getCurrentDateTime();
+            
+            // Handle file upload if present
+            if ($request->hasFile('complain_attachment')) {
+                $complainData['complain_attachment'] = $this->imageService->processImageAsync(
+                    $request->file('complain_attachment'),
+                    'complains',
+                    $complain->complain_attachment,
+                    Complain::class,
+                    $complain->id,
+                    'complain_attachment'
+                );
+            }
+            
+            $complain->update($complainData);
+            $complain->load(['student', 'staff']);
+            
+            return response()->json($complain);
+            
+        } catch (\Exception $e) {
+            // Clean up if update fails
+            if (isset($complainData['complain_attachment']) && $request->hasFile('complain_attachment')) {
+                Storage::disk('public')->delete($complainData['complain_attachment']);
+            }
+            return response()->json(['message' => 'Failed to update complaint: ' . $e->getMessage()], 500);
+        }
+    }
 }

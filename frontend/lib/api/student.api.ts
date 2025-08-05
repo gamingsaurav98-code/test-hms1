@@ -365,6 +365,28 @@ export const studentApi = {
     
     return handleResponse<any>(response);
   },
+
+  // Get current student's outstanding dues
+  async getStudentOutstandingDues(): Promise<{
+    outstanding_dues: number;
+    generated_fees: number;
+    total_payments: number;
+    balance_due: number;
+    calculation_date: string;
+  }> {
+    const response = await fetch(`${API_BASE_URL}/student/outstanding-dues`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    
+    return handleResponse<{
+      outstanding_dues: number;
+      generated_fees: number;
+      total_payments: number;
+      balance_due: number;
+      calculation_date: string;
+    }>(response);
+  },
   
   // Upload a student image
   async uploadStudentImage(id: string, file: File): Promise<{ student_image: string }> {

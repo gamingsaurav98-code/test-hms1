@@ -263,4 +263,54 @@ class StudentFinancialController extends Controller
             return response()->json(['message' => 'Failed to fetch payment history: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Get the authenticated student's outstanding dues
+     */
+    public function getMyOutstandingDues()
+    {
+        try {
+            $user = auth()->user();
+            if (!$user || $user->role !== 'student') {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+
+            // Get student record
+            $student = Student::where('user_id', $user->id)->first();
+            
+            if (!$student) {
+                return response()->json(['message' => 'Student record not found'], 404);
+            }
+
+            // Calculate outstanding dues based on generated fees and payments
+            $generatedFees = \App\Models\StudentFeeGenerate::where('student_id', $student->id)->sum('amount');
+            $totalPayments = StudentFinancial::where('student_id', $student->id)->sum('amount');
+            
+            // Get any balance due from the student's financial record
+            $latestFinancial = StudentFinancial::where('student_id', $student->id)
+                ->orderBy('created_at', 'desc')
+                ->first();
+            
+            $balanceDue = 0;
+            if ($latestFinancial && $latestFinancial->balance_type === 'due') {
+                $balanceDue = floatval($latestFinancial->initial_balance_after_registration ?? 0);
+            }
+            
+            // Calculate outstanding amount
+            $outstandingDues = $generatedFees + $balanceDue - $totalPayments;
+            
+            // Ensure no negative dues
+            $outstandingDues = max(0, $outstandingDues);
+
+            return response()->json([
+                'outstanding_dues' => $outstandingDues,
+                'generated_fees' => $generatedFees,
+                'total_payments' => $totalPayments,
+                'balance_due' => $balanceDue,
+                'calculation_date' => now()->toDateString()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to calculate outstanding dues: ' . $e->getMessage()], 500);
+        }
+    }
 }

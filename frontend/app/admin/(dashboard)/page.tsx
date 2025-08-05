@@ -11,7 +11,7 @@ import { expenseApi } from '@/lib/api/expense.api';
 import { studentCheckInCheckOutApi } from '@/lib/api/student-checkincheckout.api';
 import { staffCheckInCheckOutApi } from '@/lib/api/staff-checkincheckout.api';
 import { complainApi } from '@/lib/api/complain.api';
-// Note: SalaryApi import removed due to API endpoint issues
+import { SalaryApi } from '@/lib/api/salary.api';
 
 interface DashboardStats {
   totalStudentCapacity: number;
@@ -135,24 +135,20 @@ export default function AdminDashboardPage() {
       fetchWithTimeout(() => complainApi.getComplains(1), { data: [], total: 0 })
         .then(data => { complainsData = data; });
 
-      // Set salary statistics to fallback values since the API endpoint may not be available
-      const salaryStats = {
+      // Fetch salary statistics
+      let salaryStats = {
         total_salaries_this_month: 0,
         total_amount_this_month: 0,
         paid_salaries_this_month: 0,
         pending_salaries_this_month: 0,
       };
 
-      // Note: Salary statistics API endpoint appears to be unavailable
-      // You can uncomment and modify this section once the endpoint is working:
-      /*
       try {
-        const fetchedSalaryStats = await SalaryApi.getStatistics();
+        const fetchedSalaryStats = await fetchWithTimeout(() => SalaryApi.getStatistics(), salaryStats);
         salaryStats = fetchedSalaryStats;
       } catch (error) {
         console.warn('Salary statistics not available:', error);
       }
-      */
 
       // Calculate real stats from fetched data
       const today = new Date().toISOString().split('T')[0];

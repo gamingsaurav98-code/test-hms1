@@ -382,7 +382,52 @@ export const staffApi = {
     return handleResponse<any>(response);
   },
 
-  // Get staff complains (staff-specific endpoint)
+  // Get staff payments (staff-specific endpoint)
+  async getStaffPayments(): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/staff/payments`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    
+    return handleResponse<any>(response);
+  },
+
+  // Staff-specific methods for authenticated staff portal
+  // Get current staff's profile
+  async getStaffProfile(): Promise<StaffWithAmenities> {
+    const response = await fetch(`${API_BASE_URL}/staff/profile`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    
+    return handleResponse<StaffWithAmenities>(response);
+  },
+
+  // Update current staff's profile
+  async updateStaffProfile(data: Partial<StaffFormData>): Promise<StaffWithAmenities> {
+    const response = await fetch(`${API_BASE_URL}/staff/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+    
+    return handleResponse<StaffWithAmenities>(response);
+  },
+
+  // Get current staff's check-in/out records
+  async getStaffCheckInOuts(): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/staff/checkincheckouts`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    
+    return handleResponse<any>(response);
+  },
+
+  // Get current staff's complaints
   async getStaffComplains(): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/staff/complains`, {
       method: 'GET',
@@ -392,9 +437,19 @@ export const staffApi = {
     return handleResponse<any>(response);
   },
 
-  // Get staff payments (staff-specific endpoint)
-  async getStaffPayments(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/staff/payments`, {
+  // Get current staff's notices
+  async getStaffNotices(): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/staff/notices`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    
+    return handleResponse<any>(response);
+  },
+
+  // Get current staff's salary history
+  async getStaffSalaryHistory(): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/staff/salary-history`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });

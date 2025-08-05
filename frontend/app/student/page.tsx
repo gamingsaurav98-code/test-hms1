@@ -80,13 +80,15 @@ export default function StudentDashboardPage() {
         checkInOutData,
         complaintsData,
         paymentsData,
-        noticesData
+        noticesData,
+        outstandingDuesData
       ] = await Promise.all([
         fetchWithTimeout(() => studentApi.getStudentProfile(), null),
         fetchWithTimeout(() => studentApi.getStudentCheckInOuts(), { data: [] }),
         fetchWithTimeout(() => studentApi.getStudentComplains(), { data: [], total: 0 }),
         fetchWithTimeout(() => studentApi.getStudentPayments(), { data: [] }),
-        fetchWithTimeout(() => studentApi.getStudentNotices(), { data: [] })
+        fetchWithTimeout(() => studentApi.getStudentNotices(), { data: [] }),
+        fetchWithTimeout(() => studentApi.getStudentOutstandingDues(), { outstanding_dues: 0 })
       ]);
 
       const today = new Date().toISOString().split('T')[0];
@@ -132,8 +134,8 @@ export default function StudentDashboardPage() {
       const lastPaymentDate = latestPayment ? latestPayment.payment_date || latestPayment.created_at : '';
       const lastPaymentAmount = latestPayment ? parseFloat(latestPayment.amount || '0') : 0;
 
-      // Calculate outstanding dues (this would need proper logic based on student fees)
-      const outstandingDues = 0; // Placeholder - should be calculated based on student's fee structure
+      // Calculate outstanding dues from API data
+      const outstandingDues = outstandingDuesData?.outstanding_dues || 0;
 
       // Get room information from profile
       const roomNumber = profileData?.room?.room_name || '';

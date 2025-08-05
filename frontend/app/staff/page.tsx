@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { staffCheckInCheckOutApi } from '@/lib/api/staff-checkincheckout.api';
 import { SalaryApi } from '@/lib/api/salary.api';
+import { staffApi } from '@/lib/api/staff.api';
 import { 
   Calendar,
   Clock,
@@ -86,11 +87,17 @@ export default function StaffDashboardPage() {
       
       // Fetch staff-specific data using optimized API calls
       const [
+        profileData,
         checkInOutData,
         salaryData,
+        complaintsData,
+        noticesData
       ] = await Promise.all([
-        fetchWithTimeout(() => staffCheckInCheckOutApi.getMyRecords(), { data: [] }),
-        fetchWithTimeout(() => SalaryApi.getMySalaryHistory(), []),
+        fetchWithTimeout(() => staffApi.getStaffProfile(), null),
+        fetchWithTimeout(() => staffApi.getStaffCheckInOuts(), { data: [] }),
+        fetchWithTimeout(() => staffApi.getStaffSalaryHistory(), []),
+        fetchWithTimeout(() => staffApi.getStaffComplains(), { data: [], total: 0 }),
+        fetchWithTimeout(() => staffApi.getStaffNotices(), { data: [] })
       ]);
 
       const today = new Date().toISOString().split('T')[0];

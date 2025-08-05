@@ -503,6 +503,114 @@ class StaffController extends Controller
     }
     
     /**
+     * Get current staff member's profile (for staff portal)
+     */
+    public function getMyProfile(): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+            
+            if (!$user || $user->role !== 'staff') {
+                return response()->json([
+                    'error' => 'Unauthorized - Staff access required'
+                ], 403);
+            }
+            
+            // Find staff by user_id relationship
+            $staff = Staff::where('user_id', $user->id)
+                ->with([
+                    'salaries' => function($query) {
+                        $query->orderBy('year', 'desc')->orderBy('month', 'desc')->limit(12);
+                    },
+                    'amenities',
+                    'attachments'
+                ])
+                ->first();
+            
+            if (!$staff) {
+                return response()->json([
+                    'error' => 'Staff profile not found'
+                ], 404);
+            }
+            
+            return response()->json($staff);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch profile',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update current staff member's profile (for staff portal)
+     */
+    public function updateMyProfile(Request $request): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+            
+            if (!$user || $user->role !== 'staff') {
+                return response()->json([
+                    'error' => 'Unauthorized - Staff access required'
+                ], 403);
+            }
+            
+            // Find staff by user_id relationship
+            $staff = Staff::where('user_id', $user->id)->first();
+            
+            if (!$staff) {
+                return response()->json([
+                    'error' => 'Staff profile not found'
+                ], 404);
+            }
+            
+            // Staff can only update limited fields for security
+            $validated = $request->validate([
+                'contact_number' => 'sometimes|required|string|max:20',
+                'email' => 'sometimes|required|email|max:255|unique:staff,email,' . $staff->id,
+                'food' => 'nullable|string|in:vegetarian,non-vegetarian,egg-only',
+                'staff_image' => 'nullable|image|max:2048',
+                // Address fields staff can update
+                'district' => 'nullable|string|max:100',
+                'city_name' => 'nullable|string|max:100',
+                'ward_no' => 'nullable|string|max:20',
+                'street_name' => 'nullable|string|max:100',
+                // Health fields staff can update
+                'blood_group' => 'nullable|string|max:10',
+                'disease' => 'nullable|string|max:255',
+                // Family contact info staff can update
+                'father_contact' => 'nullable|string|max:20',
+                'mother_contact' => 'nullable|string|max:20',
+                'spouse_contact' => 'nullable|string|max:20',
+                'local_guardian_contact' => 'nullable|string|max:20',
+            ]);
+            
+            // Handle file upload
+            if ($request->hasFile('staff_image')) {
+                // Delete old image if exists
+                if ($staff->staff_image) {
+                    Storage::disk('public')->delete($staff->staff_image);
+                }
+                $path = $request->file('staff_image')->store('staff', 'public');
+                $validated['staff_image'] = $path;
+            }
+            
+            $staff->update($validated);
+            
+            // Load relationships for response
+            $staff->load(['amenities', 'attachments']);
+            
+            return response()->json($staff);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to update profile',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Parse boolean values from string inputs
      */
     private function parseBoolean($value): bool

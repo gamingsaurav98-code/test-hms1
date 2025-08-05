@@ -168,6 +168,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Student financial records (own records only)
         Route::get('student/financials', [StudentFinancialController::class, 'getMyFinancials']);
         Route::get('student/payment-history', [StudentFinancialController::class, 'getMyPaymentHistory']);
+        Route::get('student/outstanding-dues', [StudentFinancialController::class, 'getMyOutstandingDues']);
         
         // Student complaints (own complaints only)
         Route::get('student/complains', [ComplainController::class, 'getMyComplaints']);
@@ -200,6 +201,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Staff financial records (own records only)
         Route::get('staff/financials', [StaffFinancialController::class, 'getMyFinancials']);
         Route::get('staff/salary-history', [StaffFinancialController::class, 'getMySalaryHistory']);
+        
+        // Staff complaints to admin (own complaints only)
+        Route::get('staff/complains', [ComplainController::class, 'getMyStaffComplaints']);
+        Route::post('staff/complains', [ComplainController::class, 'createStaffComplaint']);
+        Route::get('staff/complains/{id}', [ComplainController::class, 'getMyStaffComplaint']);
+        Route::put('staff/complains/{id}', [ComplainController::class, 'updateMyStaffComplaint']);
         
         // Staff notices (notices targeted to staff)
         Route::get('staff/notices', [NoticeController::class, 'getMyNotices']);

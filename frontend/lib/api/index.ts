@@ -58,6 +58,14 @@ export type {
   PurchaseFormData
 } from './types/expense.types';
 
+// Import staff API types
+export type {
+  Staff as StaffMember,
+  StaffFormData,
+  StaffAmenity,
+  StaffFinancial
+} from './staff.api';
+
 // Import salary API types
 export type {
   Salary,
@@ -74,9 +82,12 @@ export { blockApi } from './block.api';
 export { roomApi } from './room.api';
 export { incomeApi } from './income.api';
 export { studentApi, studentFinancialApi } from './student.api';
+export { staffApi } from './staff.api';
 export { supplierApi } from './supplier.api';
 export { supplierFinancialApi } from './supplier-financial.api';
 export { noticeApi } from './notice.api';
 export { inquiryApi } from './inquiry.api';
 export { expenseApi, expenseCategoryApi } from './expense.api';
 export { SalaryApi, StaffApi } from './salary.api';
+export { complainApi } from './complain.api';
+export { default as UnifiedApi } from './unified.api';
