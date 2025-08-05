@@ -39,6 +39,7 @@ interface StaffDashboardStats {
     priority: 'high' | 'medium' | 'low';
     dueDate: string;
   }>;
+  hasPendingCheckout?: boolean;
 }
 
 export default function StaffDashboardPage() {
@@ -58,6 +59,7 @@ export default function StaffDashboardPage() {
     lastSalaryAmount: 0,
     recentActivities: [],
     pendingTasks: [],
+    hasPendingCheckout: false,
   });
   const [loading, setLoading] = useState(true);
   const [staffId] = useState('1'); // This should come from auth context
@@ -95,7 +97,7 @@ export default function StaffDashboardPage() {
       ] = await Promise.all([
         fetchWithTimeout(() => staffApi.getStaffProfile(), null),
         fetchWithTimeout(() => staffApi.getStaffCheckInOuts(), { data: [] }),
-        fetchWithTimeout(() => staffApi.getStaffSalaryHistory(), []),
+        fetchWithTimeout(() => SalaryApi.getMySalaryHistory(), []),
         fetchWithTimeout(() => staffApi.getStaffComplains(), { data: [], total: 0 }),
         fetchWithTimeout(() => staffApi.getStaffNotices(), { data: [] })
       ]);
@@ -210,6 +212,7 @@ export default function StaffDashboardPage() {
         monthlySalary: thisMonthSalary ? parseFloat(String(thisMonthSalary.amount || '0')) : 0,
         lastSalaryDate: lastSalary ? `${lastSalary.year}-${String(lastSalary.month).padStart(2, '0')}-01` : '',
         lastSalaryAmount: lastSalary ? parseFloat(String(lastSalary.amount || '0')) : 0,
+        hasPendingCheckout: checkInOutData?.length > 0 && !(latestCheckIn as any)?.checkout_time,
         recentActivities: recentActivities.slice(0, 5),
         pendingTasks: [
           { task: 'Review student check-in requests', priority: 'high', dueDate: '2025-07-29' },
@@ -334,6 +337,19 @@ export default function StaffDashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Checkout Status Alert */}
+        {stats.hasPendingCheckout && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-8">
+            <div className="flex items-center">
+              <Clock className="w-8 h-8 text-yellow-600 mr-3" />
+              <div>
+                <h3 className="text-lg font-semibold text-yellow-800">Checkout Request Pending</h3>
+                <p className="text-yellow-600">Your checkout request is awaiting admin approval</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Activities Feed */}

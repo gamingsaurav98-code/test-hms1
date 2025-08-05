@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { staffApi } from '@/lib/api/staff.api';
 import { 
   Button, 
   SearchBar, 
@@ -46,9 +47,11 @@ export default function StaffNoticePage() {
       setLoading(true);
       setError(null);
       
-      // TODO: Implement actual API call when notice API is ready
-      setNotices([]);
-      setFilteredNotices([]);
+      const response = await staffApi.getStaffNotices();
+      const noticesData = response.data || [];
+      
+      setNotices(noticesData);
+      setFilteredNotices(noticesData);
     } catch (err) {
       console.error('Error fetching notices:', err);
       setError('Failed to load notices. Please try again.');

@@ -195,7 +195,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Staff check-in/check-out (own records only)
         Route::post('staff/checkin', [StaffCheckInCheckOutController::class, 'checkIn']);
         Route::post('staff/checkout', [StaffCheckInCheckOutController::class, 'checkOut']);
-        Route::get('staff/checkincheckouts', [StaffCheckInCheckOutController::class, 'getMyRecords']);
+        Route::get('staff/my-checkincheckouts', [StaffCheckInCheckOutController::class, 'getMyRecords']);
         Route::get('staff/today-attendance', [StaffCheckInCheckOutController::class, 'getMyTodayAttendance']);
         
         // Staff financial records (own records only)

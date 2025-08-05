@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { staffCheckInCheckOutApi, StaffCheckInCheckOut } from '@/lib/api/staff-checkincheckout.api';
+import { tokenStorage } from '@/lib/api/auth.api';
+import { API_BASE_URL } from '@/lib/api/core';
 import { Button, ActionButtons } from '@/components/ui';
 import { 
   Plus, 
@@ -54,6 +56,10 @@ export default function StaffCheckinCheckoutPage() {
     try {
       setLoading(true);
       
+      console.log('=== FETCHING STAFF RECORDS ===');
+      console.log('Auth token exists:', !!tokenStorage.get());
+      console.log('API URL will be:', `${API_BASE_URL}/staff/checkincheckouts`);
+      
       // Optimized API call with timeout - improved error handling
       const fetchWithTimeout = async () => {
         return await Promise.race([
@@ -62,14 +68,17 @@ export default function StaffCheckinCheckoutPage() {
             setTimeout(() => {
               console.log('API timeout - returning empty data');
               resolve({ data: [] });
-            }, 2000) // 2 second timeout
+            }, 10000) // Increased timeout to 10 seconds
           )
         ]);
       };
       
       const response = await fetchWithTimeout();
       
-      console.log('Staff Records Response:', response.data);
+      console.log('=== API RESPONSE ===');
+      console.log('Staff Records Response:', response);
+      console.log('Records count:', response.data?.length || 0);
+      console.log('Raw response data:', response.data);
       
       setRecords(response.data);
       setFilteredRecords(response.data);
@@ -79,11 +88,17 @@ export default function StaffCheckinCheckoutPage() {
         record.status === 'checked_in' || record.status === 'pending' || record.status === 'approved'
       );
       
-      console.log('Active Record:', activeRecord);
+      console.log('Active Record Found:', activeRecord);
       
       setCurrentStatus(activeRecord || null);
     } catch (err) {
+      console.error('=== API ERROR ===');
       console.error('Failed to fetch records:', err);
+      console.error('Error details:', {
+        message: (err as any)?.message,
+        status: (err as any)?.status,
+        validation: (err as any)?.validation
+      });
       setError('Failed to load check-in/checkout data');
       // Don't let API failures prevent the page from loading
       setRecords([]);
