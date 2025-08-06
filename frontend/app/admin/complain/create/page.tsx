@@ -198,9 +198,9 @@ export default function ComplainChatPage() {
                   <h4 className="text-sm font-medium text-gray-500 mb-1">Messages</h4>
                   <p className="text-gray-700 text-sm">
                     {selectedComplain.total_messages || 0} total
-                    {(selectedComplain.unread_admin_messages > 0) && (
+                    {((selectedComplain.unread_admin_messages ?? 0) > 0) && (
                       <span className="ml-2 bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full">
-                        {selectedComplain.unread_admin_messages} unread
+                        {selectedComplain.unread_admin_messages ?? 0} unread
                       </span>
                     )}
                   </p>
@@ -332,9 +332,9 @@ export default function ComplainChatPage() {
                       <div className="text-sm text-gray-600">
                         {complain.total_messages || 0} messages
                       </div>
-                      {complain.unread_admin_messages > 0 && (
+                      {(complain.unread_admin_messages ?? 0) > 0 && (
                         <div className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full">
-                          {complain.unread_admin_messages} unread
+                          {complain.unread_admin_messages ?? 0} unread
                         </div>
                       )}
                     </div>

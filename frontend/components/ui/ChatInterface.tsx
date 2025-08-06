@@ -197,8 +197,11 @@ export default function ChatInterface({
   // Render message
   const renderMessage = (msg: ChatMessage) => {
     // For admin users, their own messages appear on the right
-    // For student users, their own messages appear on the right
-    const isOwnMessage = msg.sender_type === currentUserType;
+    // For the current user, their own messages appear on the right
+    // We need to check both sender_type and sender_name to identify the actual sender
+    const isOwnMessage = msg.sender_type === currentUserType && 
+                        (msg.sender_name === currentUserName || 
+                         (currentUserType === 'admin' && msg.sender_type === 'admin'));
     const isEditing = editingMessageId === msg.id;
     const canEdit = canEditMessage(msg.created_at) && isOwnMessage;
     const isDropdownOpen = openDropdownId === msg.id;

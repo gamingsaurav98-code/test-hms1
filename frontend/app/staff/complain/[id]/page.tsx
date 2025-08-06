@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { staffApi } from '@/lib/api/staff.api';
 import { Complain } from '@/lib/api/complain.api';
@@ -9,16 +9,11 @@ import { Button, ConfirmModal, TableSkeleton } from '@/components/ui';
 import ChatInterface from '@/components/ui/ChatInterface';
 import { 
   ArrowLeft, 
-  ChevronDown, 
-  Download, 
-  Calendar, 
-  User, 
-  Clock,
-  Upload,
   AlertCircle,
   Check,
   X,
-  Loader
+  Loader,
+  Clock
 } from 'lucide-react';
 
 export default function StaffComplainDetail() {
@@ -29,8 +24,6 @@ export default function StaffComplainDetail() {
   const [complain, setComplain] = useState<Complain | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch complain data
   useEffect(() => {
@@ -62,20 +55,6 @@ export default function StaffComplainDetail() {
       fetchComplain();
     }
   }, [complainId]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowStatusDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -144,18 +123,6 @@ export default function StaffComplainDetail() {
     });
   };
 
-  const handleDownloadAttachment = () => {
-    if (complain?.complain_attachment) {
-      // Create download link
-      const link = document.createElement('a');
-      link.href = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/storage/${complain.complain_attachment}`;
-      link.download = complain.complain_attachment.split('/').pop() || 'attachment';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 py-6 px-4">
@@ -216,223 +183,109 @@ export default function StaffComplainDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 px-4">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="secondary"
-              onClick={() => router.push('/staff/complain')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Complaints
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Complaint Details</h1>
-              <p className="text-gray-600">ID: {complain.id}</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{complain.title}</h1>
+                <div className="flex items-center gap-4 mt-2">
+                  {getStatusBadge(complain.status)}
+                  <span className="text-sm text-gray-500">•</span>
+                  <span className="text-sm text-gray-600">{formatDate(complain.created_at)}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {getStatusBadge(complain.status)}
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Complaint Details Card */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="space-y-6">
-                {/* Title */}
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                    {complain.title}
-                  </h2>
-                  {getStatusBadge(complain.status)}
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+          {/* Left Sidebar - Complaint Details */}
+          <div className="xl:col-span-3">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              {/* Info Section */}
+              <div className="p-7">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="text-xl font-semibold text-gray-900">Complain Details</h3>
                 </div>
-
-                {/* Description */}
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Description</h3>
-                  <div className="prose prose-sm max-w-none">
-                    <p className="text-gray-700 whitespace-pre-wrap">
-                      {complain.description}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Attachment */}
-                {complain.complain_attachment && (
+                
+                <div className="space-y-8">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Attachment</h3>
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                            📎
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              {complain.complain_attachment.split('/').pop()}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Supporting document
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={handleDownloadAttachment}
-                          className="flex items-center gap-2"
-                        >
-                          <Download className="w-4 h-4" />
-                          Download
-                        </Button>
-                      </div>
+                    <label className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3 block flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                      </svg>
+                      Title
+                    </label>
+                    <p className="text-lg text-gray-900 leading-relaxed font-medium bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">{complain.title}</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3 block flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Description
+                    </label>
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-green-500">
+                      <p className="text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{complain.description}</p>
                     </div>
                   </div>
-                )}
+
+                  {/* Metadata */}
+                  <div className="pt-6 border-t border-gray-200">
+                    <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center">
+                      <svg className="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Information
+                    </h4>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 font-medium">Created</span>
+                        <span className="text-gray-900 font-semibold">{formatDate(complain.created_at)}</span>
+                      </div>
+                      {complain.updated_at && (
+                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                          <span className="text-gray-700 font-medium">Updated</span>
+                          <span className="text-gray-900 font-semibold">{formatDate(complain.updated_at)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Chat Interface */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center gap-2">
-                  <Upload className="w-5 h-5 text-gray-600" />
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Communication
-                  </h2>
-                  {complain.unread_messages > 0 && (
-                    <span className="bg-red-500 text-white text-xs font-medium px-2 py-1 rounded-full">
-                      {complain.unread_messages} new
-                    </span>
-                  )}
+          {/* Right Main Area - Chat Interface */}
+          <div className="xl:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Chat Messages</h3>
+                    <p className="text-sm text-gray-600 mt-1">Communicate directly with the administration about this complaint</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs font-medium text-green-600">Online</span>
+                  </div>
                 </div>
-                <p className="text-gray-600 text-sm mt-1">
-                  Communicate with the administration about this complaint
-                </p>
               </div>
-              
-              <div className="p-6">
+              <div className="flex-1 min-h-0" style={{height: 'calc(100vh - 340px)'}}>
                 <ChatInterface
                   complainId={complain.id}
                   currentUserId={complain.staff?.id || 0}
                   currentUserType="staff"
                   currentUserName={complain.staff?.staff_name || 'Staff Member'}
+                  className="h-full"
                 />
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Complaint Info */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Complaint Information
-              </h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Created</p>
-                    <p className="text-sm text-gray-600">
-                      {formatDate(complain.created_at)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Last Updated</p>
-                    <p className="text-sm text-gray-600">
-                      {formatDate(complain.updated_at)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <User className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Submitted By</p>
-                    <p className="text-sm text-gray-600">
-                      {complain.staff?.staff_name || 'Staff Member'}
-                    </p>
-                    {complain.staff?.contact_number && (
-                      <p className="text-xs text-gray-500">
-                        {complain.staff.contact_number}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Upload className="w-5 h-5 text-gray-400 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Messages</p>
-                    <p className="text-sm text-gray-600">
-                      {complain.total_messages || 0} total
-                    </p>
-                    {complain.unread_messages > 0 && (
-                      <p className="text-xs text-red-600">
-                        {complain.unread_messages} unread
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {complain.last_message_at && (
-                  <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Last Message</p>
-                      <p className="text-sm text-gray-600">
-                        {formatDate(complain.last_message_at)}
-                      </p>
-                      {complain.last_message_by && (
-                        <p className="text-xs text-gray-500">
-                          by {complain.last_message_by}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Status Information */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Status Information
-              </h3>
-              
-              <div className="space-y-3">
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    {getStatusIcon(complain.status)}
-                    <span className="text-sm font-medium text-gray-900 capitalize">
-                      {complain.status.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600">
-                    {complain.status === 'pending' && 'Your complaint is awaiting review by the administration.'}
-                    {complain.status === 'in_progress' && 'Your complaint is being actively addressed.'}
-                    {complain.status === 'resolved' && 'Your complaint has been resolved.'}
-                    {complain.status === 'rejected' && 'Your complaint was reviewed but could not be addressed.'}
-                  </p>
-                </div>
-
-                <div className="text-xs text-gray-500">
-                  <p>Only administrators can update the complaint status.</p>
-                  <p className="mt-1">Use the chat to communicate about this complaint.</p>
-                </div>
               </div>
             </div>
           </div>
