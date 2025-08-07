@@ -583,7 +583,7 @@ class StaffCheckInCheckOutController extends Controller
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
 
-            // Get staff record for the authenticated user using user_id relationship
+            // Get staff record for the authenticated user
             $staff = \App\Models\Staff::where('user_id', $user->id)->first();
             
             if (!$staff) {
@@ -600,8 +600,52 @@ class StaffCheckInCheckOutController extends Controller
                 'data' => $records
             ]);
         } catch (\Exception $e) {
+            \Log::error('getMyRecords error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'error' => 'Failed to fetch your check-in/checkout records',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get a specific check-in/checkout record for the authenticated staff
+     */
+    public function getMyRecord($id)
+    {
+        try {
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Get staff record for the authenticated user
+            $staff = \App\Models\Staff::where('user_id', $user->id)->first();
+            
+            if (!$staff) {
+                return response()->json(['error' => 'Staff record not found'], 404);
+            }
+
+            // Find the record and make sure it belongs to the authenticated staff
+            $record = StaffCheckInCheckOut::where('id', $id)
+                ->where('staff_id', $staff->id)
+                ->with(['staff', 'block'])
+                ->first();
+
+            if (!$record) {
+                return response()->json(['error' => 'Record not found or access denied'], 404);
+            }
+
+            return response()->json([
+                'data' => $record
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('getMyRecord error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'error' => 'Failed to fetch record',
                 'message' => $e->getMessage()
             ], 500);
         }

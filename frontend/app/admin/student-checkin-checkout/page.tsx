@@ -115,14 +115,18 @@ export default function StudentCheckinCheckoutList() {
     });
   };
 
-  const calculateDuration = (estimatedCheckinDate: string | null | undefined, checkoutTime: string | null | undefined) => {
-    if (!estimatedCheckinDate || !checkoutTime) return '-';
+  const calculateDuration = (record: StudentCheckInCheckOut) => {
+    if (!record.checkout_time) return '-';
     
-    const estimated = new Date(estimatedCheckinDate);
-    const checkout = new Date(checkoutTime);
-    const diffMs = estimated.getTime() - checkout.getTime();
+    // Use actual check-in time if available, otherwise use estimated check-in time
+    const endTime = record.checkin_time || record.estimated_checkin_date;
+    if (!endTime) return '-';
     
-    // Handle negative duration (if checkout is after estimated checkin)
+    const checkout = new Date(record.checkout_time);
+    const checkInOrEstimated = new Date(endTime);
+    const diffMs = checkInOrEstimated.getTime() - checkout.getTime();
+    
+    // Handle negative duration (if checkout is after check-in/estimated time)
     const absDiffMs = Math.abs(diffMs);
     const diffDays = Math.floor(absDiffMs / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor((absDiffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -307,7 +311,7 @@ export default function StudentCheckinCheckoutList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {calculateDuration(record.estimated_checkin_date, record.checkout_time)}
+                        {calculateDuration(record)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

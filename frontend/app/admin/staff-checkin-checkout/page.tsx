@@ -115,23 +115,47 @@ export default function StaffCheckinCheckoutList() {
     });
   };
 
-  const calculateDuration = (estimatedCheckinDate: string | null | undefined, checkoutTime: string | null | undefined) => {
-    if (!estimatedCheckinDate || !checkoutTime) return '-';
+  const calculateDuration = (record: StaffCheckInCheckOut) => {
+    if (!record.checkout_time) return '-';
     
-    const estimated = new Date(estimatedCheckinDate);
-    const checkout = new Date(checkoutTime);
-    const diffMs = estimated.getTime() - checkout.getTime();
-    
-    // Handle negative duration (if checkout is after estimated checkin)
-    const absDiffMs = Math.abs(diffMs);
-    const diffDays = Math.floor(absDiffMs / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor((absDiffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
-    if (diffDays > 0) {
-      return `${diffDays}d ${diffHours}h`;
-    } else {
-      return `${diffHours}h`;
+    // If staff has checked in, calculate actual duration between checkout and checkin
+    if (record.checkin_time) {
+      const checkout = new Date(record.checkout_time);
+      const checkin = new Date(record.checkin_time);
+      const diffMs = checkin.getTime() - checkout.getTime();
+      
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      if (diffDays > 0) {
+        return `${diffDays}d ${diffHours}h`;
+      } else if (diffHours > 0) {
+        return `${diffHours}h ${diffMinutes}m`;
+      } else {
+        return `${diffMinutes}m`;
+      }
     }
+    
+    // If not checked in yet, calculate estimated duration between checkout and estimated checkin
+    if (record.estimated_checkin_date) {
+      const checkout = new Date(record.checkout_time);
+      const estimated = new Date(record.estimated_checkin_date);
+      const diffMs = estimated.getTime() - checkout.getTime();
+      
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      
+      if (diffDays > 0) {
+        return `${diffDays}d ${diffHours}h (est.)`;
+      } else if (diffHours > 0) {
+        return `${diffHours}h (est.)`;
+      } else {
+        return 'Less than 1h (est.)';
+      }
+    }
+    
+    return '-';
   };
 
   const getStatusBadge = (record: StaffCheckInCheckOut) => {
@@ -307,7 +331,7 @@ export default function StaffCheckinCheckoutList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {calculateDuration(record.estimated_checkin_date, record.checkout_time)}
+                        {calculateDuration(record)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

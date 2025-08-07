@@ -314,68 +314,33 @@ export const staffCheckInCheckOutApi = {
   // Staff-specific method to get current user's check-in/checkout records
   async getMyRecords(): Promise<{ data: StaffCheckInCheckOut[] }> {
     const url = `${API_BASE_URL}/my-staff/my-checkincheckouts`;
-    console.log('=== STAFF API CALL DEBUG ===');
-    console.log('Making request to:', url);
-    console.log('With headers:', getAuthHeaders());
-    console.log('Token exists:', !!getAuthHeaders().Authorization);
     
     try {
-      // Add timeout using Promise.race with graceful fallback
-      const fetchPromise = fetch(url, {
+      const response = await fetch(url, {
         headers: getAuthHeaders(),
       });
       
-      const timeoutPromise = new Promise<Response>((resolve) => {
-        setTimeout(() => {
-          console.log('Request timeout - creating empty response');
-          // Create a mock response that will return empty data
-          resolve(new Response(JSON.stringify({ data: [] }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          }));
-        }, 8000); // 8 second timeout
-      });
-      
-      const response = await Promise.race([fetchPromise, timeoutPromise]);
-      
-      console.log('=== API RESPONSE DEBUG ===');
-      console.log('Response status:', response.status);
-      console.log('Response URL:', response.url);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      // Handle authorization and other errors gracefully
-      if (response.status === 401) {
-        console.log('Authorization error - staff endpoint may require backend restart');
-        console.log('Current token:', getAuthHeaders().Authorization?.substring(0, 20) + '...');
-        return { data: [] };
-      }
-      
-      if (response.status === 404 || response.status === 500) {
-        console.log('Staff endpoint not available, backend might need restart');
-        return { data: [] };
-      }
-      
-      if (!response.ok) {
-        console.log('API request failed with status:', response.status);
-        const errorText = await response.text();
-        console.log('Error response:', errorText);
-        return { data: [] };
-      }
-      
       const result = await handleResponse<{ data: StaffCheckInCheckOut[] }>(response);
-      console.log('=== SUCCESSFUL API RESULT ===');
-      console.log('Result:', result);
-      console.log('Records count:', result.data?.length || 0);
-      console.log('Sample record:', result.data?.[0] || 'No records');
-      
       return result;
     } catch (error) {
-      console.error('=== API NETWORK ERROR ===');
-      console.error('getMyRecords network error:', error);
-      console.error('Error type:', typeof error);
-      console.error('Error constructor:', error?.constructor?.name);
       // Return empty data instead of throwing error to prevent crashes
       return { data: [] };
+    }
+  },
+
+  // Staff-specific method to get a single record by ID
+  async getMyRecord(id: string): Promise<{ data: StaffCheckInCheckOut }> {
+    const url = `${API_BASE_URL}/my-staff/my-checkincheckouts/${id}`;
+    
+    try {
+      const response = await fetch(url, {
+        headers: getAuthHeaders(),
+      });
+      
+      const result = await handleResponse<{ data: StaffCheckInCheckOut }>(response);
+      return result;
+    } catch (error) {
+      throw error;
     }
   },
 

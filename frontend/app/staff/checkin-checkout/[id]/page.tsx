@@ -24,6 +24,8 @@ export default function StaffCheckinCheckoutDetailPage() {
   const [loading, setLoading] = useState(true);
   const [record, setRecord] = useState<StaffCheckInCheckOut | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [checkingIn, setCheckingIn] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (recordId) {
@@ -34,13 +36,43 @@ export default function StaffCheckinCheckoutDetailPage() {
   const fetchRecord = async () => {
     try {
       setLoading(true);
-      const response = await staffCheckInCheckOutApi.getCheckInCheckOut(recordId);
+      const response = await staffCheckInCheckOutApi.getMyRecord(recordId);
       setRecord(response.data);
     } catch (err: any) {
       console.error('Failed to fetch record:', err);
       setError(err.message || 'Failed to load record details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCheckIn = async () => {
+    if (!record) return;
+    
+    try {
+      setCheckingIn(true);
+      setError(null);
+      
+      // Use current date and time for check-in
+      const now = new Date();
+      
+      await staffCheckInCheckOutApi.checkIn({
+        block_id: String(record.block?.id || ''),
+        remarks: `Checked in from detail page at ${now.toLocaleString()}`
+      });
+      
+      setSuccessMessage(`Successfully checked in at ${now.toLocaleString()}!`);
+      
+      // Refresh the record to get updated data
+      await fetchRecord();
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(null), 5000);
+    } catch (err: any) {
+      console.error('Failed to check in:', err);
+      setError(err.message || 'Failed to check in');
+    } finally {
+      setCheckingIn(false);
     }
   };
 
@@ -52,21 +84,21 @@ export default function StaffCheckinCheckoutDetailPage() {
         return (
           <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
             <Clock className="w-4 h-4 mr-2" />
-            Checkout Pending Approval
+            Pending
           </span>
         );
       case 'approved':
         return (
           <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
             <Check className="w-4 h-4 mr-2" />
-            Checkout Approved
+            Approved
           </span>
         );
       case 'declined':
         return (
           <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800 border border-red-200">
             <X className="w-4 h-4 mr-2" />
-            Checkout Declined
+            Declined
           </span>
         );
       case 'checked_in':
@@ -108,21 +140,57 @@ export default function StaffCheckinCheckoutDetailPage() {
   };
 
   const calculateDuration = () => {
-    if (!record || !record.checkin_time || !record.checkout_time) {
+    if (!record || !record.checkout_time) {
       return 'N/A';
     }
     
-    const checkinTime = new Date(record.checkin_time);
-    const checkoutTime = new Date(record.checkout_time);
-    const diffMs = checkoutTime.getTime() - checkinTime.getTime();
-    
-    const hours = Math.floor(diffMs / (1000 * 60 * 60));
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+    // If staff has checked in, calculate duration between checkout and checkin
+    if (record.checkin_time) {
+      const checkoutTime = new Date(record.checkout_time);
+      const checkinTime = new Date(record.checkin_time);
+      const diffMs = checkinTime.getTime() - checkoutTime.getTime();
+      
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      if (days > 0) {
+        return `${days}d ${hours}h ${minutes}m`;
+      } else if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+      }
+      return `${minutes}m`;
     }
-    return `${minutes}m`;
+    
+    // If not checked in yet, calculate duration between checkout and estimated return
+    if (record.estimated_checkin_date) {
+      const checkoutTime = new Date(record.checkout_time);
+      const estimatedReturn = new Date(record.estimated_checkin_date);
+      const diffMs = estimatedReturn.getTime() - checkoutTime.getTime();
+      
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      
+      if (days > 0) {
+        return `${days}d ${hours}h (estimated)`;
+      } else if (hours > 0) {
+        return `${hours}h (estimated)`;
+      }
+      return 'Less than 1 hour (estimated)';
+    }
+    
+    return 'N/A';
+  };
+
+  const getCheckoutReason = () => {
+    if (!record || !record.remarks) return '';
+    
+    // Extract only the original checkout reason, exclude check-in information
+    const remarks = record.remarks;
+    
+    // Split by ". Check-in:" to separate original reason from check-in timestamp
+    const parts = remarks.split('. Check-in:');
+    return parts[0]; // Return only the original checkout reason
   };
 
   if (loading) {
@@ -180,216 +248,151 @@ export default function StaffCheckinCheckoutDetailPage() {
       <div className="w-full">
         {/* Header */}
         <div className="mb-6">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Check-in/Checkout
-          </button>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Check-in/Checkout Details</h1>
-              <p className="text-gray-600 mt-1">Record ID: {record.id}</p>
+              <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                <span>Created: {formatDateTime(record.created_at)}</span>
+              </div>
             </div>
-            <div>{getStatusBadge()}</div>
+            <div className="flex items-center gap-3">
+              {getStatusBadge()}
+              {record.status === 'approved' && !record.checkin_time && (
+                <button
+                  onClick={handleCheckIn}
+                  disabled={checkingIn}
+                  className="inline-flex items-center justify-center px-3 py-1.5 border border-transparent rounded-md bg-green-600 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Check In"
+                >
+                  {checkingIn ? (
+                    <>
+                      <svg className="w-4 h-4 mr-1.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Checking In...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="w-4 h-4 mr-1.5" />
+                      Check In
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
+          
+          {/* Success Message */}
+          {successMessage && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center">
+              <Check className="w-5 h-5 text-green-600 mr-2" />
+              <p className="text-green-800 text-sm font-medium">{successMessage}</p>
+            </div>
+          )}
+          
+          {/* Error Message */}
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center">
+              <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+              <p className="text-red-800 text-sm font-medium">{error}</p>
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Calendar className="w-5 h-5 mr-2" />
-                Basic Information
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Date</label>
-                  <p className="mt-1 text-sm text-gray-900">{formatDate(record.date)}</p>
+        <div className="space-y-6">
+          {/* Time Details */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <Clock className="w-5 h-5 mr-2" />
+              Time Details
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {record.checkout_time && (
+                <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="flex items-center mb-2">
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                      <ArrowLeft className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <p className="text-sm font-medium text-orange-900">Checkout Time</p>
+                  </div>
+                  <p className="text-lg font-semibold text-orange-800 ml-11">{formatDateTime(record.checkout_time)}</p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Status</label>
-                  <div className="mt-1">{getStatusBadge()}</div>
+              )}
+
+              {record.checkin_time && (
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center mb-2">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                      <ArrowRight className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <p className="text-sm font-medium text-blue-900">Check-in Time</p>
+                  </div>
+                  <p className="text-lg font-semibold text-blue-800 ml-11">{formatDateTime(record.checkin_time)}</p>
                 </div>
-                {record.block && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Block</label>
-                    <p className="mt-1 text-sm text-gray-900 flex items-center">
-                      <Home className="w-4 h-4 mr-1" />
-                      {record.block.block_name}
+              )}
+
+              {record.estimated_checkin_date && (
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center mb-2">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                      <Calendar className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <p className="text-sm font-medium text-blue-900">Estimated Return</p>
+                  </div>
+                  <p className="text-lg font-semibold text-blue-800 ml-11">{formatDate(record.estimated_checkin_date)}</p>
+                </div>
+              )}
+
+              {/* Always show duration if checkout time exists */}
+              {record.checkout_time && (
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center mb-2">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                      <Clock className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-700">
+                      {record.checkin_time ? 'Total Duration' : 'Expected Duration'}
                     </p>
                   </div>
-                )}
-                {record.estimated_checkin_date && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Estimated Return Date</label>
-                    <p className="mt-1 text-sm text-blue-600 flex items-center">
-                      <Calendar className="w-4 h-4 mr-1" />
-                      {formatDate(record.estimated_checkin_date)}
-                    </p>
+                  <p className="text-lg font-semibold text-gray-900 ml-11">{calculateDuration()}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Additional Info */}
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex flex-wrap gap-4 text-sm">
+                {record.block && (
+                  <div className="flex items-center text-gray-600">
+                    <Home className="w-4 h-4 mr-1" />
+                    <span className="font-medium">Block:</span>
+                    <span className="ml-1">{record.block.block_name}</span>
                   </div>
                 )}
                 {record.checkout_duration && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Duration</label>
-                    <p className="mt-1 text-sm text-gray-900">{record.checkout_duration}</p>
+                  <div className="flex items-center text-gray-600">
+                    <Clock className="w-4 h-4 mr-1" />
+                    <span className="font-medium">Duration:</span>
+                    <span className="ml-1">{record.checkout_duration}</span>
                   </div>
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Time Details */}
+          {/* Remarks */}
+          {record.remarks && getCheckoutReason() && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Clock className="w-5 h-5 mr-2" />
-                Time Details
+                <AlertCircle className="w-5 h-5 mr-2" />
+                Remarks
               </h2>
-              <div className="space-y-4">
-                {record.checkin_time && (
-                  <div className="flex items-start justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <ArrowRight className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-blue-900">Check-in Time</p>
-                        <p className="text-lg font-semibold text-blue-800">{formatDateTime(record.checkin_time)}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {record.checkout_time && (
-                  <div className="flex items-start justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
-                        <ArrowLeft className="w-5 h-5 text-orange-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-orange-900">Checkout Time</p>
-                        <p className="text-lg font-semibold text-orange-800">{formatDateTime(record.checkout_time)}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {record.estimated_checkin_date && (
-                  <div className="flex items-start justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <Calendar className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-blue-900">Estimated Return Date</p>
-                        <p className="text-lg font-semibold text-blue-800">{formatDate(record.estimated_checkin_date)}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {record.checkin_time && record.checkout_time && (
-                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-gray-700">Total Duration</p>
-                      <p className="text-lg font-semibold text-gray-900">{calculateDuration()}</p>
-                    </div>
-                  </div>
-                )}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-gray-700">{getCheckoutReason()}</p>
               </div>
             </div>
-
-            {/* Remarks */}
-            {record.remarks && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <AlertCircle className="w-5 h-5 mr-2" />
-                  Remarks
-                </h2>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-700">{record.remarks}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Staff Information */}
-            {record.staff && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <User className="w-5 h-5 mr-2" />
-                  Staff Information
-                </h2>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Name</label>
-                    <p className="mt-1 text-sm text-gray-900">{record.staff.staff_name}</p>
-                  </div>
-                  {record.staff.staff_id && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Staff ID</label>
-                      <p className="mt-1 text-sm text-gray-900">{record.staff.staff_id}</p>
-                    </div>
-                  )}
-                  {record.staff.contact_number && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Contact</label>
-                      <p className="mt-1 text-sm text-gray-900">{record.staff.contact_number}</p>
-                    </div>
-                  )}
-                  {record.staff.email && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Email</label>
-                      <p className="mt-1 text-sm text-gray-900 break-words">{record.staff.email}</p>
-                    </div>
-                  )}
-                  {record.staff.department && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Department</label>
-                      <p className="mt-1 text-sm text-gray-900">{record.staff.department}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="space-y-3">
-                <Button
-                  onClick={() => router.push('/staff/checkin-checkout')}
-                  variant="secondary"
-                  className="w-full"
-                >
-                  View All Records
-                </Button>
-              </div>
-            </div>
-
-            {/* Record Metadata */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Record Information</h2>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Created</span>
-                  <span className="text-gray-900">{formatDateTime(record.created_at)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Last Updated</span>
-                  <span className="text-gray-900">{formatDateTime(record.updated_at)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Record ID</span>
-                  <span className="text-gray-900 font-mono">{record.id}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
