@@ -9,6 +9,9 @@ class Chat extends Model
 {
     protected $fillable = [
         'complain_id',
+        'sender_id',
+        'sender_type',
+        'sender_name',
         'message',
         'is_edited',
         'is_read',
@@ -122,5 +125,45 @@ class Chat extends Model
     public function getTimeAgo()
     {
         return $this->created_at->diffForHumans();
+    }
+    
+    /**
+     * Check if message can be edited (within 5 minutes of creation)
+     */
+    public function canBeEdited()
+    {
+        $fiveMinutesAgo = now()->subMinutes(5);
+        return $this->created_at->greaterThan($fiveMinutesAgo);
+    }
+    
+    /**
+     * Get remaining time for editing in seconds
+     */
+    public function getEditTimeRemaining()
+    {
+        $fiveMinutesFromCreation = $this->created_at->addMinutes(5);
+        $now = now();
+        
+        if ($now->lessThan($fiveMinutesFromCreation)) {
+            return $fiveMinutesFromCreation->diffInSeconds($now);
+        }
+        
+        return 0;
+    }
+    
+    /**
+     * Check if current user owns this message
+     */
+    public function isOwnedBy($userId, $userType)
+    {
+        return $this->sender_id == $userId && $this->sender_type == $userType;
+    }
+    
+    /**
+     * Check if current user can edit this message
+     */
+    public function canBeEditedBy($userId, $userType)
+    {
+        return $this->isOwnedBy($userId, $userType) && $this->canBeEdited();
     }
 }

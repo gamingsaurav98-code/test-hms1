@@ -18,6 +18,7 @@ export default function StudentComplainDetail() {
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteModal, setDeleteModal] = useState<boolean>(false);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   // Fetch complain data
   useEffect(() => {
@@ -178,14 +179,13 @@ export default function StudentComplainDetail() {
 
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="w-full px-6 py-5">
+        <div className="w-full px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{complain.title}</h1>
+                <h1 className="text-xl font-bold text-gray-900">{complain.title}</h1>
                 <div className="flex items-center gap-4 mt-2">
                   {getStatusBadge(complain.status)}
-                  <span className="text-sm text-gray-600 font-medium">ID: #{complain.id}</span>
                   <span className="text-sm text-gray-500">•</span>
                   <span className="text-sm text-gray-600">{formatDate(complain.created_at)}</span>
                 </div>
@@ -223,72 +223,90 @@ export default function StudentComplainDetail() {
       </div>
 
       {/* Main Content */}
-      <div className="w-full px-6 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+      <div className="w-full px-6 py-4">
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
           {/* Left Sidebar - Complain Details */}
           <div className="xl:col-span-3">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
               {/* Status Info Section */}
-              <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl border-b border-gray-200">
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Current Status</h3>
-                    <p className="text-sm text-gray-600 mt-1">{getStatusDescription(complain.status)}</p>
+                    <h3 className="text-base font-semibold text-gray-900">Current Status</h3>
+                    <p className="text-xs text-gray-600 mt-1">{getStatusDescription(complain.status)}</p>
                   </div>
                   {getStatusBadge(complain.status)}
                 </div>
               </div>
 
               {/* Details Section */}
-              <div className="p-7">
-                <div className="space-y-8">
+              <div className="p-5">
+                <div className="space-y-6">
                   <div>
-                    <label className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3 block flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block flex items-center">
+                      <svg className="w-3 h-3 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                       </svg>
                       Title
                     </label>
-                    <p className="text-lg text-gray-900 leading-relaxed font-medium bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">{complain.title}</p>
+                    <p className="text-base text-gray-900 leading-relaxed font-medium bg-gray-50 p-3 rounded-lg border-l-4 border-blue-500">{complain.title}</p>
                   </div>
 
                   <div>
-                    <label className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3 block flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block flex items-center">
+                      <svg className="w-3 h-3 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       Description
                     </label>
-                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-green-500">
-                      <p className="text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{complain.description}</p>
+                    <div className="bg-gray-50 p-3 rounded-lg border-l-4 border-green-500">
+                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{complain.description}</p>
                     </div>
                   </div>
 
                   {/* Attachment */}
                   {complain.complain_attachment && (
                     <div>
-                      <label className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3 block flex items-center">
-                        <svg className="w-4 h-4 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block flex items-center">
+                        <svg className="w-3 h-3 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                         </svg>
                         Attachment
                       </label>
-                      <div className="mt-3 border-2 border-dashed border-gray-300 rounded-xl overflow-hidden bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div className="p-6">
-                          {complain.complain_attachment.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                            <img
-                              src={getImageUrl(complain.complain_attachment)}
-                              alt="Attachment"
-                              className="max-w-full max-h-48 object-contain mx-auto rounded-lg shadow-md"
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center space-x-3 py-4">
-                              <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                              <span className="text-sm text-gray-700 font-medium">View File</span>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                              {complain.complain_attachment.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                              ) : (
+                                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                              )}
                             </div>
-                          )}
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                {complain.complain_attachment.match(/\.(jpg|jpeg|png|gif)$/i) ? 'Image File' : 'Document File'}
+                              </p>
+                              <p className="text-xs text-gray-500">Click to view attachment</p>
+                            </div>
+                          </div>
+                          <Button
+                            onClick={() => setShowImageModal(true)}
+                            variant="secondary"
+                            size="sm"
+                            icon={
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            }
+                          >
+                            View
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -359,6 +377,109 @@ export default function StudentComplainDetail() {
           </div>
         </div>
       </div>
+
+      {/* Attachment Modal */}
+      {complain?.complain_attachment && showImageModal && (
+        <div 
+          className="fixed inset-0 bg-black/75 flex items-center justify-center p-4 z-50"
+          onClick={() => setShowImageModal(false)}
+        >
+          <div className="relative max-w-4xl max-h-full bg-white rounded-xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  {complain.complain_attachment.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  )}
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {complain.complain_attachment.match(/\.(jpg|jpeg|png|gif)$/i) ? 'Image Attachment' : 'Document Attachment'}
+                  </h3>
+                </div>
+                <Button
+                  onClick={() => setShowImageModal(false)}
+                  variant="ghost"
+                  size="sm"
+                  icon={
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  }
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="max-h-[70vh] overflow-auto">
+              {complain.complain_attachment.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                <div className="p-6 flex justify-center">
+                  <img
+                    src={getImageUrl(complain.complain_attachment)}
+                    alt="Complaint Attachment"
+                    className="max-w-full max-h-[60vh] object-contain rounded-lg cursor-zoom-in hover:scale-105 transition-transform duration-200"
+                    onClick={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      if (img.style.transform === 'scale(2)') {
+                        img.style.transform = 'scale(1)';
+                        img.style.cursor = 'zoom-in';
+                        img.parentElement!.style.overflow = 'hidden';
+                      } else {
+                        img.style.transform = 'scale(2)';
+                        img.style.cursor = 'zoom-out';
+                        img.parentElement!.style.overflow = 'auto';
+                      }
+                    }}
+                    onError={(e) => {
+                      console.error('Image failed to load');
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="p-12 text-center">
+                  <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">Document File</h4>
+                  <p className="text-gray-600 mb-6">This file cannot be previewed directly. You can download it to view.</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Modal Actions */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-3">
+              <Button
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = getImageUrl(complain.complain_attachment);
+                  link.download = 'attachment';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+                variant="primary"
+                size="sm"
+                icon={
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                }
+              >
+                Download
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

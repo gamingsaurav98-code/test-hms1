@@ -27,6 +27,9 @@ class ChatController extends Controller
                 return [
                     'id' => $chat->id,
                     'complain_id' => $chat->complain_id,
+                    'sender_id' => $chat->sender_id,
+                    'sender_type' => $chat->sender_type,
+                    'sender_name' => $chat->sender_name,
                     'message' => $chat->message,
                     'is_edited' => $chat->is_edited,
                     'is_read' => $chat->is_read,
@@ -38,6 +41,8 @@ class ChatController extends Controller
                     'time_ago' => $chat->getTimeAgo(),
                     'is_unread' => $chat->isUnread(),
                     'is_edited_flag' => $chat->isEdited(),
+                    'can_be_edited' => $chat->canBeEdited(),
+                    'edit_time_remaining' => $chat->getEditTimeRemaining(),
                 ];
             });
 
@@ -82,9 +87,21 @@ class ChatController extends Controller
                 ], 422);
             }
 
-            // Create the chat message
+            // Get current authenticated user
+            $user = auth()->user();
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
+            // Create the chat message with sender information
             $chat = Chat::create([
                 'complain_id' => $request->complain_id,
+                'sender_id' => $user->id,
+                'sender_type' => $user->role, // 'admin', 'student', 'staff'
+                'sender_name' => $user->name,
                 'message' => $request->message,
                 'is_edited' => false,
                 'is_read' => false,
@@ -99,7 +116,21 @@ class ChatController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Message sent successfully',
-                'data' => $chat
+                'data' => [
+                    'id' => $chat->id,
+                    'complain_id' => $chat->complain_id,
+                    'sender_id' => $chat->sender_id,
+                    'sender_type' => $chat->sender_type,
+                    'sender_name' => $chat->sender_name,
+                    'message' => $chat->message,
+                    'is_edited' => $chat->is_edited,
+                    'is_read' => $chat->is_read,
+                    'read_at' => $chat->read_at,
+                    'created_at' => $chat->created_at,
+                    'updated_at' => $chat->updated_at,
+                    'can_be_edited' => $chat->canBeEdited(),
+                    'edit_time_remaining' => $chat->getEditTimeRemaining(),
+                ]
             ], 201);
 
         } catch (\Exception $e) {
@@ -128,7 +159,31 @@ class ChatController extends Controller
                 ], 422);
             }
 
+            // Get current authenticated user
+            $user = auth()->user();
+            if (!$user) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not authenticated'
+                ], 401);
+            }
+
             $chat = Chat::findOrFail($chatId);
+            
+            // Check if user can edit this message (owns it and within 5 minutes)
+            if (!$chat->canBeEditedBy($user->id, $user->role)) {
+                $message = 'You can only edit your own messages within 5 minutes of posting.';
+                if (!$chat->isOwnedBy($user->id, $user->role)) {
+                    $message = 'You can only edit your own messages.';
+                } else if (!$chat->canBeEdited()) {
+                    $message = 'Messages can only be edited within 5 minutes of posting.';
+                }
+                
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $message
+                ], 403);
+            }
             
             // Use the model method to edit the message
             $chat->editMessage($request->message);
@@ -138,11 +193,20 @@ class ChatController extends Controller
                 'message' => 'Message updated successfully',
                 'data' => [
                     'id' => $chat->id,
+                    'complain_id' => $chat->complain_id,
+                    'sender_id' => $chat->sender_id,
+                    'sender_type' => $chat->sender_type,
+                    'sender_name' => $chat->sender_name,
                     'message' => $chat->message,
                     'is_edited' => $chat->is_edited,
+                    'is_read' => $chat->is_read,
+                    'read_at' => $chat->read_at,
+                    'created_at' => $chat->created_at,
                     'updated_at' => $chat->updated_at,
                     'message_preview' => $chat->getMessagePreview(),
                     'formatted_timestamp' => $chat->getFormattedTimestamp(),
+                    'can_be_edited' => $chat->canBeEdited(),
+                    'edit_time_remaining' => $chat->getEditTimeRemaining(),
                 ]
             ]);
 
@@ -155,25 +219,15 @@ class ChatController extends Controller
     }
 
     /**
-     * Delete a chat message
+     * Delete a chat message - DISABLED
+     * Messages cannot be deleted as per business requirements
      */
     public function deleteMessage($chatId): JsonResponse
     {
-        try {
-            $chat = Chat::findOrFail($chatId);
-            $chat->delete();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Message deleted successfully'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to delete message: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Messages cannot be deleted. You can only edit messages within 5 minutes of posting.'
+        ], 403);
     }
 
     /**

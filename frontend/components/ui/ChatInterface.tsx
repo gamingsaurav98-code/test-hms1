@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/ui/form-field';
-import { Loader, Edit, Trash, ChevronRight, MoreVertical } from 'lucide-react';
+import { Loader, Edit, ChevronRight, MoreVertical } from 'lucide-react';
 import { chatApi, ChatMessage, ChatResponse, SendMessageRequest } from '@/lib/api/chat.api';
 
 interface ChatInterfaceProps {
@@ -29,10 +29,16 @@ const timeAgo = (date: string) => {
   return `${diffDays}d ago`;
 };
 
-// Check if message can be edited (within 5 minutes)
-const canEditMessage = (createdAt: string) => {
+// Check if message can be edited (use backend field or fallback to 5 minutes check)
+const canEditMessage = (msg: ChatMessage) => {
+  // Use backend field if available, otherwise fallback to time check
+  if (msg.can_be_edited !== undefined) {
+    return msg.can_be_edited;
+  }
+  
+  // Fallback to time-based check
   const now = new Date();
-  const messageDate = new Date(createdAt);
+  const messageDate = new Date(msg.created_at);
   const diffMs = now.getTime() - messageDate.getTime();
   const diffMinutes = Math.floor(diffMs / 60000);
   return diffMinutes < 5;
@@ -129,9 +135,10 @@ export default function ChatInterface({
         const newMessage: ChatMessage = {
           id: Date.now(), // Temporary ID
           complain_id: complainId,
-          message: sendData.message,
-          sender_name: currentUserName,
+          sender_id: currentUserId,
           sender_type: currentUserType,
+          sender_name: currentUserName,
+          message: sendData.message,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           is_edited: false,
@@ -167,18 +174,6 @@ export default function ChatInterface({
     }
   };
 
-  // Delete message
-  const handleDeleteMessage = async (messageId: number) => {
-    if (!confirm('Are you sure you want to delete this message?')) return;
-
-    try {
-      await chatApi.deleteMessage(messageId);
-      await loadChats();
-    } catch (error) {
-      console.error('Error deleting message:', error);
-    }
-  };
-
   // Handle file selection - removed for simplified version
   // const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   // File upload functionality removed
@@ -196,14 +191,12 @@ export default function ChatInterface({
 
   // Render message
   const renderMessage = (msg: ChatMessage) => {
-    // For admin users, their own messages appear on the right
     // For the current user, their own messages appear on the right
-    // We need to check both sender_type and sender_name to identify the actual sender
-    const isOwnMessage = msg.sender_type === currentUserType && 
-                        (msg.sender_name === currentUserName || 
-                         (currentUserType === 'admin' && msg.sender_type === 'admin'));
+    // Check if this message was sent by the current user
+    const isOwnMessage = msg.sender_id === currentUserId && 
+                        msg.sender_type === currentUserType;
     const isEditing = editingMessageId === msg.id;
-    const canEdit = canEditMessage(msg.created_at) && isOwnMessage;
+    const canEdit = canEditMessage(msg) && isOwnMessage;
     const isDropdownOpen = openDropdownId === msg.id;
 
     // Determine sender display name and styling
@@ -212,19 +205,25 @@ export default function ChatInterface({
         return {
           name: 'Admin',
           color: 'text-blue-600',
-          bgColor: isOwnMessage ? 'from-blue-500 to-blue-600' : 'bg-blue-50 border-blue-200'
+          // Admin messages: gradient when it's own message, light blue when from others
+          ownBg: 'bg-gradient-to-br from-blue-500 to-blue-600 text-white',
+          otherBg: 'bg-blue-50 border border-blue-200 text-gray-900'
         };
       } else if (msg.sender_type === 'student') {
         return {
           name: msg.sender_name || 'Student',
-          color: 'text-green-600',
-          bgColor: isOwnMessage ? 'from-green-500 to-green-600' : 'bg-green-50 border-green-200'
+          color: 'text-emerald-600',
+          // Student messages: gradient when it's own message, light emerald when from others
+          ownBg: 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white',
+          otherBg: 'bg-emerald-50 border border-emerald-200 text-gray-900'
         };
-      } else {
+      } else { // staff
         return {
-          name: msg.sender_name || 'User',
-          color: 'text-gray-600',
-          bgColor: isOwnMessage ? 'from-gray-500 to-gray-600' : 'bg-gray-50 border-gray-200'
+          name: msg.sender_name || 'Staff',
+          color: 'text-indigo-600',
+          // Staff messages: gradient when it's own message, light indigo when from others
+          ownBg: 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white',
+          otherBg: 'bg-indigo-50 border border-indigo-200 text-gray-900'
         };
       }
     };
@@ -253,10 +252,10 @@ export default function ChatInterface({
             {/* Message bubble */}
             <div className="relative">
               <div
-                className={`rounded-2xl px-4 py-3 shadow-sm border transform transition-all duration-300 hover:shadow-md ${
+                className={`rounded-2xl px-4 py-3 shadow-sm transform transition-all duration-300 hover:shadow-md ${
                   isOwnMessage
-                    ? `bg-gradient-to-br ${senderInfo.bgColor} text-white border-transparent rounded-br-md`
-                    : `${senderInfo.bgColor} text-gray-900 rounded-bl-md shadow-md`
+                    ? `${senderInfo.ownBg} border-transparent rounded-br-md`
+                    : `${senderInfo.otherBg} rounded-bl-md shadow-md`
                 }`}
                 style={{
                   animation: 'slideInMessage 0.3s ease-out'
@@ -303,8 +302,8 @@ export default function ChatInterface({
               </div>
             </div>
 
-            {/* Three dots menu - only for own messages */}
-            {isOwnMessage && !isEditing && (
+            {/* Three dots menu - only for own messages that can be edited */}
+            {isOwnMessage && !isEditing && canEdit && (
               <div className="flex-shrink-0 mt-2">
                 <div className="relative" ref={dropdownRef}>
                   <button
@@ -317,28 +316,16 @@ export default function ChatInterface({
                   {/* Dropdown menu */}
                   {isDropdownOpen && (
                     <div className="absolute right-0 top-10 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-50 min-w-[140px]">
-                      {canEdit && (
-                        <button
-                          onClick={() => {
-                            setEditingMessageId(msg.id);
-                            setEditingText(msg.message);
-                            setOpenDropdownId(null);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-3 transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                          <span>Edit</span>
-                        </button>
-                      )}
                       <button
                         onClick={() => {
-                          handleDeleteMessage(msg.id);
+                          setEditingMessageId(msg.id);
+                          setEditingText(msg.message);
                           setOpenDropdownId(null);
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-3 transition-colors"
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-3 transition-colors"
                       >
-                        <Trash className="w-4 h-4" />
-                        <span>Delete</span>
+                        <Edit className="w-4 h-4" />
+                        <span>Edit</span>
                       </button>
                     </div>
                   )}

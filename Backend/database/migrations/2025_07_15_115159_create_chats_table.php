@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('chats', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('complain_id'); // Reference to complaint
+            $table->unsignedBigInteger('sender_id'); // ID of the sender
+            $table->string('sender_type'); // 'admin', 'student', 'staff'
+            $table->string('sender_name'); // Name of the sender
             $table->text('message'); // Chat message content
             $table->boolean('is_edited')->default(false); // Flag to indicate if message was edited
             $table->boolean('is_read')->default(false); // Message read status
@@ -25,6 +28,8 @@ return new class extends Migration
             
             // Indexes for better performance
             $table->index(['complain_id', 'created_at']);
+            $table->index(['sender_id', 'sender_type']);
+            $table->index(['complain_id', 'sender_type']);
         });
     }
 

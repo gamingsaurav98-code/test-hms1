@@ -4,6 +4,9 @@ import { getAuthHeaders } from './auth.api';
 export interface ChatMessage {
   id: number;
   complain_id: number;
+  sender_id: number;
+  sender_type: 'admin' | 'student' | 'staff';
+  sender_name: string;
   message: string;
   is_edited: boolean;
   is_read: boolean;
@@ -11,13 +14,12 @@ export interface ChatMessage {
   created_at: string;
   updated_at: string;
   // Additional fields that might be added by the controller
-  sender_name?: string;
-  sender_type?: 'admin' | 'student' | 'staff';
   formatted_time?: string;
   preview?: string;
   can_edit?: boolean;
   can_delete?: boolean;
   edit_time_remaining?: number;
+  can_be_edited?: boolean;
 }
 
 export interface ChatComplaint {

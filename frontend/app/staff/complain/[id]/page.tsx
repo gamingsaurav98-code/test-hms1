@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
 import { staffApi } from '@/lib/api/staff.api';
 import { Complain } from '@/lib/api/complain.api';
 import { ApiError } from '@/lib/api/core';
@@ -19,6 +20,7 @@ import {
 export default function StaffComplainDetail() {
   const router = useRouter();
   const params = useParams();
+  const { user } = useAuth();
   const complainId = params.id as string;
 
   const [complain, setComplain] = useState<Complain | null>(null);
@@ -186,11 +188,11 @@ export default function StaffComplainDetail() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-5">
+        <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{complain.title}</h1>
+                <h1 className="text-xl font-bold text-gray-900">{complain.title}</h1>
                 <div className="flex items-center gap-4 mt-2">
                   {getStatusBadge(complain.status)}
                   <span className="text-sm text-gray-500">•</span>
@@ -203,57 +205,57 @@ export default function StaffComplainDetail() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
           {/* Left Sidebar - Complaint Details */}
           <div className="xl:col-span-3">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200" style={{height: '550px'}}>
               {/* Info Section */}
-              <div className="p-7">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="text-xl font-semibold text-gray-900">Complain Details</h3>
+              <div className="p-5 h-full overflow-y-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Complain Details</h3>
                 </div>
                 
-                <div className="space-y-8">
+                <div className="space-y-6">
                   <div>
-                    <label className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3 block flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block flex items-center">
+                      <svg className="w-3 h-3 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                       </svg>
                       Title
                     </label>
-                    <p className="text-lg text-gray-900 leading-relaxed font-medium bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">{complain.title}</p>
+                    <p className="text-base text-gray-900 leading-relaxed font-medium bg-gray-50 p-3 rounded-lg border-l-4 border-blue-500">{complain.title}</p>
                   </div>
 
                   <div>
-                    <label className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-3 block flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 block flex items-center">
+                      <svg className="w-3 h-3 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       Description
                     </label>
-                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-green-500">
-                      <p className="text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{complain.description}</p>
+                    <div className="bg-gray-50 p-3 rounded-lg border-l-4 border-green-500">
+                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{complain.description}</p>
                     </div>
                   </div>
 
                   {/* Metadata */}
-                  <div className="pt-6 border-t border-gray-200">
-                    <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="pt-4 border-t border-gray-200">
+                    <h4 className="text-xs font-bold text-gray-700 mb-3 flex items-center">
+                      <svg className="w-3 h-3 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       Information
                     </h4>
-                    <div className="space-y-3 text-sm">
-                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-700 font-medium">Created</span>
-                        <span className="text-gray-900 font-semibold">{formatDate(complain.created_at)}</span>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="p-2 bg-gray-50 rounded-lg">
+                        <span className="text-gray-700 font-medium block text-xs mb-1">Created</span>
+                        <span className="text-gray-900 font-semibold text-xs">{formatDate(complain.created_at)}</span>
                       </div>
                       {complain.updated_at && (
-                        <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                          <span className="text-gray-700 font-medium">Updated</span>
-                          <span className="text-gray-900 font-semibold">{formatDate(complain.updated_at)}</span>
+                        <div className="p-2 bg-gray-50 rounded-lg">
+                          <span className="text-gray-700 font-medium block text-xs mb-1">Updated</span>
+                          <span className="text-gray-900 font-semibold text-xs">{formatDate(complain.updated_at)}</span>
                         </div>
                       )}
                     </div>
@@ -265,12 +267,12 @@ export default function StaffComplainDetail() {
 
           {/* Right Main Area - Chat Interface */}
           <div className="xl:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 h-full flex flex-col overflow-hidden">
-              <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden" style={{height: '550px'}}>
+              <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Chat Messages</h3>
-                    <p className="text-sm text-gray-600 mt-1">Communicate directly with the administration about this complaint</p>
+                    <h3 className="text-base font-semibold text-gray-900">Chat Messages</h3>
+                    <p className="text-xs text-gray-600 mt-1">Communicate directly with the administration about this complaint</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -278,12 +280,12 @@ export default function StaffComplainDetail() {
                   </div>
                 </div>
               </div>
-              <div className="flex-1 min-h-0" style={{height: 'calc(100vh - 340px)'}}>
+              <div className="flex-1 min-h-0 overflow-hidden">
                 <ChatInterface
                   complainId={complain.id}
-                  currentUserId={complain.staff?.id || 0}
+                  currentUserId={user?.id || 0}
                   currentUserType="staff"
-                  currentUserName={complain.staff?.staff_name || 'Staff Member'}
+                  currentUserName={user?.name || 'Staff Member'}
                   className="h-full"
                 />
               </div>
