@@ -44,37 +44,6 @@ class NoticeController extends Controller
     }
     
     /**
-     * Debug endpoint to check schema
-     */
-    public function debug()
-    {
-        // Get current column schema information
-        $connection = \DB::connection();
-        $schema = $connection->getDoctrineSchemaManager();
-        $table = $schema->listTableDetails('notices');
-        
-        $targetTypeColumn = $table->getColumn('target_type');
-        $noticeTypeColumn = $table->getColumn('notice_type');
-        
-        // Fetch enum types using a raw query as Doctrine might not expose this
-        $targetTypeEnum = \DB::select("SHOW COLUMNS FROM notices WHERE Field = 'target_type'")[0];
-        $noticeTypeEnum = \DB::select("SHOW COLUMNS FROM notices WHERE Field = 'notice_type'")[0];
-        
-        return response()->json([
-            'target_type' => [
-                'default' => $targetTypeColumn->getDefault(),
-                'type' => $targetTypeColumn->getType()->getName(),
-                'definition' => $targetTypeEnum->Type ?? null,
-            ],
-            'notice_type' => [
-                'default' => $noticeTypeColumn->getDefault(),
-                'type' => $noticeTypeColumn->getType()->getName(),
-                'definition' => $noticeTypeEnum->Type ?? null,
-            ]
-        ]);
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)

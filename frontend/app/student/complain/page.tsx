@@ -239,7 +239,7 @@ export default function StudentComplainList() {
                   <div className="col-span-4">
                     <div className="text-xs text-gray-600 line-clamp-2">
                       {complain.description.length > 15 
-                        ? `${complain.description.substring(0, 80)}...` 
+                        ? `${complain.description.substring(0, 15)}...` 
                         : complain.description}
                     </div>
                   </div>

@@ -231,7 +231,7 @@ export default function StaffComplainList() {
                       {complain.title.length > 60 ? `${complain.title.substring(0, 60)}...` : complain.title}
                     </div>
                     <div className="text-xs text-gray-600 mt-1 line-clamp-2">
-                      {complain.description.length > 80 ? `${complain.description.substring(0, 80)}...` : complain.description}
+                      {complain.description.length > 15 ? `${complain.description.substring(0, 15)}...` : complain.description}
                     </div>
                   </div>
 

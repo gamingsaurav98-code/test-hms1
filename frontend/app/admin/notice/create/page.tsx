@@ -390,24 +390,8 @@ export default function CreateNotice() {
                   { value: 'block', label: 'Specific Block' }
                 ]}
               />
-
-              {/* Notice Type */}
-              <FormField
-                name="notice_type"
-                label="Notice Type"
-                type="select"
-                value={formData.notice_type || ''}
-                onChange={handleInputChange}
-                error={errors.notice_type}
-                options={[
-                  { value: 'general', label: 'General' },
-                  { value: 'urgent', label: 'Urgent' },
-                  { value: 'event', label: 'Event' },
-                  { value: 'announcement', label: 'Announcement' }
-                ]}
-              />
               
-              {/* Conditional fields based on target type */}
+              {/* Conditional fields based on target type - Show student selection first */}
               {formData.target_type === 'specific_student' && (
                 <FormField
                   name="student_id"
@@ -418,10 +402,10 @@ export default function CreateNotice() {
                   onChange={handleInputChange}
                   error={errors.student_id}
                   options={[
-                    { value: '', label: isLoading.students ? 'Loading students...' : '-- Select a student --' },
+                    { value: '', label: isLoading.students ? 'Loading students...' : 'Choose a student' },
                     ...students.map(student => ({ 
                       value: student.id.toString(), 
-                      label: `${student.name} ${student.room && student.room.block ? `(${student.room.block.name}, Room: ${student.room.room_number})` : ''}`
+                      label: `${student.name}${student.student_id ? ` (${student.student_id})` : ''}${student.room && student.room.room_number ? ` - Room: ${student.room.room_number}` : ''}${student.room && student.room.block && student.room.block.name ? ` (${student.room.block.name})` : ''}`
                     }))
                   ]}
                 />
@@ -437,7 +421,7 @@ export default function CreateNotice() {
                   onChange={handleInputChange}
                   error={errors.staff_id}
                   options={[
-                    { value: '', label: isLoading.staff ? 'Loading staff...' : 'Select a staff member' },
+                    { value: '', label: isLoading.staff ? 'Loading staff...' : 'Choose a staff member' },
                     ...staff.map(staffMember => ({ 
                       value: staffMember.id.toString(), 
                       label: `${staffMember.name} (${staffMember.staff_id})`
@@ -456,7 +440,7 @@ export default function CreateNotice() {
                   onChange={handleInputChange}
                   error={errors.block_id}
                   options={[
-                    { value: '', label: isLoading.blocks ? 'Loading blocks...' : 'Select a block' },
+                    { value: '', label: isLoading.blocks ? 'Loading blocks...' : 'Choose a block' },
                     ...blocks.map(block => ({ 
                       value: block.id.toString(), 
                       label: `${block.name} - ${block.location}` 
@@ -464,6 +448,21 @@ export default function CreateNotice() {
                   ]}
                 />
               )}
+
+              {/* Notice Type - Moved after conditional selections */}
+              <FormField
+                name="notice_type"
+                label="Notice Type"
+                type="select"
+                value={formData.notice_type || ''}
+                onChange={handleInputChange}
+                error={errors.notice_type}
+                options={[
+                  { value: 'general', label: 'General' },
+                  { value: 'urgent', label: 'Urgent' },
+                  { value: 'announcement', label: 'Announcement' }
+                ]}
+              />
 
               {/* Attachments */}
               <div>

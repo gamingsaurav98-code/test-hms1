@@ -343,12 +343,12 @@ export default function ExpenseList() {
                     <div className="font-medium text-sm text-gray-900">{expense.title}</div>
                   </div>
 
-                  {/* Description - truncated to 30 characters */}
+                  {/* Description - truncated to 15 characters */}
                   <div className="col-span-2">
                     <div className="text-sm text-gray-900">
                       {expense.description 
-                        ? (expense.description.length > 30 
-                            ? expense.description.substring(0, 30) + '...' 
+                        ? (expense.description.length > 15 
+                            ? expense.description.substring(0, 15) + '...' 
                             : expense.description)
                         : 'No description'
                       }

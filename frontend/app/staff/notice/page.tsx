@@ -239,8 +239,8 @@ export default function StaffNoticePage() {
                   <div className="col-span-3">
                     <div className="text-sm text-gray-600 truncate">
                       {notice.description 
-                        ? notice.description.length > 50 
-                          ? `${notice.description.substring(0, 50)}...` 
+                        ? notice.description.length > 15 
+                          ? `${notice.description.substring(0, 15)}...` 
                           : notice.description
                         : 'No description'
                       }

@@ -80,7 +80,7 @@ export default function BlockList() {
     });
   };
 
-  const truncateText = (text: string, maxLength: number = 30) => {
+  const truncateText = (text: string, maxLength: number = 15) => {
     if (!text) return 'No description';
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';

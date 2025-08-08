@@ -450,8 +450,8 @@ export default function NoticeList() {
                   <div className="col-span-2">
                     <div className="text-sm text-gray-600 truncate">
                       {notice.description 
-                        ? notice.description.length > 30 
-                          ? `${notice.description.substring(0, 30)}...` 
+                        ? notice.description.length > 15 
+                          ? `${notice.description.substring(0, 15)}...` 
                           : notice.description
                         : 'No description'
                       }

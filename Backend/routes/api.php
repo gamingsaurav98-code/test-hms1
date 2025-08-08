@@ -194,7 +194,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Notice Management (Admin - Full CRUD)
         Route::apiResource('notices', NoticeController::class);
         Route::delete('notices/{noticeId}/attachments/{attachmentId}', [NoticeController::class, 'deleteAttachment']);
-        Route::get('debug/notices/schema', [NoticeController::class, 'debug']);
         Route::get('notices/target/{targetType}', [NoticeController::class, 'getNoticesByTargetType']);
         Route::get('notices/student/{studentId}', [NoticeController::class, 'getNoticesForStudent']);
         Route::get('notices/staff/{staffId}', [NoticeController::class, 'getNoticesForStaff']);
