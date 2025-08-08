@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { studentCheckInCheckOutApi, StudentCheckInCheckOut } from '@/lib/api/student-checkincheckout.api';
-import { PaginatedResponse } from '@/lib/api/core';
+import { StudentCheckInCheckOut } from '@/lib/api/student-checkincheckout.api';
+import { PaginatedResponse, API_BASE_URL, handleResponse } from '@/lib/api/core';
+import { getAuthHeaders } from '@/lib/api/auth.api';
 import { Button, ConfirmModal, ActionButtons } from '@/components/ui';
 import { 
   Plus, 
@@ -40,16 +41,20 @@ export default function StudentCheckinCheckoutList() {
   const fetchRecords = async (page: number = 1) => {
     try {
       setLoading(true);
-      const response: PaginatedResponse<StudentCheckInCheckOut> = await studentCheckInCheckOutApi.getCheckInCheckOuts(page, { all: true });
+      // Use admin endpoint to fetch student checkin-checkout records
+      const response = await fetch(`${API_BASE_URL}/student-checkincheckouts?page=${page}`, {
+        headers: getAuthHeaders()
+      });
+      const result: any = await handleResponse(response);
       
-      const fetchedRecords = response.data || [];
+      const fetchedRecords = result.data || [];
       setAllRecords(fetchedRecords);
       setRecords(fetchedRecords);
       setFilteredRecords(fetchedRecords);
       
       // Set pagination info from PaginatedResponse structure
-      if (response.last_page) {
-        setTotalPages(response.last_page);
+      if (result.last_page) {
+        setTotalPages(result.last_page);
       } else {
         setTotalPages(1);
       }
@@ -89,7 +94,12 @@ export default function StudentCheckinCheckoutList() {
     if (!deleteModal.recordId) return;
 
     try {
-      await studentCheckInCheckOutApi.deleteCheckInCheckOut(deleteModal.recordId);
+      // Use admin endpoint to delete student checkin-checkout record
+      const response = await fetch(`${API_BASE_URL}/student-checkincheckouts/${deleteModal.recordId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      await handleResponse(response);
       setDeleteModal({ show: false, recordId: null, studentName: '' });
       fetchRecords(currentPage);
     } catch (error) {
@@ -130,11 +140,14 @@ export default function StudentCheckinCheckoutList() {
     const absDiffMs = Math.abs(diffMs);
     const diffDays = Math.floor(absDiffMs / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor((absDiffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((absDiffMs % (1000 * 60 * 60)) / (1000 * 60));
     
     if (diffDays > 0) {
-      return `${diffDays}d ${diffHours}h`;
+      return `${diffDays}d ${diffHours}h ${diffMinutes}m`;
+    } else if (diffHours > 0) {
+      return `${diffHours}h ${diffMinutes}m`;
     } else {
-      return `${diffHours}h`;
+      return `${diffMinutes}m`;
     }
   };
 

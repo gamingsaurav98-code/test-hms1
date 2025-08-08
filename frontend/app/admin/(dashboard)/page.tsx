@@ -8,10 +8,11 @@ import { roomApi } from '@/lib/api/room.api';
 import { staffApi } from '@/lib/api/staff.api';
 import { incomeApi } from '@/lib/api/income.api';
 import { expenseApi } from '@/lib/api/expense.api';
-import { studentCheckInCheckOutApi } from '@/lib/api/student-checkincheckout.api';
 import { staffCheckInCheckOutApi } from '@/lib/api/staff-checkincheckout.api';
 import { complainApi } from '@/lib/api/complain.api';
 import { SalaryApi } from '@/lib/api/salary.api';
+import { API_BASE_URL, handleResponse } from '@/lib/api/core';
+import { getAuthHeaders } from '@/lib/api/auth.api';
 
 interface DashboardStats {
   totalStudentCapacity: number;
@@ -126,7 +127,12 @@ export default function AdminDashboardPage() {
       let complainsData: any = { data: [], total: 0 };
 
       // Fetch slower APIs in background (don't wait for these)
-      fetchWithTimeout(() => studentCheckInCheckOutApi.getCheckInCheckOuts(1), { data: [] })
+      fetchWithTimeout(async () => {
+        const response = await fetch(`${API_BASE_URL}/student-checkincheckouts?page=1`, {
+          headers: getAuthHeaders()
+        });
+        return handleResponse(response);
+      }, { data: [] })
         .then(data => { studentCheckInsData = data; });
       
       fetchWithTimeout(() => staffCheckInCheckOutApi.getCheckInCheckOuts(1), { data: [] })

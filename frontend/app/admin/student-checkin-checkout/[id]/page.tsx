@@ -20,7 +20,7 @@ export default function StudentCheckinCheckoutDetail() {
   const fetchRecord = async () => {
     try {
       setLoading(true);
-      const response = await studentCheckInCheckOutApi.getCheckInCheckOut(recordId);
+      const response = await studentCheckInCheckOutApi.getStudentCheckInCheckOutRecord(recordId);
       setRecord(response.data);
       setError(null);
     } catch (error) {
@@ -63,7 +63,7 @@ export default function StudentCheckinCheckoutDetail() {
 
   const handleDelete = async () => {
     try {
-      await studentCheckInCheckOutApi.getCheckInCheckOut(recordId);
+      // TODO: Implement delete functionality with proper admin endpoint
       router.push('/admin/student-checkin-checkout');
     } catch (error) {
       console.error('Error deleting record:', error);
@@ -89,6 +89,33 @@ export default function StudentCheckinCheckoutDetail() {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const getOriginalReason = (remarks: string | null | undefined) => {
+    if (!remarks) return '';
+    
+    // Handle different check-in message formats
+    const checkInPatterns = [
+      '. Check-in:', 
+      'Check-in:', 
+      '. Student self check-in',
+      'Student self check-in',
+      '. Checked in from detail page',
+      'Checked in from detail page'
+    ];
+    
+    let originalReason = remarks;
+    
+    // Remove check-in information based on various patterns
+    for (const pattern of checkInPatterns) {
+      if (originalReason.includes(pattern)) {
+        originalReason = originalReason.split(pattern)[0];
+        break;
+      }
+    }
+    
+    // Clean up any trailing periods or whitespace
+    return originalReason.replace(/\.$/, '').trim();
   };
 
   const calculateDuration = (estimatedCheckinDate: string | null | undefined, checkoutTime: string | null | undefined) => {
@@ -260,10 +287,6 @@ export default function StudentCheckinCheckoutDetail() {
                 <p className="mt-1 text-sm text-gray-900">{formatDate(record.date)}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-500">Status</label>
-                <div className="mt-1">{getStatusBadge()}</div>
-              </div>
-              <div>
                 <label className="text-sm font-medium text-gray-500">Check-out Time</label>
                 <p className="mt-1 text-sm text-gray-900">{formatDateTime(record.checkout_time)}</p>
               </div>
@@ -283,10 +306,12 @@ export default function StudentCheckinCheckoutDetail() {
                   {calculateDuration(record.estimated_checkin_date, record.checkout_time)}
                 </p>
               </div>
-              {record.remarks && (
+              {record.remarks && getOriginalReason(record.remarks) && (
                 <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-gray-500">Remarks</label>
-                  <p className="mt-1 text-sm text-gray-900">{record.remarks}</p>
+                  <label className="text-sm font-medium text-gray-500">Reason</label>
+                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-blue-800 font-medium">{getOriginalReason(record.remarks)}</p>
+                  </div>
                 </div>
               )}
             </div>

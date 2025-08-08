@@ -182,19 +182,11 @@ export const studentCheckInCheckOutApi = {
 
   // Get specific check-in/check-out record (student-specific)
   async getCheckInCheckOut(id: string): Promise<{ data: StudentCheckInCheckOut }> {
-    // Since there's no individual endpoint, we get all records and find the specific one
-    const response = await fetch(`${API_BASE_URL}/student/checkincheckouts`, {
+    const response = await fetch(`${API_BASE_URL}/student/checkincheckouts/${id}`, {
       headers: getAuthHeaders(),
     });
     
-    const result = await handleResponse<{ data: StudentCheckInCheckOut[]; total: number }>(response);
-    const record = result.data.find(item => item.id === id);
-    
-    if (!record) {
-      throw new Error('Record not found');
-    }
-    
-    return { data: record };
+    return await handleResponse<{ data: StudentCheckInCheckOut }>(response);
   },
 
   // NOTE: Admin-only methods (createCheckInCheckOut, updateCheckInCheckOut, deleteCheckInCheckOut) 
@@ -289,6 +281,15 @@ export const studentCheckInCheckOutApi = {
       }),
     });
     return handleResponse<{ data: StudentCheckInCheckOut }>(response);
+  },
+
+  // Admin: Get specific student check-in/checkout record
+  async getStudentCheckInCheckOutRecord(id: string): Promise<{ data: StudentCheckInCheckOut }> {
+    const response = await fetch(`${API_BASE_URL}/student-checkincheckouts/${id}`, {
+      headers: getAuthHeaders(),
+    });
+    
+    return await handleResponse<{ data: StudentCheckInCheckOut }>(response);
   },
 
   // Get student statistics

@@ -281,27 +281,81 @@ class StudentCheckInCheckOutController extends Controller
      */
     public function checkIn(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'student_id' => 'required|exists:students,id',
-            'block_id' => 'required|exists:blocks,id',
-            'checkin_time' => 'nullable|date',
-            'remarks' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         try {
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Get student record for the authenticated user
+            $student = \App\Models\Student::where('user_id', $user->id)->first();
+            
+            if (!$student) {
+                return response()->json(['error' => 'Student record not found'], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'block_id' => 'required|exists:blocks,id',
+                'checkin_time' => 'nullable|date',
+                'remarks' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
             $today = Carbon::today()->toDateString();
+            
+            // Check for approved checkout record that hasn't been checked in yet
+            $approvedCheckout = StudentCheckInCheckOut::where('student_id', $student->id)
+                ->where('status', 'approved')
+                ->whereNotNull('checkout_time')
+                ->whereNull('checkin_time')
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if ($approvedCheckout) {
+                // Update the existing approved checkout record with checkin time
+                $approvedCheckout->update([
+                    'checkin_time' => $request->checkin_time ?? Carbon::now(),
+                    'block_id' => $request->block_id, // Update block if different
+                    'remarks' => $request->remarks ? $approvedCheckout->remarks . '. Check-in: ' . $request->remarks : $approvedCheckout->remarks,
+                    'status' => 'checked_in'
+                ]);
+
+                $approvedCheckout->load(['student.room.block', 'block']);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Student checked in successfully',
+                    'data' => $approvedCheckout
+                ], 201);
+            }
+
+            // Check if student is already checked in today without checkout
+            $existingRecord = StudentCheckInCheckOut::where('student_id', $student->id)
+                ->whereDate('date', $today)
+                ->whereNotNull('checkin_time')
+                ->whereNull('checkout_time')
+                ->first();
+
+            if ($existingRecord) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Student is already checked in today'
+                ], 422);
+            }
+
+            // Create new check-in record for new day/session (fallback case)
             $checkinTime = $request->checkin_time ?? Carbon::now();
 
             $record = StudentCheckInCheckOut::create([
-                'student_id' => $request->student_id,
+                'student_id' => $student->id,
                 'block_id' => $request->block_id,
                 'date' => $today,
                 'checkin_time' => $checkinTime,
@@ -330,7 +384,6 @@ class StudentCheckInCheckOutController extends Controller
     public function checkOut(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'student_id' => 'required|exists:students,id',
             'checkout_time' => 'nullable|date',
             'estimated_checkin_date' => 'nullable|date',
             'remarks' => 'nullable|string',
@@ -345,37 +398,53 @@ class StudentCheckInCheckOutController extends Controller
         }
 
         try {
-            $today = Carbon::today()->toDateString();
-            $checkoutTime = $request->checkout_time ?? Carbon::now();
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
 
-            // Find the latest checked-in record for this student
-            $record = StudentCheckInCheckOut::where('student_id', $request->student_id)
-                ->whereDate('date', $today)
-                ->where('status', 'checked_in')
-                ->whereNotNull('checkin_time')
-                ->whereNull('checkout_time')
-                ->latest()
-                ->first();
+            // Get student record for the authenticated user
+            $student = \App\Models\Student::with('room.block')->where('user_id', $user->id)->first();
 
-            if (!$record) {
+            if (!$student) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'No active check-in found for this student today'
+                    'message' => 'Student record not found for authenticated user'
+                ], 404);
+            }
+
+            $today = Carbon::today()->toDateString();
+            
+            // Check if student already has a pending checkout request for today
+            $existingRequest = StudentCheckInCheckOut::where('student_id', $student->id)
+                ->whereDate('date', $today)
+                ->whereIn('status', ['pending', 'approved'])
+                ->first();
+
+            if ($existingRequest) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You already have a checkout request for today. Status: ' . ucfirst($existingRequest->status)
                 ], 422);
             }
 
-            $record->update([
-                'checkout_time' => $checkoutTime,
+            // Create a new checkout request
+            $record = StudentCheckInCheckOut::create([
+                'student_id' => $student->id,
+                'block_id' => $student->room->block_id ?? 1, // Use student's block or default to 1
+                'date' => $today,
+                'checkout_time' => $request->checkout_time ?? Carbon::now(),
                 'estimated_checkin_date' => $request->estimated_checkin_date,
-                'status' => 'pending', // Checkout needs admin approval
-                'remarks' => $request->remarks ?? $record->remarks,
+                'remarks' => $request->remarks ?? 'Student checkout request',
+                'status' => 'pending'
             ]);
 
             $record->load(['student.room.block', 'block']);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Student checked out successfully',
+                'message' => 'Checkout request submitted successfully',
                 'data' => $record
             ]);
         } catch (\Exception $e) {
@@ -525,7 +594,7 @@ class StudentCheckInCheckOutController extends Controller
 
             $records = StudentCheckInCheckOut::where('student_id', $student->id)
                 ->with(['student.room.block', 'block', 'checkoutRule'])
-                ->orderBy('created_at', 'desc')
+                ->orderByRaw('GREATEST(COALESCE(checkout_time, "1970-01-01"), COALESCE(checkin_time, "1970-01-01"), created_at) DESC')
                 ->get();
 
             return response()->json([
@@ -568,6 +637,52 @@ class StudentCheckInCheckOutController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to fetch today\'s attendance: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get a specific record for the authenticated student
+     */
+    public function getMyRecord($id)
+    {
+        try {
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            // Get student record for the authenticated user
+            $student = \App\Models\Student::where('user_id', $user->id)->first();
+            
+            if (!$student) {
+                return response()->json(['error' => 'Student record not found'], 404);
+            }
+
+            // Find the record and make sure it belongs to the authenticated student
+            $record = StudentCheckInCheckOut::where('id', $id)
+                ->where('student_id', $student->id)
+                ->with(['student.room.block', 'block', 'checkoutRule', 'checkoutFinancials'])
+                ->first();
+
+            if (!$record) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Check-in/check-out record not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $record
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('getMyRecord error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch check-in/check-out record'
             ], 500);
         }
     }

@@ -66,6 +66,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('student/checkin', [StudentCheckInCheckOutController::class, 'checkIn']);
         Route::post('student/checkout', [StudentCheckInCheckOutController::class, 'checkOut']);
         Route::get('student/checkincheckouts', [StudentCheckInCheckOutController::class, 'getMyRecords']);
+        Route::get('student/checkincheckouts/{id}', [StudentCheckInCheckOutController::class, 'getMyRecord']);
         Route::get('student/today-attendance', [StudentCheckInCheckOutController::class, 'getMyTodayAttendance']);
         
         // Student financial records (own records only)

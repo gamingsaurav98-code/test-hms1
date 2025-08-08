@@ -129,7 +129,7 @@ export default function StaffCheckinCheckoutList() {
       const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
       
       if (diffDays > 0) {
-        return `${diffDays}d ${diffHours}h`;
+        return `${diffDays}d ${diffHours}h ${diffMinutes}m`;
       } else if (diffHours > 0) {
         return `${diffHours}h ${diffMinutes}m`;
       } else {
@@ -145,13 +145,14 @@ export default function StaffCheckinCheckoutList() {
       
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
       const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
       
       if (diffDays > 0) {
-        return `${diffDays}d ${diffHours}h (est.)`;
+        return `${diffDays}d ${diffHours}h ${diffMinutes}m (est.)`;
       } else if (diffHours > 0) {
-        return `${diffHours}h (est.)`;
+        return `${diffHours}h ${diffMinutes}m (est.)`;
       } else {
-        return 'Less than 1h (est.)';
+        return `${diffMinutes}m (est.)`;
       }
     }
     

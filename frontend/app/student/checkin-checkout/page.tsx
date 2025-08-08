@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { studentCheckInCheckOutApi, StudentCheckInCheckOut } from '@/lib/api/student-checkincheckout.api';
-import { Button } from '@/components/ui';
+import { Button, ActionButtons } from '@/components/ui';
 import { 
   Plus, 
   Clock, 
@@ -51,31 +51,18 @@ export default function StudentCheckinCheckoutPage() {
     try {
       setLoading(true);
       
-      // Optimized API call with timeout - improved error handling
-      const fetchWithTimeout = async () => {
-        return await Promise.race([
-          studentCheckInCheckOutApi.getMyRecords(),
-          new Promise<{ data: StudentCheckInCheckOut[] }>((resolve) => 
-            setTimeout(() => {
-              resolve({ data: [] });
-            }, 10000) // Increased timeout to 10 seconds
-          )
-        ]);
-      };
+      const response = await studentCheckInCheckOutApi.getMyRecords();
       
-      const response = await fetchWithTimeout();
-      
-      setRecords(response.data);
-      setFilteredRecords(response.data);
+      setRecords(response.data || []);
+      setFilteredRecords(response.data || []);
       
       // Find the most recent active record (checked_in, pending, or approved)
-      const activeRecord = response.data.find(record => 
+      const activeRecord = (response.data || []).find(record => 
         record.status === 'checked_in' || record.status === 'pending' || record.status === 'approved'
       );
       
       setCurrentStatus(activeRecord || null);
     } catch (err) {
-      console.error('Failed to fetch records:', err);
       setError('Failed to load check-in/checkout data');
       // Don't let API failures prevent the page from loading
       setRecords([]);
@@ -91,14 +78,30 @@ export default function StudentCheckinCheckoutPage() {
       setCheckingIn(true);
       setError(null);
       
+      // Find the most recent approved record to get block_id
+      const approvedRecord = records.find(record => record.status === 'approved');
+      
+      if (!approvedRecord || !approvedRecord.block_id) {
+        setError('No approved checkout record found to check in');
+        return;
+      }
+      
       // Student check-in (backend will get student info from auth)
       await studentCheckInCheckOutApi.checkIn({
+        block_id: approvedRecord.block_id,
         remarks: "Student self check-in"
       });
       
       await fetchStudentRecords();
     } catch (err: any) {
       console.error('Check-in failed:', err);
+      
+      // If student is already checked in, refresh the records to get updated status
+      if (err.message && err.message.includes('already checked in')) {
+        await fetchStudentRecords();
+        return;
+      }
+      
       setError(err.message || 'Failed to check in');
     } finally {
       setCheckingIn(false);
@@ -134,19 +137,48 @@ export default function StudentCheckinCheckoutPage() {
     });
   };
 
-  const calculateDuration = (checkinTime: string | null | undefined, checkoutTime: string | null | undefined) => {
-    if (!checkinTime || !checkoutTime) return '-';
+  const calculateDuration = (record: StudentCheckInCheckOut) => {
+    if (!record.checkout_time) return '-';
     
-    const checkin = new Date(checkinTime);
-    const checkout = new Date(checkoutTime);
-    const diffMs = checkin.getTime() - checkout.getTime();
+    // If student has checked in, calculate actual duration between checkout and checkin
+    if (record.checkin_time) {
+      const checkout = new Date(record.checkout_time);
+      const checkin = new Date(record.checkin_time);
+      const diffMs = checkin.getTime() - checkout.getTime();
+      
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      if (diffDays > 0) {
+        return `${diffDays}d ${diffHours}h ${diffMinutes}m`;
+      } else if (diffHours > 0) {
+        return `${diffHours}h ${diffMinutes}m`;
+      } else {
+        return `${diffMinutes}m`;
+      }
+    }
     
-    // Handle negative duration (if checkout is after checkin)
-    const absDiffMs = Math.abs(diffMs);
-    const diffHours = Math.floor(absDiffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor((absDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+    // If not checked in yet, calculate estimated duration between checkout and estimated checkin
+    if (record.estimated_checkin_date) {
+      const checkout = new Date(record.checkout_time);
+      const estimated = new Date(record.estimated_checkin_date);
+      const diffMs = estimated.getTime() - checkout.getTime();
+      
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      if (diffDays > 0) {
+        return `${diffDays}d ${diffHours}h ${diffMinutes}m (est.)`;
+      } else if (diffHours > 0) {
+        return `${diffHours}h ${diffMinutes}m (est.)`;
+      } else {
+        return `${diffMinutes}m (est.)`;
+      }
+    }
     
-    return `${diffHours}h ${diffMinutes}m`;
+    return '-';
   };
 
   const getStatusBadge = (record: StudentCheckInCheckOut) => {
@@ -169,7 +201,7 @@ export default function StudentCheckinCheckoutPage() {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
           <Clock className="w-3 h-3 mr-1" />
-          Pending Approval
+          Pending
         </span>
       );
     } else if (record.checkout_time && record.checkin_time) {
@@ -184,22 +216,22 @@ export default function StudentCheckinCheckoutPage() {
       // Only checkout exists
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-          <ArrowLeft className="w-3 h-3 mr-1" />
+          <Clock className="w-3 h-3 mr-1" />
           Checked Out
         </span>
       );
     } else if (record.checkin_time) {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-          <ArrowRight className="w-3 h-3 mr-1" />
+          <Clock className="w-3 h-3 mr-1" />
           Checked In
         </span>
       );
     } else {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          <AlertCircle className="w-3 h-3 mr-1" />
-          Unknown
+          <X className="w-3 h-3 mr-1" />
+          Draft
         </span>
       );
     }
@@ -218,7 +250,7 @@ export default function StudentCheckinCheckoutPage() {
   return (
     <div className="p-4 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Check-in / Checkout</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Check-in/Check-out</h1>
         <Button
           onClick={() => router.push('/student/checkin-checkout/create')}
           className="bg-[#235999] hover:bg-[#1e4d87] text-white"
@@ -261,13 +293,13 @@ export default function StudentCheckinCheckoutPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Block
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Checkout Time
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Est. Check-in Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Check-in Time
@@ -293,34 +325,25 @@ export default function StudentCheckinCheckoutPage() {
               ) : (
                 filteredRecords
                   .sort((a, b) => {
-                    // Sort by priority: active statuses first, then by date (newest first)
-                    const priorityOrder = { 'checked_in': 1, 'pending': 2, 'approved': 3, 'declined': 4 };
-                    const aPriority = priorityOrder[a.status as keyof typeof priorityOrder] || 5;
-                    const bPriority = priorityOrder[b.status as keyof typeof priorityOrder] || 5;
+                    // Get the most recent activity timestamp for each record
+                    const getLatestActivity = (record: StudentCheckInCheckOut) => {
+                      const times = [
+                        record.checkout_time,
+                        record.checkin_time,
+                        record.created_at
+                      ].filter(Boolean).map(time => new Date(time!).getTime());
+                      
+                      return Math.max(...times);
+                    };
                     
-                    if (aPriority !== bPriority) {
-                      return aPriority - bPriority;
-                    }
+                    const aLatest = getLatestActivity(a);
+                    const bLatest = getLatestActivity(b);
                     
-                    // If same priority, sort by date (newest first)
-                    return new Date(b.date).getTime() - new Date(a.date).getTime();
+                    // Sort by most recent activity first
+                    return bLatest - aLatest;
                   })
                   .map((record) => (
-                    <tr key={record.id} className={`hover:bg-gray-50 ${
-                      ['checked_in', 'pending'].includes(record.status) ? 'bg-blue-50' : ''
-                    }`}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          {['checked_in', 'pending'].includes(record.status) && (
-                            <div className="px-2 py-1 bg-blue-600 text-white text-xs font-medium rounded mr-2">
-                              ACTIVE
-                            </div>
-                          )}
-                          <div className="text-sm font-medium text-gray-900">
-                            {formatDate(record.date)}
-                          </div>
-                        </div>
-                      </td>
+                    <tr key={record.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">
                           {record.block?.block_name || 'N/A'}
@@ -337,6 +360,11 @@ export default function StudentCheckinCheckoutPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {record.estimated_checkin_date ? formatDate(record.estimated_checkin_date) : 'Not set'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col">
                           <div className="text-sm text-gray-500">
                             {formatDate(record.checkin_time)}
@@ -348,7 +376,7 @@ export default function StudentCheckinCheckoutPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {calculateDuration(record.checkin_time, record.checkout_time)}
+                          {calculateDuration(record)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -356,26 +384,12 @@ export default function StudentCheckinCheckoutPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center gap-2">
-                          <Link href={`/student/checkin-checkout/${record.id}`}>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              icon={<Eye className="w-3 h-3" />}
-                            >
-                              View
-                            </Button>
-                          </Link>
-                          
-                          {/* Quick Actions for Active Records */}
-                          {record.status === 'checked_in' && (
-                            <Button
-                              onClick={() => router.push('/student/checkin-checkout/create')}
-                              size="sm"
-                              className="bg-orange-600 hover:bg-orange-700 text-white text-xs px-2 py-1"
-                            >
-                              Request Checkout
-                            </Button>
-                          )}
+                          <ActionButtons
+                            viewUrl={`/student/checkin-checkout/${record.id}`}
+                            style="compact"
+                            hideEdit={true}
+                            hideDelete={true}
+                          />
                           
                           {record.status === 'approved' && (
                             <Button

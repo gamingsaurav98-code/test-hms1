@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { studentCheckInCheckOutApi } from '@/lib/api/student-checkincheckout.api';
+import { studentApi } from '@/lib/api/student.api';
 import { 
   SubmitButton, 
   CancelButton 
@@ -12,9 +13,10 @@ import { Calendar, Clock, AlertCircle } from 'lucide-react';
 export default function CreateStudentCheckout() {
   const router = useRouter();
   
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [studentProfile, setStudentProfile] = useState<any>(null);
   
   // Get current date for default values
   const currentDate = new Date().toISOString().split('T')[0];
@@ -25,7 +27,20 @@ export default function CreateStudentCheckout() {
   });
 
   useEffect(() => {
-    setLoading(false);
+    const fetchStudentProfile = async () => {
+      try {
+        setLoading(true);
+        const profile = await studentApi.getStudentProfile();
+        setStudentProfile(profile);
+      } catch (error: any) {
+        console.error('Error fetching student profile:', error);
+        setErrors({ general: 'Failed to load student profile. Please try again.' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudentProfile();
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -68,6 +83,12 @@ export default function CreateStudentCheckout() {
       return;
     }
 
+    if (!studentProfile || !studentProfile.id) {
+      setErrors({ general: 'Student profile not loaded. Please refresh the page.' });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       await studentCheckInCheckOutApi.checkOut({
         estimated_checkin_date: formData.estimated_checkin_date,
@@ -97,96 +118,138 @@ export default function CreateStudentCheckout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-2 py-4">
-      <div className="max-w-5xl mx-auto">
-        {/* Clean Header */}
+    <div className="min-h-screen bg-gray-50 px-4 py-6">
+      <div className="w-full">
+        {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900">Request Checkout</h1>
-          <p className="text-gray-600 mt-1">Submit a checkout request with your expected return date</p>
+          <h1 className="text-2xl font-bold text-gray-900">Request Checkout</h1>
+          <p className="text-gray-600 mt-1">
+            Submit a request to checkout from the hostel
+          </p>
         </div>
 
-        {/* Modern Form Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <form onSubmit={handleSubmit} className="p-4">
-            {/* General Error */}
-            {errors.general && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-700 text-sm">{errors.general}</p>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          {errors.general && (
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex">
+                <AlertCircle className="w-5 h-5 text-red-400 mr-2" />
+                <p className="text-red-800">{errors.general}</p>
               </div>
-            )}
+            </div>
+          )}
 
-            <div className="space-y-4">
-              {/* Form Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Expected Return Date */}
-                <div>
-                  <label htmlFor="estimated_checkin_date" className="block text-sm font-medium text-gray-700 mb-2">
-                    <Calendar className="w-4 h-4 inline mr-1" />
-                    Expected Return Date *
-                  </label>
-                  <input
-                    type="date"
-                    id="estimated_checkin_date"
-                    name="estimated_checkin_date"
-                    value={formData.estimated_checkin_date}
-                    onChange={handleChange}
-                    min={currentDate}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  />
-                  {errors.estimated_checkin_date && (
-                    <p className="text-red-600 text-sm mt-1">{errors.estimated_checkin_date}</p>
-                  )}
-                </div>
-
-                {/* Empty column for spacing consistency */}
-                <div></div>
+          {/* Information Card */}
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
               </div>
-
-              {/* Reason - Full Width */}
-              <div>
-                <label htmlFor="remarks" className="block text-sm font-medium text-gray-700 mb-2">
-                  <Clock className="w-4 h-4 inline mr-1" />
-                  Reason for Checkout *
-                </label>
-                <textarea
-                  id="remarks"
-                  name="remarks"
-                  value={formData.remarks}
-                  onChange={handleChange}
-                  rows={6}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="Please provide detailed information about why you need to checkout, including purpose, destination, and any relevant context..."
-                />
-                {errors.remarks && (
-                  <p className="text-red-600 text-sm mt-1">{errors.remarks}</p>
-                )}
-              </div>
-
-              {/* Info Box */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <AlertCircle className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h4 className="text-sm font-medium text-blue-900">Important Information</h4>
-                    <ul className="text-sm text-blue-700 mt-2 space-y-1">
-                      <li>• Your checkout request will be reviewed by the administration</li>
-                      <li>• You will be notified once your request is approved or declined</li>
-                      <li>• Please ensure your return date is realistic and accurate</li>
-                      <li>• Late returns may affect your future checkout requests</li>
-                    </ul>
-                  </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-900">Important Information</h3>
+                <div className="mt-2 text-sm text-blue-800">
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Your checkout request will be submitted to admin for approval</li>
+                    <li>Checkout time will be recorded as current system time when approved</li>
+                    <li>You can check back in once your request is approved and you return</li>
+                    <li>Estimated return date is required to track checkout duration</li>
+                  </ul>
                 </div>
               </div>
             </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Checkout Date and Time */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-semibold text-neutral-900 flex items-center">
+                <Clock className="w-4 h-4 mr-2" />
+                Checkout Date & Time
+              </label>
+              <div className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 bg-gray-50">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="font-medium text-gray-700">Date: </span>
+                    <span>{new Date().toLocaleDateString('en-US', { 
+                      month: '2-digit',
+                      day: '2-digit', 
+                      year: 'numeric'
+                    })}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Time: </span>
+                    <span>{new Date().toLocaleTimeString('en-US', { 
+                      hour: '2-digit', 
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true 
+                    })}</span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500">
+                This will be recorded as your checkout time when the request is approved.
+              </p>
+            </div>
+
+            {/* Estimated Return Date */}
+            <div className="space-y-1.5">
+              <label htmlFor="estimated_checkin_date" className="block text-sm font-semibold text-neutral-900 flex items-center">
+                <Calendar className="w-4 h-4 mr-2" />
+                Estimated Return Date *
+              </label>
+              <input
+                type="date"
+                id="estimated_checkin_date"
+                name="estimated_checkin_date"
+                value={formData.estimated_checkin_date}
+                onChange={handleChange}
+                min={currentDate}
+                className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 focus:border-neutral-400 focus:ring-0 outline-none transition-all duration-200"
+                required
+              />
+              <p className="text-xs text-gray-500">
+                This helps track your checkout duration and is required for approval.
+              </p>
+              {errors.estimated_checkin_date && (
+                <div className="flex items-center mt-1.5 text-xs text-red-600">
+                  <AlertCircle className="w-3.5 h-3.5 mr-2" />
+                  {errors.estimated_checkin_date}
+                </div>
+              )}
+            </div>
+
+            {/* Reason/Remarks */}
+            <div className="space-y-1.5">
+              <label htmlFor="remarks" className="block text-sm font-semibold text-neutral-900">
+                Reason for Checkout *
+              </label>
+              <textarea
+                id="remarks"
+                name="remarks"
+                value={formData.remarks}
+                onChange={handleChange}
+                placeholder="Please provide the reason for your checkout request (e.g., going home for weekend, medical appointment, family emergency, etc.)"
+                rows={4}
+                className="w-full px-4 py-4 border border-neutral-200/60 rounded-lg text-sm text-neutral-600 focus:border-neutral-400 focus:ring-0 outline-none transition-all duration-200 resize-none"
+                required
+              />
+              <p className="text-xs text-gray-500">
+                A clear reason helps admin process your request faster
+              </p>
+              {errors.remarks && (
+                <div className="flex items-center mt-1.5 text-xs text-red-600">
+                  <AlertCircle className="w-3.5 h-3.5 mr-2" />
+                  {errors.remarks}
+                </div>
+              )}
+            </div>
 
             {/* Form Actions */}
-            <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-200">
+            <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
               <CancelButton onClick={() => router.push('/student/checkin-checkout')} />
               <SubmitButton 
-                loading={isSubmitting} 
-                loadingText="Submitting..."
+                loading={isSubmitting}
+                loadingText="Submitting Request..."
               >
                 Submit Checkout Request
               </SubmitButton>

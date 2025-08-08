@@ -294,10 +294,10 @@ export default function StudentStructure({ children }: { children: React.ReactNo
                 className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
               >
                 <div className="w-9 h-9 bg-gradient-to-br from-[#235999] to-[#1e4d87] rounded-xl flex items-center justify-center shadow-lg ring-2 ring-white">
-                  <span className="text-white font-bold text-lg">S</span>
+                  <span className="text-white font-bold text-lg">{user?.name?.charAt(0).toUpperCase() || 'S'}</span>
                 </div>
                 <div className="hidden lg:block text-left">
-                  <div className="text-sm font-semibold text-gray-800">Student User</div>
+                  <div className="text-sm font-semibold text-gray-800">{user?.name?.split(' ')[0] || 'Student'}</div>
                 </div>
                 <svg className="hidden lg:block w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -314,10 +314,10 @@ export default function StudentStructure({ children }: { children: React.ReactNo
                   <div className="px-5 py-4 border-b border-gray-100/50">
                     <div className="flex items-start space-x-4">
                       <div className="w-9 h-9 bg-gradient-to-br from-[#235999] to-[#1e4d87] rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                        <span className="text-white font-bold text-lg">S</span>
+                        <span className="text-white font-bold text-lg">{user?.name?.charAt(0).toUpperCase() || 'S'}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-base font-bold text-gray-800 mb-1">Student User</div>
+                        <div className="text-base font-bold text-gray-800 mb-1">{user?.name || 'Student'}</div>
                         <div 
                           className={`text-sm break-all cursor-pointer transition-all duration-200 hover:text-[#235999] ${
                             emailCopied ? 'text-green-600' : 'text-gray-500'
