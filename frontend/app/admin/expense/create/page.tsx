@@ -391,20 +391,32 @@ export default function CreateExpense() {
                     <label htmlFor="expense_category_id" className="block text-sm font-semibold text-neutral-900 mb-2">
                       Expense Category <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      id="expense_category_id"
-                      name="expense_category_id"
-                      value={formData.expense_category_id}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                    >
-                      <option value="">Select Category</option>
-                      {expenseCategories.map(category => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex gap-2">
+                      <select
+                        id="expense_category_id"
+                        name="expense_category_id"
+                        value={formData.expense_category_id}
+                        onChange={handleInputChange}
+                        className="flex-1 px-4 py-3 border border-neutral-200 rounded-lg text-sm text-neutral-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                      >
+                        <option value="">Select Category</option>
+                        {expenseCategories.map(category => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => router.push('/admin/expense-category/create')}
+                        className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+                        title="Add New Category"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Supplier */}

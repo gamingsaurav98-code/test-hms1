@@ -31,6 +31,13 @@ class Expense extends Model
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['payment_status'];
+
+    /**
      * The "booted" method of the model.
      *
      * @return void

@@ -7,6 +7,7 @@ use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Purchase;
 use App\Models\Attachment;
+use App\Models\SupplierPayment;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -147,6 +148,17 @@ class ExpenseController extends Controller
                         ]);
                     }
                 }
+            }
+
+            // Create supplier payment if paid_amount > 0 and supplier exists
+            if ($request->supplier_id && $request->paid_amount && $request->paid_amount > 0) {
+                SupplierPayment::create([
+                    'supplier_id' => $request->supplier_id,
+                    'payment_date' => $request->expense_date,
+                    'description' => 'Payment for: ' . $title,
+                    'amount' => $request->paid_amount,
+                    'payment_type_id' => $request->payment_type_id ?? 1,
+                ]);
             }
 
             DB::commit();

@@ -715,13 +715,18 @@ export default function SupplierDetail() {
                     <h4 className="text-sm font-medium text-gray-700">Current Balance</h4>
                   </div>
                   <div className="col-span-2">
-                    <p className={`text-sm px-3 py-1 inline-block rounded-full ${
-                      supplier.balance_type === 'due'
-                        ? 'bg-orange-50 text-orange-700'
-                        : 'bg-green-50 text-green-700'
-                    }`}>
-                      NPR {supplier.opening_balance || '0.00'} ({supplier.balance_type === 'due' ? 'Due' : 'Advance'})
-                    </p>
+                    {(() => {
+                      const totalDue = supplier.expenses?.reduce((acc, e) => acc + parseFloat(e.due_amount || 0), 0) || 0;
+                      return (
+                        <p className={`text-sm px-3 py-1 inline-block rounded-full ${
+                          totalDue > 0
+                            ? 'bg-orange-50 text-orange-700'
+                            : 'bg-green-50 text-green-700'
+                        }`}>
+                          NPR {totalDue.toFixed(2)} ({totalDue > 0 ? 'Due' : 'Paid'})
+                        </p>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -741,7 +746,7 @@ export default function SupplierDetail() {
                   </div>
                   <div className="col-span-2">
                     <p className="text-sm font-medium text-gray-900">
-                      NPR {supplier.financials?.reduce((acc, f) => acc + parseFloat(f.amount || 0), 0).toFixed(2) || '0.00'}
+                      NPR {supplier.expenses?.reduce((acc, e) => acc + parseFloat(e.amount || 0), 0).toFixed(2) || '0.00'}
                     </p>
                   </div>
                 </div>
@@ -752,7 +757,7 @@ export default function SupplierDetail() {
                   </div>
                   <div className="col-span-2">
                     <p className="text-sm font-medium text-gray-900">
-                      NPR {supplier.supplierPayments?.reduce((acc, p) => acc + parseFloat(p.amount || 0), 0).toFixed(2) || '0.00'}
+                      NPR {supplier.expenses?.reduce((acc, e) => acc + parseFloat(e.paid_amount || 0), 0).toFixed(2) || '0.00'}
                     </p>
                   </div>
                 </div>
@@ -763,7 +768,9 @@ export default function SupplierDetail() {
                   </div>
                   <div className="col-span-2">
                     <p className="text-sm text-gray-900">
-                      {supplier.financials && supplier.financials.length > 0 
+                      {supplier.expenses && supplier.expenses.length > 0 
+                        ? `${formatDate(supplier.expenses[0].expense_date || supplier.expenses[0].created_at)} (${getDaysAgo(supplier.expenses[0].expense_date || supplier.expenses[0].created_at)})`
+                        : supplier.financials && supplier.financials.length > 0 
                         ? `${formatDate(supplier.financials[0].payment_date)} (${getDaysAgo(supplier.financials[0].payment_date)})`
                         : 'No transactions yet'}
                     </p>
@@ -815,10 +822,79 @@ export default function SupplierDetail() {
           </div>
         )}
         
-        {/* Transaction History - Placeholder for future implementation */}
+        {/* Supplier Transactions */}
         <div className="mt-8 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Transactions</h3>
-          <p className="text-gray-500 italic">Transaction history will be displayed here in future updates.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Supplier Transactions</h3>
+          {supplier.expenses && supplier.expenses.length > 0 ? (
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Title
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Payment Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {supplier.expenses.map((expense: any) => (
+                    <tr key={expense.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(expense.expense_date || expense.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {expense.title || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {expense.expense_category?.name || expense.expense_type || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="font-semibold text-gray-900">
+                          NPR {parseFloat(expense.amount || 0).toFixed(2)}
+                        </div>
+                        {expense.payment_status === 'partially_paid' && (
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            Paid: NPR {parseFloat(expense.paid_amount || 0).toFixed(2)}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          expense.payment_status === 'paid' 
+                            ? 'bg-green-100 text-green-800' 
+                            : expense.payment_status === 'partially_paid'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {expense.payment_status === 'paid' ? 'Paid' : 
+                           expense.payment_status === 'partially_paid' ? 'Partially Paid' : 
+                           'Credit'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="bg-gray-50 rounded-lg border border-gray-200 p-8 text-center">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <p className="mt-2 text-gray-500">No expense transactions found for this supplier</p>
+            </div>
+          )}
         </div>
 
         {/* Metadata */}

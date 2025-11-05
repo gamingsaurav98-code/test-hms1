@@ -14,7 +14,7 @@ class SupplierController extends Controller
      */
     public function index()
     {
-        $suppliers = Supplier::all();
+        $suppliers = Supplier::with('expenses')->get();
         return response()->json([
             'status' => true,
             'data' => $suppliers

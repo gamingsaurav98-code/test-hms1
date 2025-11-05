@@ -315,18 +315,19 @@ export default function SupplierList() {
                   {/* Balance */}
                   <div className="col-span-2">
                     <div className="text-sm text-gray-700">
-                      <span className={
-                        supplier.balance_type === 'due'
-                          ? 'text-orange-600'
-                          : supplier.balance_type === 'advance'
-                            ? 'text-green-600'
-                            : 'text-gray-600'
-                      }>
-                        {supplier.opening_balance ? `Rs. ${supplier.opening_balance}` : 'Rs. 0'} 
-                      </span>
-                      <span className="ml-1 text-xs text-gray-500">
-                        ({getBalanceTypeDisplay(supplier.balance_type)})
-                      </span>
+                      {(() => {
+                        const totalDue = supplier.expenses?.reduce((acc: number, e: any) => acc + parseFloat(e.due_amount || 0), 0) || 0;
+                        return (
+                          <>
+                            <span className={totalDue > 0 ? 'text-orange-600' : 'text-green-600'}>
+                              Rs. {totalDue.toFixed(2)}
+                            </span>
+                            <span className="ml-1 text-xs text-gray-500">
+                              ({totalDue > 0 ? 'Due (Payable)' : 'Paid'})
+                            </span>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
 
