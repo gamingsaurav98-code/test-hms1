@@ -5,9 +5,19 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 
+type SidebarItem = {
+  icon: () => JSX.Element;
+  label: string;
+  href: string;
+  category: string;
+  hasSubmenu?: boolean;
+  submenu?: { label: string; href: string }[];
+};
+
 export default function Structure({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [expenseMenuOpen, setExpenseMenuOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [mounted, setMounted] = useState(false);
   const [emailCopied, setEmailCopied] = useState(false);
@@ -113,6 +123,13 @@ export default function Structure({ children }: { children: React.ReactNode }) {
 
   const currentPageName = getPageName(pathname);
 
+  // Auto-open expense menu if on expense or expense-category pages
+  useEffect(() => {
+    if (pathname.startsWith('/admin/expense')) {
+      setExpenseMenuOpen(true);
+    }
+  }, [pathname]);
+
   const handleBackClick = () => {
     router.back();
   };
@@ -130,7 +147,7 @@ export default function Structure({ children }: { children: React.ReactNode }) {
     return date.toLocaleDateString('en-US', options);
   };
 
-  const sidebarItems = [
+  const sidebarItems: SidebarItem[] = [
     // Core Management
     { 
       icon: () => (
@@ -226,7 +243,12 @@ export default function Structure({ children }: { children: React.ReactNode }) {
       ), 
       label: "Expenses", 
       href: "/admin/expense",
-      category: "financial"
+      category: "financial",
+      hasSubmenu: true,
+      submenu: [
+        { label: "All Expenses", href: "/admin/expense" },
+        { label: "Expense Categories", href: "/admin/expense-category" }
+      ]
     },
     { 
       icon: () => (
@@ -556,31 +578,91 @@ export default function Structure({ children }: { children: React.ReactNode }) {
         <div className="h-full overflow-y-auto py-3 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent hover:scrollbar-thumb-blue-300">
           <nav className="px-2 space-y-0.5">
             {sidebarItems.map((item, index) => {
-              const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href) && !sidebarItems.some(otherItem => 
-                otherItem.href !== item.href && 
-                otherItem.href !== "/admin" && 
-                pathname.startsWith(otherItem.href) && 
-                otherItem.href.length > item.href.length
-              ));
+              // For items with submenu, don't mark parent as active, only check submenu items
+              const isActive = !item.hasSubmenu && (
+                pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href) && !sidebarItems.some(otherItem => 
+                  otherItem.href !== item.href && 
+                  otherItem.href !== "/admin" && 
+                  pathname.startsWith(otherItem.href) && 
+                  otherItem.href.length > item.href.length
+                ))
+              );
+              
+              // Check if any submenu item is active
+              const isSubmenuActive = item.submenu?.some(subItem => pathname === subItem.href || pathname.startsWith(subItem.href));
+              const shouldShowSubmenu = item.hasSubmenu && (expenseMenuOpen || isSubmenuActive);
               
               return (
-                <Link
-                  key={index}
-                  href={item.href}
-                  className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    isActive
-                      ? "bg-gradient-to-r from-[#235999] to-[#1e4d87] text-white shadow-md shadow-blue-200/60"
-                      : "text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-[#235999]"
-                  }`}
-                >
-                  <div className={`mr-3 flex-shrink-0 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}>
-                    <item.icon />
-                  </div>
-                  <span className="tracking-tight text-xs font-semibold">{item.label}</span>
-                  {isActive && (
-                    <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full opacity-90"></div>
+                <div key={index}>
+                  {item.hasSubmenu ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setExpenseMenuOpen(!expenseMenuOpen);
+                      }}
+                      className={`group flex items-center w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        isSubmenuActive
+                          ? "bg-gradient-to-r from-[#235999] to-[#1e4d87] text-white shadow-md shadow-blue-200/60"
+                          : "text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-[#235999]"
+                      }`}
+                    >
+                      <div className={`mr-3 flex-shrink-0 transition-transform duration-200 ${isSubmenuActive ? 'scale-110' : 'group-hover:scale-105'}`}>
+                        <item.icon />
+                      </div>
+                      <span className="tracking-tight text-xs font-semibold flex-1 text-left">{item.label}</span>
+                      <svg 
+                        className={`w-4 h-4 transition-transform duration-200 ${shouldShowSubmenu ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        isActive
+                          ? "bg-gradient-to-r from-[#235999] to-[#1e4d87] text-white shadow-md shadow-blue-200/60"
+                          : "text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-[#235999]"
+                      }`}
+                    >
+                      <div className={`mr-3 flex-shrink-0 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}>
+                        <item.icon />
+                      </div>
+                      <span className="tracking-tight text-xs font-semibold">{item.label}</span>
+                      {isActive && (
+                        <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full opacity-90"></div>
+                      )}
+                    </Link>
                   )}
-                </Link>
+                  
+                  {/* Submenu */}
+                  {item.hasSubmenu && shouldShowSubmenu && (
+                    <div className="mt-1 ml-7 space-y-0.5 animate-in slide-in-from-top-2 duration-200">
+                      {item.submenu?.map((subItem, subIndex) => {
+                        const isSubItemActive = pathname === subItem.href || pathname.startsWith(subItem.href);
+                        return (
+                          <Link
+                            key={subIndex}
+                            href={subItem.href}
+                            className={`group flex items-center px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
+                              isSubItemActive
+                                ? "bg-blue-100 text-[#235999]"
+                                : "text-gray-600 hover:bg-blue-50 hover:text-[#235999]"
+                            }`}
+                          >
+                            <div className="mr-2 w-1.5 h-1.5 rounded-full bg-current opacity-60"></div>
+                            <span>{subItem.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
