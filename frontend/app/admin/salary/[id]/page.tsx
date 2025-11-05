@@ -34,20 +34,6 @@ export default function SalaryDetail() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      paid: 'bg-green-100 text-green-800',
-      pending: 'bg-yellow-100 text-yellow-800',
-      cancelled: 'bg-red-100 text-red-800'
-    };
-    
-    return (
-      <span className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${statusConfig[status as keyof typeof statusConfig] || 'bg-gray-100 text-gray-800'}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
-    );
-  };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NP', {
       style: 'currency',
@@ -91,27 +77,28 @@ export default function SalaryDetail() {
   }
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-end mb-4">
-          <Link href={`/admin/salary/${salary.id}/edit`}>
-            <Button 
-              icon={<Edit className="w-4 h-4" />}
-              className="bg-[#235999] hover:bg-[#1e4d87]"
-            >
-              Edit Salary
-            </Button>
-          </Link>
+    <div className="min-h-screen bg-gray-50 px-4 py-6">
+      <div className="w-full">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-end mb-4">
+            <Link href={`/admin/salary/${salary.id}/edit`}>
+              <Button 
+                icon={<Edit className="w-4 h-4" />}
+                className="bg-[#235999] hover:bg-[#1e4d87]"
+              >
+                Edit Salary
+              </Button>
+            </Link>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Salary Details</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Salary record for {salary.staff?.staff_name} - {salary.month_name} {salary.year}
+          </p>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Salary Details</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Salary record for {salary.staff?.staff_name} - {salary.month_name} {salary.year}
-        </p>
-      </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Primary Information */}
         <div className="lg:col-span-2 space-y-6">
           {/* Staff Information Card */}
@@ -127,7 +114,7 @@ export default function SalaryDetail() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-500">Staff ID</label>
-                <p className="mt-1 text-sm text-gray-900">{salary.staff?.staff_id}</p>
+                <p className="mt-1 text-sm text-gray-900">{salary.staff_id}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-500">Email</label>
@@ -148,9 +135,9 @@ export default function SalaryDetail() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-500">Salary Period</label>
+                <label className="block text-sm font-medium text-gray-500">Payment Date</label>
                 <p className="mt-1 text-sm text-gray-900 font-medium">
-                  {salary.month_name} {salary.year}
+                  {formatDate(salary.created_at)}
                 </p>
               </div>
               <div>
@@ -159,15 +146,9 @@ export default function SalaryDetail() {
                   {formatCurrency(salary.amount)}
                 </p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500">Status</label>
-                <div className="mt-1">
-                  {getStatusBadge(salary.status)}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500">Formatted Amount</label>
-                <p className="mt-1 text-sm text-gray-900">Rs. {salary.formatted_amount}</p>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-500">Description</label>
+                <p className="mt-1 text-sm text-gray-900">{salary.description || 'No description provided'}</p>
               </div>
             </div>
           </div>
@@ -175,28 +156,6 @@ export default function SalaryDetail() {
 
         {/* Sidebar Information */}
         <div className="space-y-6">
-          {/* Status Summary Card */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Clock className="w-5 h-5 text-gray-400" />
-              <h2 className="text-lg font-medium text-gray-900">Status Summary</h2>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Current Status</span>
-                {getStatusBadge(salary.status)}
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Salary ID</span>
-                <span className="text-sm font-medium text-gray-900">#{salary.id}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Staff ID</span>
-                <span className="text-sm font-medium text-gray-900">{salary.staff_id}</span>
-              </div>
-            </div>
-          </div>
-
           {/* Timeline Card */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -236,6 +195,7 @@ export default function SalaryDetail() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

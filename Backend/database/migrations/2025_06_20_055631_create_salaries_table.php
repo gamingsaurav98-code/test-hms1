@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('amount');
             $table->string('month');
             $table->year('year');
+            $table->text('description')->nullable();
             $table->string('status')->nullable();
             $table->timestamps();
             

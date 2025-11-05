@@ -10,6 +10,7 @@ export interface Salary {
   status: 'pending' | 'paid' | 'cancelled';
   month_name: string;
   formatted_amount: string;
+  description?: string;
   created_at: string;
   updated_at: string;
   staff?: Staff;
@@ -37,6 +38,7 @@ export interface CreateSalaryRequest {
   amount: number;
   month: number;
   year: number;
+  description?: string;
   status?: 'pending' | 'paid' | 'cancelled';
 }
 
@@ -45,6 +47,7 @@ export interface UpdateSalaryRequest {
   amount?: number;
   month?: number;
   year?: number;
+  description?: string;
   status?: 'pending' | 'paid' | 'cancelled';
 }
 

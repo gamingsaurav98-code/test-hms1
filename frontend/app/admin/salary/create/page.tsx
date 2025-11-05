@@ -18,6 +18,7 @@ export default function CreateSalary() {
     amount: 0,
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
+    description: '',
     status: 'pending'
   });
   const [loading, setLoading] = useState(false);
@@ -245,6 +246,9 @@ export default function CreateSalary() {
                     Description (Optional)
                   </label>
                   <textarea
+                    name="description"
+                    value={formData.description || ''}
+                    onChange={handleInputChange}
                     rows={3}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#235999] focus:border-[#235999] sm:text-sm"
                     placeholder="Enter description (optional)"

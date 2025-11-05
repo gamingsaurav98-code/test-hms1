@@ -51,6 +51,7 @@ export default function EditSalary() {
         amount: salaryData.amount,
         month: salaryData.month,
         year: salaryData.year,
+        description: salaryData.description,
         status: salaryData.status
       });
       
@@ -304,6 +305,9 @@ export default function EditSalary() {
                     Description (Optional)
                   </label>
                   <textarea
+                    name="description"
+                    value={formData.description !== undefined ? formData.description || '' : salary.description || ''}
+                    onChange={handleInputChange}
                     rows={3}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#235999] focus:border-[#235999] sm:text-sm"
                     placeholder="Enter description (optional)"

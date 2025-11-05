@@ -69,8 +69,7 @@ export default function StaffSalaryPage() {
     } else {
       const filtered = salaries.filter(salary =>
         getMonthName(salary.month).toLowerCase().includes(searchQuery.toLowerCase()) ||
-        salary.year.toString().includes(searchQuery) ||
-        salary.status?.toLowerCase().includes(searchQuery.toLowerCase())
+        salary.year.toString().includes(searchQuery)
       );
       setFilteredSalaries(filtered);
     }
@@ -198,7 +197,7 @@ export default function StaffSalaryPage() {
         <SearchBar
           value={searchQuery}
           onChange={handleSearch}
-          placeholder="Search by month, year, or status..."
+          placeholder="Search by month or year..."
         />
       </div>
 
@@ -232,17 +231,6 @@ export default function StaffSalaryPage() {
                           {getMonthName(salary.month)} {salary.year}
                         </h3>
                       </div>
-                      
-                      {/* Status Badge */}
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        salary.status === 'paid'
-                          ? 'bg-green-100 text-green-800 border-green-200'
-                          : salary.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                          : 'bg-red-100 text-red-800 border-red-200'
-                      }`}>
-                        {salary.status || 'pending'}
-                      </span>
                     </div>
 
                     {/* Amount */}
@@ -256,11 +244,7 @@ export default function StaffSalaryPage() {
                     <div className="flex items-center gap-6 text-sm text-gray-500">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        <span>Payment Date: {
-                          salary.status === 'paid' 
-                            ? new Date(salary.updated_at || salary.created_at).toLocaleDateString()
-                            : 'Pending'
-                        }</span>
+                        <span>Payment Date: {new Date(salary.updated_at || salary.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>

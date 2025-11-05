@@ -107,20 +107,6 @@ export default function SalaryList() {
     setDeleteModal({show: false, salaryId: null});
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      paid: 'bg-green-100 text-green-800',
-      pending: 'bg-yellow-100 text-yellow-800',
-      cancelled: 'bg-red-100 text-red-800'
-    };
-    
-    return (
-      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${statusConfig[status as keyof typeof statusConfig] || 'bg-gray-100 text-gray-800'}`}>
-        {status}
-      </span>
-    );
-  };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NP', {
       style: 'currency',
@@ -265,9 +251,8 @@ export default function SalaryList() {
           <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
             <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
               <div className="col-span-3">Staff Details</div>
-              <div className="col-span-2">Period</div>
-              <div className="col-span-2">Amount</div>
-              <div className="col-span-2">Status</div>
+              <div className="col-span-3">Description</div>
+              <div className="col-span-3">Amount</div>
               <div className="col-span-2">Created Date</div>
               <div className="col-span-1 text-center">Actions</div>
             </div>
@@ -284,21 +269,16 @@ export default function SalaryList() {
                     <div className="text-xs text-gray-500">{salary.staff?.staff_id}</div>
                   </div>
 
-                  {/* Period */}
-                  <div className="col-span-2">
+                  {/* Description */}
+                  <div className="col-span-3">
                     <div className="text-sm text-gray-900">
-                      {salary.month_name} {salary.year}
+                      {salary.description || 'No description'}
                     </div>
                   </div>
 
                   {/* Amount */}
-                  <div className="col-span-2">
+                  <div className="col-span-3">
                     <div className="text-sm font-medium text-gray-900">{formatCurrency(salary.amount)}</div>
-                  </div>
-
-                  {/* Status */}
-                  <div className="col-span-2">
-                    {getStatusBadge(salary.status)}
                   </div>
 
                   {/* Created Date */}

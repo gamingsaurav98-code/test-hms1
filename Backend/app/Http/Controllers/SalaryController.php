@@ -20,7 +20,7 @@ class SalaryController extends Controller
         try {
             // Use select to limit fields and improve performance
             $query = Salary::select([
-                'id', 'staff_id', 'amount', 'month', 'year', 'status', 'created_at', 'updated_at'
+                'id', 'staff_id', 'amount', 'month', 'year', 'description', 'status', 'created_at', 'updated_at'
             ])->with(['staff' => function($query) {
                 $query->select('id', 'staff_name', 'position', 'department', 'contact_number', 'email');
             }]);
@@ -82,6 +82,7 @@ class SalaryController extends Controller
                 'amount' => 'required|numeric|min:0.01',
                 'month' => 'required|integer|min:1|max:12',
                 'year' => 'required|integer|min:2000|max:' . (date('Y') + 1),
+                'description' => 'nullable|string|max:1000',
                 'status' => 'nullable|string|in:pending,paid,cancelled',
             ]);
 
@@ -109,6 +110,7 @@ class SalaryController extends Controller
                 'amount' => $request->amount,
                 'month' => $request->month,
                 'year' => $request->year,
+                'description' => $request->description,
                 'status' => $request->status ?? 'pending',
             ]);
 
@@ -131,7 +133,7 @@ class SalaryController extends Controller
     {
         try {
             $salary = Salary::select([
-                'id', 'staff_id', 'amount', 'month', 'year', 'status', 'created_at', 'updated_at'
+                'id', 'staff_id', 'amount', 'month', 'year', 'description', 'status', 'created_at', 'updated_at'
             ])->with(['staff:id,staff_name,position,department,contact_number,email'])
               ->findOrFail($id);
             return response()->json($salary);
@@ -168,6 +170,7 @@ class SalaryController extends Controller
                 'amount' => 'sometimes|required|numeric|min:0.01',
                 'month' => 'sometimes|required|integer|min:1|max:12',
                 'year' => 'sometimes|required|integer|min:2000|max:' . (date('Y') + 1),
+                'description' => 'sometimes|nullable|string|max:1000',
                 'status' => 'sometimes|nullable|string|in:pending,paid,cancelled',
             ]);
 
@@ -193,7 +196,7 @@ class SalaryController extends Controller
                 }
             }
 
-            $salary->update($request->only(['staff_id', 'amount', 'month', 'year', 'status']));
+            $salary->update($request->only(['staff_id', 'amount', 'month', 'year', 'description', 'status']));
 
             // Load relationships and return
             $salary->load(['staff:id,staff_name,position,department']);
