@@ -76,6 +76,13 @@ export type {
   SalaryFilters
 } from './salary.api';
 
+// Import profile API types
+export type {
+  UserProfile,
+  UpdateProfileData,
+  ChangePasswordData
+} from './profile.api';
+
 // Re-export APIs
 export { authApi, tokenStorage, getAuthHeaders } from './auth.api';
 export { blockApi } from './block.api';
@@ -91,4 +98,5 @@ export { staffInquiryApi } from './staff-inquiry.api';
 export { expenseApi, expenseCategoryApi } from './expense.api';
 export { SalaryApi, StaffApi } from './salary.api';
 export { complainApi } from './complain.api';
+export { profileApi } from './profile.api';
 export { default as UnifiedApi } from './unified.api';

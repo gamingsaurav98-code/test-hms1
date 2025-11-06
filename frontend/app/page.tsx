@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
+import { PasswordInput } from '@/components/ui/password-input';
 import RegisterForm from '@/components/auth/RegisterForm';
 import Image from "next/image";
 
@@ -181,19 +182,16 @@ export default function LoginPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                      Password
-                    </label>
-                    <input
+                    <PasswordInput
                       id="password"
                       name="password"
-                      type="password"
-                      autoComplete="current-password"
-                      required
+                      label="Password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       placeholder="Enter your password"
+                      required
+                      autoComplete="current-password"
+                      className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                     />
                   </div>
                 </div>

@@ -478,4 +478,74 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get user profile
+     */
+    public function getProfile(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'id' => $user->id,
+                    'user_id' => $user->user_id,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch profile',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Update user profile (email only for now)
+     */
+    public function updateProfile(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|unique:users,email,' . $request->user()->id,
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = $request->user();
+            $user->email = $request->email;
+            $user->save();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Profile updated successfully',
+                'data' => [
+                    'id' => $user->id,
+                    'user_id' => $user->user_id,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'updated_at' => $user->updated_at,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update profile',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
 }

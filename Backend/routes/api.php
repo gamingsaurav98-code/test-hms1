@@ -131,6 +131,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     
     Route::middleware(['role:admin'])->group(function () {
         
+        // Admin profile
+        Route::get('admin/profile', [AuthController::class, 'getProfile']);
+        Route::put('admin/profile', [AuthController::class, 'updateProfile']);
+        
         // Core Management
         Route::apiResource('blocks', BlockController::class);
         Route::apiResource('rooms', RoomController::class);

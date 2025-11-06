@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { PasswordInput } from '@/components/ui/password-input';
 import { authApi, tokenStorage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 
@@ -193,36 +194,32 @@ export default function RegisterForm({ onSuccess, onBackToLogin }: RegisterFormP
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
-              autoComplete="new-password"
-              required
+              label="Password"
               value={formData.password}
               onChange={handleInputChange}
-              className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               placeholder="Create a password (min 8 characters)"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             />
           </div>
 
           <div>
-            <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm Password
-            </label>
-            <input
+            <PasswordInput
               id="password_confirmation"
               name="password_confirmation"
-              type="password"
-              autoComplete="new-password"
-              required
+              label="Confirm Password"
               value={formData.password_confirmation}
               onChange={handleInputChange}
-              className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               placeholder="Confirm your password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             />
           </div>
         </div>
