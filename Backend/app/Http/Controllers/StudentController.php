@@ -612,6 +612,12 @@ class StudentController extends Controller
                 $updateData['student_image'] = $request->file('student_image')->store('students', 'public');
             }
 
+            // If email is being updated, also update it in the users table
+            if (isset($updateData['email'])) {
+                $user->email = $updateData['email'];
+                $user->save();
+            }
+
             $student->update($updateData);
             $student->load(['room.block', 'financials']);
 

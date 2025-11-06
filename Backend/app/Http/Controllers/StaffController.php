@@ -596,6 +596,12 @@ class StaffController extends Controller
                 $validated['staff_image'] = $path;
             }
             
+            // If email is being updated, also update it in the users table
+            if (isset($validated['email'])) {
+                $user->email = $validated['email'];
+                $user->save();
+            }
+            
             $staff->update($validated);
             
             // Load relationships for response

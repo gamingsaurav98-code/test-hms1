@@ -529,6 +529,21 @@ class AuthController extends Controller
             $user->email = $request->email;
             $user->save();
 
+            // If user is a staff or student, also update their email in the respective table
+            if ($user->role === 'staff') {
+                $staff = Staff::where('user_id', $user->id)->first();
+                if ($staff) {
+                    $staff->email = $request->email;
+                    $staff->save();
+                }
+            } elseif ($user->role === 'student') {
+                $student = Student::where('user_id', $user->id)->first();
+                if ($student) {
+                    $student->email = $request->email;
+                    $student->save();
+                }
+            }
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Profile updated successfully',
