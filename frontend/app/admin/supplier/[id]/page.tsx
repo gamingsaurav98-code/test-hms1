@@ -769,9 +769,9 @@ export default function SupplierDetail() {
                   <div className="col-span-2">
                     <p className="text-sm text-gray-900">
                       {supplier.expenses && supplier.expenses.length > 0 
-                        ? `${formatDate(supplier.expenses[0].expense_date || supplier.expenses[0].created_at)} (${getDaysAgo(supplier.expenses[0].expense_date || supplier.expenses[0].created_at)})`
+                        ? formatDate(supplier.expenses[0].expense_date || supplier.expenses[0].created_at)
                         : supplier.financials && supplier.financials.length > 0 
-                        ? `${formatDate(supplier.financials[0].payment_date)} (${getDaysAgo(supplier.financials[0].payment_date)})`
+                        ? formatDate(supplier.financials[0].payment_date)
                         : 'No transactions yet'}
                     </p>
                   </div>

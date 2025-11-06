@@ -87,6 +87,7 @@ export { supplierApi } from './supplier.api';
 export { supplierFinancialApi } from './supplier-financial.api';
 export { noticeApi } from './notice.api';
 export { inquiryApi } from './inquiry.api';
+export { staffInquiryApi } from './staff-inquiry.api';
 export { expenseApi, expenseCategoryApi } from './expense.api';
 export { SalaryApi, StaffApi } from './salary.api';
 export { complainApi } from './complain.api';

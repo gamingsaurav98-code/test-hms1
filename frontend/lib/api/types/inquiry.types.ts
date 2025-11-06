@@ -6,6 +6,12 @@ export interface Inquiry {
   email?: string;
   phone: string;
   seater_type: number;
+  staff_id?: string;
+  staff?: {
+    id: string;
+    staff_name: string;
+    email: string;
+  };
   created_at: string;
   updated_at?: string;
   attachments?: Attachment[];

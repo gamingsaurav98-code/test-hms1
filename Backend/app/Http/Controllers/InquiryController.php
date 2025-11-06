@@ -14,9 +14,22 @@ class InquiryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $inquiries = Inquiry::orderBy('created_at', 'desc')->get();
+        $user = $request->user();
+        
+        // If user is staff, only show their own inquiries
+        if ($user && $user->role === 'staff' && $user->staffProfile) {
+            $inquiries = Inquiry::with('staff:id,staff_name,email')
+                ->where('staff_id', $user->staffProfile->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            // Admin sees all inquiries
+            $inquiries = Inquiry::with('staff:id,staff_name,email')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
             
         return response()->json([
             'status' => 'success',
@@ -58,10 +71,21 @@ class InquiryController extends Controller
                 'seater_type'
             ]);
             
+            // Add staff_id if the user is authenticated and is a staff member
+            $user = $request->user();
+            if ($user && $user->role === 'staff' && $user->staffProfile) {
+                $data['staff_id'] = $user->staffProfile->id;
+            }
+            
             \Log::info('Filtered inquiry data:', $data);
             
             // Create the inquiry
             $inquiry = Inquiry::create($data);
+            
+            // Load staff relationship if exists
+            if ($inquiry->staff_id) {
+                $inquiry->load('staff:id,staff_name,email');
+            }
             
             \Log::info('Inquiry created successfully:', $inquiry->toArray());
             
@@ -88,10 +112,22 @@ class InquiryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
         try {
-            $inquiry = Inquiry::findOrFail($id);
+            $inquiry = Inquiry::with('staff:id,staff_name,email')->findOrFail($id);
+            
+            $user = $request->user();
+            
+            // If user is staff, validate they own this inquiry
+            if ($user && $user->role === 'staff' && $user->staffProfile) {
+                if ($inquiry->staff_id !== $user->staffProfile->id) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'You are not authorized to view this inquiry.'
+                    ], 403);
+                }
+            }
             
             // Log the inquiry data being sent
             \Log::info('Showing inquiry:', $inquiry->toArray());
@@ -127,6 +163,18 @@ class InquiryController extends Controller
                 'status' => 'error',
                 'message' => 'Inquiry not found'
             ], 404);
+        }
+        
+        $user = $request->user();
+        
+        // If user is staff, validate they own this inquiry
+        if ($user && $user->role === 'staff' && $user->staffProfile) {
+            if ($inquiry->staff_id !== $user->staffProfile->id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You are not authorized to update this inquiry.'
+                ], 403);
+            }
         }
         
         // Validate incoming request

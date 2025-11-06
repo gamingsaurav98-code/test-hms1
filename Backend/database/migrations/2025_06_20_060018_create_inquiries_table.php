@@ -16,8 +16,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->nullable();
             $table->string('phone');
-            $table->integer('seater')->nullable();
-            $table->foreignId('block_id');
+            $table->integer('seater_type')->nullable();
+            $table->foreignId('block_id')->nullable();
+            $table->foreignId('staff_id')->nullable()->constrained('staff')->onDelete('set null');
             $table->text('description')->nullable();
             $table->timestamps();
         });

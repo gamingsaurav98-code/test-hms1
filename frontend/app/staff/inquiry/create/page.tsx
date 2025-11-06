@@ -2,11 +2,9 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  inquiryApi, 
-  InquiryFormData,
-  ApiError,
-} from '@/lib/api/index';
+import { staffInquiryApi } from '@/lib/api/staff-inquiry.api';
+import { InquiryFormData } from '@/lib/api/types/inquiry.types';
+import { ApiError } from '@/lib/api/core';
 import { 
   FormField, 
   SubmitButton, 
@@ -14,7 +12,7 @@ import {
   SuccessToast,
 } from '@/components/ui';
 
-export default function CreateInquiry() {
+export default function StaffCreateInquiry() {
   const router = useRouter();
   const [formData, setFormData] = useState<InquiryFormData>({
     name: '',
@@ -27,12 +25,9 @@ export default function CreateInquiry() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
-  // Form handling logic
-  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === 'seater_type') {
-      // Only allow numbers and ensure value is within reasonable range
       const numValue = value ? parseInt(value) : 0;
       if (!isNaN(numValue) && numValue > 0) {
         setFormData({
@@ -48,11 +43,6 @@ export default function CreateInquiry() {
     }
   };
   
-  // Room seater options have been removed
-  // No helper functions needed for room selection
-  
-
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -67,7 +57,7 @@ export default function CreateInquiry() {
     
     try {
       console.log('Submitting data:', formData);
-      const response = await inquiryApi.createInquiry(formData);
+      const response = await staffInquiryApi.createInquiry(formData);
       console.log('Create response:', response);
       
       setSuccess('Inquiry created successfully!');
@@ -82,13 +72,12 @@ export default function CreateInquiry() {
       
       // Redirect after delay
       setTimeout(() => {
-        router.push('/admin/inquiry');
+        router.push('/staff/inquiry');
       }, 2000);
       
     } catch (error) {
       console.error('Error creating inquiry:', error);
       if (error instanceof ApiError && error.validation) {
-        // Show validation errors if available
         const validationMessages = Object.values(error.validation).flat();
         setError(validationMessages.join('\n'));
       } else if (error instanceof ApiError) {
@@ -218,7 +207,7 @@ export default function CreateInquiry() {
           {/* Form Actions */}
           <div className="flex justify-end items-center gap-3 pt-6 mt-6 border-t border-gray-200">
             <CancelButton 
-              onClick={() => router.push('/admin/inquiry')} 
+              onClick={() => router.push('/staff/inquiry')} 
               children="Cancel"
             />
             <SubmitButton 
@@ -232,6 +221,4 @@ export default function CreateInquiry() {
       </div>
     </div>
   );
-  
-  // No helper functions needed as room selection has been removed
 }

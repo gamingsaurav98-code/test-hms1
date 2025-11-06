@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Block;
 use App\Models\InquirySeater;
 use App\Models\Attachment;
+use App\Models\Staff;
 
 class Inquiry extends Model
 {
@@ -13,7 +14,8 @@ class Inquiry extends Model
         'name',
         'email',
         'phone',
-        'seater_type'
+        'seater_type',
+        'staff_id'
     ];
 
     protected $casts = [
@@ -29,9 +31,22 @@ class Inquiry extends Model
         'email',
         'phone',
         'seater_type',
+        'staff_id',
+        'staff',
         'created_at',
         'updated_at'
     ];
+
+    // Append relationships to JSON
+    protected $with = ['staff'];
+
+    /**
+     * Get the staff who created this inquiry
+     */
+    public function staff()
+    {
+        return $this->belongsTo(Staff::class);
+    }
 
     /**
      * Get the human-readable seater type

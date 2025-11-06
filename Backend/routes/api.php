@@ -117,6 +117,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('my-staff/notices', [NoticeController::class, 'getMyNotices']);
         Route::get('my-staff/notices/{id}', [NoticeController::class, 'getNotice']);
         
+        // Staff inquiry management (can create, view, and edit their own inquiries only)
+        Route::get('my-staff/inquiries', [InquiryController::class, 'index']);
+        Route::post('my-staff/inquiries', [InquiryController::class, 'store']);
+        Route::get('my-staff/inquiries/{id}', [InquiryController::class, 'show']);
+        Route::put('my-staff/inquiries/{id}', [InquiryController::class, 'update']);
+        
     });
     
     // =============================================================================
