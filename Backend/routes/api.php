@@ -143,8 +143,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         
         // User Management
         Route::apiResource('students', StudentController::class);
+        Route::post('students/{id}/toggle-status', [StudentController::class, 'toggleStatus']);
         Route::get('students/fields/metadata', [StudentController::class, 'getFields']);
         Route::apiResource('staff', StaffController::class);
+        Route::post('staff/{id}/toggle-status', [StaffController::class, 'toggleStatus']);
         Route::get('staff/fields/metadata', [StaffController::class, 'getFields']);
         
         // Financial Management

@@ -29,6 +29,7 @@ export default function StaffList() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [togglingStatusId, setTogglingStatusId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStaff = async () => {
@@ -161,6 +162,34 @@ export default function StaffList() {
       }
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleToggleStatus = async (staffId: string) => {
+    try {
+      setTogglingStatusId(staffId);
+      
+      // Toggle status using API
+      const response = await staffApi.toggleStaffStatus(staffId);
+      
+      // Update local state with new status
+      const updatedStaff = staff.map(staffMember => 
+        staffMember.id === staffId 
+          ? { ...staffMember, is_active: response.is_active }
+          : staffMember
+      );
+      
+      setStaff(updatedStaff);
+      setFilteredStaff(updatedStaff);
+    } catch (error) {
+      console.error('Error toggling staff status:', error);
+      if (error instanceof ApiError) {
+        setError(`Failed to update staff status: ${error.message}`);
+      } else {
+        setError('Failed to update staff status. Please try again.');
+      }
+    } finally {
+      setTogglingStatusId(null);
     }
   };
 
@@ -390,13 +419,42 @@ export default function StaffList() {
                         {staffMember.joining_date ? formatDate(staffMember.joining_date) : formatDate(staffMember.created_at)}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <ActionButtons
-                          viewUrl={`/admin/staff/${staffMember.id}`}
-                          editUrl={`/admin/staff/${staffMember.id}/edit`}
-                          onDelete={() => confirmDelete(staffMember.id)}
-                          isDeleting={isDeleting && staffToDelete === staffMember.id}
-                          style="compact"
-                        />
+                        <div className="flex items-center justify-end space-x-2">
+                          {/* Toggle Status Button */}
+                          <button
+                            onClick={() => handleToggleStatus(staffMember.id)}
+                            disabled={togglingStatusId === staffMember.id}
+                            className={`p-2 rounded-lg transition-colors ${
+                              staffMember.is_active
+                                ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                                : 'bg-green-50 text-green-600 hover:bg-green-100'
+                            } ${togglingStatusId === staffMember.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            title={staffMember.is_active ? 'Deactivate' : 'Activate'}
+                          >
+                            {togglingStatusId === staffMember.id ? (
+                              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : staffMember.is_active ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                              </svg>
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            )}
+                          </button>
+                          
+                          <ActionButtons
+                            viewUrl={`/admin/staff/${staffMember.id}`}
+                            editUrl={`/admin/staff/${staffMember.id}/edit`}
+                            onDelete={() => confirmDelete(staffMember.id)}
+                            isDeleting={isDeleting && staffToDelete === staffMember.id}
+                            style="compact"
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}

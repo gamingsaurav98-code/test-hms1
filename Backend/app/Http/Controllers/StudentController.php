@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use App\Models\StudentAmenities;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class StudentController extends Controller
 {
@@ -420,6 +422,44 @@ class StudentController extends Controller
         $student->delete();
         
         return response()->json(null, 204);
+    }
+
+    /**
+     * Toggle student active status
+     */
+    public function toggleStatus(string $id): JsonResponse
+    {
+        try {
+            $student = Student::findOrFail($id);
+            
+            // Store the old room_id before toggling
+            $oldRoomId = $student->room_id;
+            
+            // Toggle the is_active status
+            $student->is_active = !$student->is_active;
+            
+            // If student is being deactivated, remove room assignment
+            if (!$student->is_active && $oldRoomId) {
+                $student->room_id = null;
+                
+                // Log the room change for reference
+                \Log::info("Student {$student->id} deactivated - Room {$oldRoomId} assignment removed");
+            }
+            
+            $student->save();
+            
+            return response()->json([
+                'message' => 'Student status updated successfully',
+                'student' => $student->load(['amenities', 'financials', 'room']),
+                'is_active' => $student->is_active,
+                'room_removed' => !$student->is_active && $oldRoomId ? true : false
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to toggle student status',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
     
     /**

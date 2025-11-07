@@ -315,6 +315,20 @@ export const studentApi = {
     return handleResponse<void>(response);
   },
 
+  // Toggle student status (activate/deactivate)
+  async toggleStudentStatus(id: string): Promise<{message: string, student: StudentWithAmenities, is_active: boolean, room_removed?: boolean}> {
+    const response = await fetch(`${API_BASE_URL}/students/${id}/toggle-status`, {
+      method: 'POST',
+      headers: {
+        ...getAuthHeaders(),
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return handleResponse<{message: string, student: StudentWithAmenities, is_active: boolean, room_removed?: boolean}>(response);
+  },
+
   // Student-specific methods
   // Get current student's profile
   async getStudentProfile(): Promise<StudentWithAmenities> {

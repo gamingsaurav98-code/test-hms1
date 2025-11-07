@@ -116,7 +116,7 @@ export default function AdminDashboardPage() {
       ] = await Promise.all([
         fetchWithTimeout(() => studentApi.getStudents(1), { data: [], total: 0 }),
         fetchWithTimeout(() => staffApi.getStaff(1), { data: [], total: 0 }),
-        fetchWithTimeout(() => roomApi.getRooms(1), { data: [], total: 0 }),
+        fetchWithTimeout(() => roomApi.getRooms(1, { per_page: 1000 }), { data: [], total: 0 }), // Fetch all rooms for accurate stats
         fetchWithTimeout(() => incomeApi.getIncomes(1), { data: [] }),
         fetchWithTimeout(() => expenseApi.getExpenses(1), { data: [] }),
       ]);
@@ -205,9 +205,17 @@ export default function AdminDashboardPage() {
         return expenseDate.getMonth() === previousMonth && expenseDate.getFullYear() === previousYear;
       }).reduce((sum: number, expense: any) => sum + parseFloat(expense.amount || 0), 0) || 0;
 
-      // Calculate beds properly (total capacity = total beds)
+      // Calculate beds properly based on actual room occupancy
       const totalBeds = totalCapacity;
-      const occupiedBeds = studentsInHostelToday; // Students currently in hostel
+      
+      // Calculate occupied beds using the occupied_beds field from backend
+      // or by counting students in each room
+      const occupiedBeds = roomsData.data?.reduce((sum: number, room: any) => {
+        // Use occupied_beds if available, otherwise count students
+        const occupied = room.occupied_beds || room.students?.length || 0;
+        return sum + occupied;
+      }, 0) || 0;
+      
       const availableBeds = Math.max(0, totalBeds - occupiedBeds);
 
       // Staff calculations from real data

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { studentApi, type StudentWithAmenities } from '@/lib/api';
+import { roomApi } from '@/lib/api/room.api';
 import { ApiError } from '@/lib/api/core';
 import { 
   TableSkeleton, 
@@ -29,38 +30,49 @@ export default function Page() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [togglingStatusId, setTogglingStatusId] = useState<string | null>(null);
+  const [rooms, setRooms] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
         
-        // Get students data from API
-        const response = await studentApi.getStudents(currentPage);
-        console.log('API Response:', response); // Debug log to see API response
+        // Fetch both students and rooms data
+        const [studentsResponse, roomsResponse] = await Promise.all([
+          studentApi.getStudents(currentPage),
+          roomApi.getRooms(1, { per_page: 1000 }) // Fetch all rooms
+        ]);
+        
+        console.log('API Response:', studentsResponse); // Debug log to see API response
         
         // Check if we have data before setting state
-        if (response && response.data) {
-          setStudents(response.data);
-          setFilteredStudents(response.data);
-          setTotalPages(response.last_page || 1);
+        if (studentsResponse && studentsResponse.data) {
+          setStudents(studentsResponse.data);
+          setFilteredStudents(studentsResponse.data);
+          setTotalPages(studentsResponse.last_page || 1);
         } else {
           console.error('No data returned from API');
           setError('No student data available. The API may be unavailable.');
         }
+        
+        // Set rooms data
+        if (roomsResponse && roomsResponse.data) {
+          setRooms(roomsResponse.data);
+        }
       } catch (error) {
-        console.error('Error fetching students:', error);
+        console.error('Error fetching data:', error);
         if (error instanceof ApiError) {
-          setError(`Failed to load students: ${error.message}`);
+          setError(`Failed to load data: ${error.message}`);
         } else {
-          setError('Failed to load student data. Please try again.');
+          setError('Failed to load data. Please try again.');
         }
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchStudents();
+    fetchData();
   }, [currentPage]);
 
   // Apply filters when searchTerm or statusFilter changes
@@ -170,6 +182,45 @@ export default function Page() {
     }
   };
 
+  const handleToggleStatus = async (studentId: string) => {
+    try {
+      setTogglingStatusId(studentId);
+      
+      // Toggle status using API
+      const response = await studentApi.toggleStudentStatus(studentId);
+      
+      // Update local state with new status and room information
+      const updatedStudents = students.map(student => 
+        student.id === studentId 
+          ? { 
+              ...student, 
+              is_active: response.is_active,
+              room_id: response.student.room_id,
+              room: response.student.room
+            }
+          : student
+      );
+      
+      setStudents(updatedStudents);
+      setFilteredStudents(updatedStudents);
+      
+      // Show a success message if room was removed
+      if (response.room_removed) {
+        // You could add a toast notification here
+        console.log('Student deactivated and room assignment removed');
+      }
+    } catch (error) {
+      console.error('Error toggling student status:', error);
+      if (error instanceof ApiError) {
+        setError(`Failed to update student status: ${error.message}`);
+      } else {
+        setError('Failed to update student status. Please try again.');
+      }
+    } finally {
+      setTogglingStatusId(null);
+    }
+  };
+
   const getStatusBadge = (isActive: boolean) => {
     return isActive ? (
       <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
@@ -183,23 +234,18 @@ export default function Page() {
   };
 
   const getTotalAvailableBeds = () => {
-    // Calculate total available beds from vacant space in rooms
-    const uniqueRooms = students.reduce((acc, student) => {
-      if (student.room && !acc.some(r => r.id === student.room!.id)) {
-        acc.push(student.room);
-      }
-      return acc;
-    }, [] as any[]);
+    // Calculate total available beds from all rooms based on their capacity and occupied beds
+    let totalAvailable = 0;
     
-    let availableBeds = 0;
-    uniqueRooms.forEach(room => {
-      if (room.capacity) {
-        const studentsInRoom = students.filter(s => s.room_id === room.id).length;
-        availableBeds += Math.max(0, room.capacity - studentsInRoom);
-      }
+    rooms.forEach(room => {
+      const capacity = parseInt(String(room.capacity || 0));
+      // Use occupied_beds if available from backend, otherwise count students
+      const occupied = room.occupied_beds || students.filter(s => s.room_id === room.id && s.is_active).length;
+      const available = Math.max(0, capacity - occupied);
+      totalAvailable += available;
     });
     
-    return availableBeds;
+    return totalAvailable;
   };
 
   if (isLoading) {
@@ -415,13 +461,42 @@ export default function Page() {
                         {formatDate(student.created_at)}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <ActionButtons
-                          viewUrl={`/admin/student/${student.id}`}
-                          editUrl={`/admin/student/${student.id}/edit`}
-                          onDelete={() => confirmDelete(student.id)}
-                          isDeleting={isDeleting && studentToDelete === student.id}
-                          style="compact"
-                        />
+                        <div className="flex items-center justify-end space-x-2">
+                          {/* Toggle Status Button */}
+                          <button
+                            onClick={() => handleToggleStatus(student.id)}
+                            disabled={togglingStatusId === student.id}
+                            className={`p-2 rounded-lg transition-colors ${
+                              student.is_active
+                                ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                                : 'bg-green-50 text-green-600 hover:bg-green-100'
+                            } ${togglingStatusId === student.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            title={student.is_active ? 'Deactivate' : 'Activate'}
+                          >
+                            {togglingStatusId === student.id ? (
+                              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : student.is_active ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                              </svg>
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            )}
+                          </button>
+                          
+                          <ActionButtons
+                            viewUrl={`/admin/student/${student.id}`}
+                            editUrl={`/admin/student/${student.id}/edit`}
+                            onDelete={() => confirmDelete(student.id)}
+                            isDeleting={isDeleting && studentToDelete === student.id}
+                            style="compact"
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}

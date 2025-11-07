@@ -6,7 +6,7 @@ import { PaginatedResponse } from './core';
 // Room API functions
 export const roomApi = {
   // Get all rooms with pagination
-  async getRooms(page: number = 1, filters: {block_id?: string, has_vacancy?: boolean} = {}): Promise<PaginatedResponse<Room>> {
+  async getRooms(page: number = 1, filters: {block_id?: string, has_vacancy?: boolean, per_page?: number} = {}): Promise<PaginatedResponse<Room>> {
     // Build query string from filters
     let queryParams = new URLSearchParams();
     queryParams.append('page', page.toString());
@@ -17,6 +17,10 @@ export const roomApi = {
     
     if (filters.has_vacancy) {
       queryParams.append('has_vacancy', 'true');
+    }
+    
+    if (filters.per_page) {
+      queryParams.append('per_page', filters.per_page.toString());
     }
     
     const url = `${API_BASE_URL}/rooms?${queryParams.toString()}`;

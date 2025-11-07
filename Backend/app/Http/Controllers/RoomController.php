@@ -48,8 +48,9 @@ class RoomController extends Controller
                 $query->hasVacancy();
             }
 
-            // Get paginated rooms
-            $rooms = $query->paginate(10);
+            // Get paginated rooms with configurable per_page (default 10, max 1000)
+            $perPage = min((int)$request->input('per_page', 10), 1000);
+            $rooms = $query->paginate($perPage);
             
             // Calculate occupancy and actual status for each room
             foreach ($rooms as $room) {

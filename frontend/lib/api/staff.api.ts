@@ -411,6 +411,20 @@ export const staffApi = {
       throw new Error(error.message || 'Failed to delete staff member');
     }
   },
+
+  // Toggle staff status (activate/deactivate)
+  async toggleStaffStatus(id: string): Promise<{message: string, staff: StaffWithAmenities, is_active: boolean}> {
+    const response = await fetch(`${API_BASE_URL}/staff/${id}/toggle-status`, {
+      method: 'POST',
+      headers: {
+        ...getAuthHeaders(),
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return handleResponse<{message: string, staff: StaffWithAmenities, is_active: boolean}>(response);
+  },
   
   // Get staff fields metadata
   async getStaffFields(): Promise<any> {

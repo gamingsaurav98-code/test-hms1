@@ -421,6 +421,31 @@ class StaffController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Toggle staff active status
+     */
+    public function toggleStatus(string $id): JsonResponse
+    {
+        try {
+            $staff = Staff::findOrFail($id);
+            
+            // Toggle the is_active status
+            $staff->is_active = !$staff->is_active;
+            $staff->save();
+            
+            return response()->json([
+                'message' => 'Staff status updated successfully',
+                'staff' => $staff->load(['amenities', 'salaries']),
+                'is_active' => $staff->is_active
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to toggle staff status',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
     
     /**
      * Get fields metadata for API documentation/frontend
