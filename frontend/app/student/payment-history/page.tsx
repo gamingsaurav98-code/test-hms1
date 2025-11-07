@@ -3,17 +3,30 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { studentApi } from '@/lib/api/student.api';
+import { formatCurrency, formatDate } from '@/lib/utils';
 
 interface PaymentRecord {
   id: string;
-  amount: string;
-  income_date?: string;
+  amount: number;
+  income_date: string;
   payment_type?: {
     name: string;
   };
-  remark?: string;
+  paymentType?: {
+    name: string;
+  };
+  income_type?: {
+    title: string;
+  };
+  incomeType?: {
+    title: string;
+  };
+  received_amount?: number;
+  due_amount?: number;
+  payment_status?: 'paid' | 'partial';
+  title?: string;
+  description?: string;
   created_at: string;
-  student_id?: string;
 }
 
 export default function StudentPaymentHistoryPage() {
@@ -30,52 +43,42 @@ export default function StudentPaymentHistoryPage() {
     try {
       setLoading(true);
       
-      // Optimized API call with timeout
-      const fetchWithTimeout = async () => {
-        return await Promise.race([
-          studentApi.getStudentPayments(),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout after 3 seconds')), 3000)
-          )
-        ]);
-      };
-      
-      // Use student-specific payment history endpoint with timeout
-      const response = await fetchWithTimeout().catch(() => ({ data: [] }));
+      // Get student payment history from income records
+      const response = await studentApi.getStudentPayments();
       
       // Handle different response structures
       const paymentsData = Array.isArray(response) ? response : (response.data || []);
       
-      // Map to PaymentRecord format
-      const studentPayments: PaymentRecord[] = paymentsData.map((payment: any) => ({
-        id: payment.id,
-        amount: payment.amount?.toString() || '0',
-        income_date: payment.payment_date || payment.income_date,
-        payment_type: payment.payment_type,
-        remark: payment.remark,
-        created_at: payment.created_at,
-        student_id: payment.student_id,
-      }));
-      
-      setPayments(studentPayments);
-      setTotalPages(Math.ceil(studentPayments.length / 10)); // Assuming 10 per page
+      setPayments(paymentsData);
+      setTotalPages(Math.ceil(paymentsData.length / 10)); // Assuming 10 per page
     } catch (error) {
       console.error('Error fetching payment history:', error);
+      setPayments([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+  const getPaymentStatusClass = (status?: string) => {
+    switch (status) {
+      case 'paid':
+        return 'bg-green-100 text-green-800';
+      case 'partial':
+        return 'bg-amber-100 text-amber-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const formatAmount = (amount: string) => {
-    return `Rs.${parseFloat(amount).toLocaleString()}`;
+  const getPaymentStatusText = (status?: string) => {
+    switch (status) {
+      case 'paid':
+        return 'Paid';
+      case 'partial':
+        return 'Partial';
+      default:
+        return 'Completed';
+    }
   };
 
   if (loading) {
@@ -117,7 +120,7 @@ export default function StudentPaymentHistoryPage() {
             </div>
             <div className="ml-4">
               <p className="text-2xl font-bold text-gray-900">
-                {formatAmount(payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0).toString())}
+                Rs. {formatCurrency(payments.reduce((sum, payment) => sum + Number(payment.amount), 0))}
               </p>
               <p className="text-sm text-gray-600">Total Paid</p>
             </div>
@@ -147,7 +150,7 @@ export default function StudentPaymentHistoryPage() {
             </div>
             <div className="ml-4">
               <p className="text-2xl font-bold text-gray-900">
-                {payments.length > 0 ? formatAmount((payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0) / payments.length).toString()) : 'Rs.0'}
+                {payments.length > 0 ? `Rs. ${formatCurrency(payments.reduce((sum, payment) => sum + Number(payment.amount), 0) / payments.length)}` : 'Rs. 0'}
               </p>
               <p className="text-sm text-gray-600">Average Payment</p>
             </div>
@@ -178,8 +181,9 @@ export default function StudentPaymentHistoryPage() {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment For</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 </tr>
               </thead>
@@ -188,27 +192,37 @@ export default function StudentPaymentHistoryPage() {
                   <tr key={payment.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 font-medium">
-                        {formatDate(payment.income_date || payment.created_at)}
+                        {formatDate(payment.income_date)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-bold text-green-600">
-                        {formatAmount(payment.amount)}
+                        Rs. {formatCurrency(payment.amount)}
+                      </div>
+                      {payment.due_amount !== undefined && payment.due_amount > 0 && (
+                        <div className="text-xs text-red-500">
+                          Due: Rs. {formatCurrency(payment.due_amount)}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {payment.paymentType?.name || payment.payment_type?.name || 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {payment.payment_type?.name || 'N/A'}
+                        {payment.incomeType?.title || payment.income_type?.title || 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-600 max-w-xs truncate">
-                        {payment.remark || 'No remarks'}
+                        {payment.description || payment.title || '-'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Completed
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusClass(payment.payment_status)}`}>
+                        {getPaymentStatusText(payment.payment_status)}
                       </span>
                     </td>
                   </tr>

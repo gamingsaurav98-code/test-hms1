@@ -238,21 +238,23 @@ class StudentFinancialController extends Controller
                 return response()->json(['message' => 'Student record not found'], 404);
             }
 
-            $payments = StudentFinancial::where('student_id', $student->id)
-                ->with(['paymentType'])
+            // Get income records (fees collected by admin) for this student
+            $payments = \App\Models\Income::where('student_id', $student->id)
+                ->with(['paymentType', 'incomeType'])
                 ->select([
                     'id',
                     'amount',
-                    'payment_date',
+                    'income_date',
                     'payment_type_id',
-                    'remark',
-                    'created_at',
-                    'admission_fee',
-                    'form_fee',
-                    'security_deposit',
-                    'monthly_fee'
+                    'income_type_id',
+                    'received_amount',
+                    'due_amount',
+                    'title',
+                    'description',
+                    'payment_status',
+                    'created_at'
                 ])
-                ->orderBy('payment_date', 'desc')
+                ->orderBy('income_date', 'desc')
                 ->get();
 
             return response()->json([
