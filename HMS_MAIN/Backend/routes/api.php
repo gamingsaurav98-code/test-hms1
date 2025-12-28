@@ -24,9 +24,11 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffFinancialController;
 use App\Http\Controllers\StaffCheckInCheckOutController;
 use App\Http\Controllers\StudentCheckInCheckOutController;
-use App\Http\Controllers\StudentCheckoutRuleController;
+use App\Http\Controllers\Api\CheckoutRuleController;
 use App\Http\Controllers\StaffCheckoutRuleController;
+use App\Http\Controllers\StudentCheckoutRuleController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\SettingsController;
 
 // =============================================================================
 // PUBLIC ROUTES (No Authentication Required)
@@ -179,9 +181,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('expenses/{expenseId}/attachments/{attachmentId}', [ExpenseController::class, 'deleteAttachment']);
         
         // Salary Management
+        Route::get('salaries/statistics', [SalaryController::class, 'getSalaryStatistics']);
         Route::apiResource('salaries', SalaryController::class);
         Route::get('staff/{staffId}/salaries', [SalaryController::class, 'getStaffSalaries']);
-        Route::get('salaries/statistics', [SalaryController::class, 'getSalaryStatistics']);
         
         // Admin Check-in/Check-out Management
         Route::apiResource('student-checkincheckouts', StudentCheckInCheckOutController::class);
@@ -195,8 +197,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('staff-checkincheckouts/today/attendance', [StaffCheckInCheckOutController::class, 'getTodayAttendance']);
         
         // Checkout Rules Management
+        Route::apiResource('checkout-rules', CheckoutRuleController::class);
         Route::apiResource('student-checkout-rules', StudentCheckoutRuleController::class);
-        Route::get('student-checkout-rules/student/{student_id}', [StudentCheckoutRuleController::class, 'getStudentRules']);
         Route::post('student-checkout-rules/{id}/toggle-status', [StudentCheckoutRuleController::class, 'toggleStatus']);
         Route::get('student-checkout-rules/preview/{student_id}', [StudentCheckoutRuleController::class, 'getRulePreview']);
         
@@ -215,6 +217,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('notices-create/students', [NoticeController::class, 'getStudentsForNotice']);
         Route::get('notices-create/staff', [NoticeController::class, 'getStaffForNotice']);
         Route::get('notices-create/blocks', [NoticeController::class, 'getBlocksForNotice']);
+        Route::post('notices/{id}/send', [NoticeController::class, 'sendNotice']);
         
         // Complaint Management (Admin - Full Management)
         Route::apiResource('complains', ComplainController::class);
@@ -279,6 +282,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
         
         // Get staff payment history
         Route::get('/staff/{staffId}/history', [PaymentController::class, 'staffPaymentHistory']);
+    });
+    
+    // Settings routes
+    Route::prefix('settings')->group(function () {
+        Route::get('current-bs-time', [SettingsController::class, 'getCurrentBsTime']);
+        Route::get('date-toggle', [SettingsController::class, 'getDateToggle']);
+        Route::put('date-toggle', [SettingsController::class, 'updateDateToggle']);
+        Route::get('calendar-format', [SettingsController::class, 'getCalendarFormat']);
+        Route::put('calendar-format', [SettingsController::class, 'updateCalendarFormat']);
     });
     
 });

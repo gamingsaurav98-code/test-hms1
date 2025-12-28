@@ -20,17 +20,25 @@ class TestNoticeEmail extends Command
         $this->info("Testing notice email system...\n");
 
         try {
-            // Get first student with email
-            $student = Student::whereNotNull('email')->first();
+            $email = $recipient;
+            $studentName = 'Test Recipient';
 
-            if (!$student) {
-                $this->error('❌ No student with email found in database');
-                $this->info('Please create a student with an email address first.');
-                return 1;
+            if (!$recipient) {
+                // Get first student with email
+                $student = Student::whereNotNull('email')->first();
+
+                if (!$student) {
+                    $this->error('❌ No student with email found in database');
+                    $this->info('Please create a student with an email address first.');
+                    return 1;
+                }
+
+                $email = $student->email;
+                $studentName = $student->student_name;
             }
 
-            $this->info("Found student: " . $student->student_name);
-            $this->info("Email: " . $student->email . "\n");
+            $this->info("Sending to: " . $studentName);
+            $this->info("Email: " . $email . "\n");
 
             // Create a test notice
             $notice = Notice::create([
@@ -46,17 +54,17 @@ class TestNoticeEmail extends Command
 
             // Send email directly to verify
             $this->info("Sending notice email...");
-            Mail::to($student->email)->send(
+            Mail::to($email)->send(
                 new AdminNoticeCreated(
                     $notice,
-                    $student->student_name ?? 'Student',
-                    $student->email
+                    $studentName ?? 'Student',
+                    $email
                 )
             );
 
             $this->info("✅ Test notice email sent successfully!");
             $this->info("\nEmail Details:");
-            $this->info("  • Recipient: " . $student->email);
+            $this->info("  • Recipient: " . $email);
             $this->info("  • Notice: " . $notice->title);
             $this->info("  • Description: " . substr($notice->description, 0, 50) . "...");
             $this->info("\n✅ Check your email inbox (or Mailtrap) to verify the email was received.");

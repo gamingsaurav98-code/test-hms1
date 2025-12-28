@@ -12,15 +12,24 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - APP_ENV=local
       - DB_CONNECTION=mysql
       - DB_HOST=database
       - DB_PORT=3306
       - DB_DATABASE=hms_db
       - DB_USERNAME=hms_user
       - DB_PASSWORD=hms_password
+      - MAIL_MAILER=smtp
+      - MAIL_HOST=smtp.gmail.com
+      - MAIL_PORT=587
+      - MAIL_USERNAME=tetre0173@gmail.com
+      - MAIL_PASSWORD=btjzhsvxfcfurnyc
+      - MAIL_ENCRYPTION=tls
+      - MAIL_FROM_ADDRESS=tetre0173@gmail.com
+      - MAIL_FROM_NAME=HMS System
+      - TZ=Asia/Kathmandu
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     networks:
       - hms_network
 
@@ -39,6 +48,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
+      - DOCKER_ENV=true
     networks:
       - hms_network
 
@@ -47,6 +57,7 @@ services:
     image: mysql:8.0
     container_name: hms_database
     restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password --bind-address=0.0.0.0 --ssl=0
     environment:
       - MYSQL_DATABASE=hms_db
       - MYSQL_USER=hms_user
@@ -56,6 +67,10 @@ services:
       - mysql_data:/var/lib/mysql
     ports:
       - "3308:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      timeout: 20s
+      retries: 10
     networks:
       - hms_network
 
@@ -71,6 +86,31 @@ services:
       - PMA_PORT=3306
     depends_on:
       - database
+    networks:
+      - hms_network
+
+  # Cron service for Laravel scheduler
+  cron:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: hms_cron
+    restart: unless-stopped
+    volumes:
+      - ./Backend:/var/www/html
+      - ./Backend/vendor:/var/www/html/vendor
+    environment:
+      - TZ=Asia/Kathmandu
+    command: >
+      sh -c "
+      while true; do
+        cd /var/www/html && php artisan schedule:run
+        sleep 60
+      done
+      "
+    depends_on:
+      - database
+      - backend
     networks:
       - hms_network
 

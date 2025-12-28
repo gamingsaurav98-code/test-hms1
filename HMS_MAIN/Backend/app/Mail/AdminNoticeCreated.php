@@ -23,6 +23,7 @@ class AdminNoticeCreated extends Mailable
     {
         return new Envelope(
             subject: 'Important Notice from Administration',
+            to: [$this->recipientEmail], // Explicitly set TO address
         );
     }
 

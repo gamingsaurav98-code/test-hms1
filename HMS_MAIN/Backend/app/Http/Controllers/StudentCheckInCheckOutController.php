@@ -122,6 +122,8 @@ class StudentCheckInCheckOutController extends Controller
                 'date',
                 'checkin_time',
                 'checkout_time',
+                'requested_checkin_time',
+                'requested_checkout_time',
                 'estimated_checkin_date',
                 'remarks'
             ]);
@@ -487,47 +489,6 @@ class StudentCheckInCheckOutController extends Controller
     }
 
     /**
-     * Approve checkout request
-     */
-    public function approveCheckout(Request $request, string $id)
-    {
-        try {
-            $record = StudentCheckInCheckOut::find($id);
-            if (!$record) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Check-in/check-out record not found'
-                ], 404);
-            }
-
-            // Update record to approved status
-            $record->update([
-                'status' => 'approved'
-            ]);
-
-            // If checkout time is not set, set it now
-            if (!$record->checkout_time) {
-                $record->update([
-                    'checkout_time' => Carbon::now()
-                ]);
-            }
-
-            $record->load(['student.room.block', 'block']);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Checkout request approved successfully',
-                'data' => $record
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to approve checkout request: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
      * Decline checkout request
      */
     public function declineCheckout(Request $request, string $id)
@@ -595,8 +556,9 @@ class StudentCheckInCheckOutController extends Controller
             }
 
             $records = StudentCheckInCheckOut::where('student_id', $student->id)
-                ->with(['student.room.block', 'block', 'checkoutRule'])
-                ->orderByRaw('GREATEST(COALESCE(checkout_time, "1970-01-01"), COALESCE(checkin_time, "1970-01-01"), created_at) DESC')
+                ->with(['block', 'checkoutRule'])
+                ->orderBy('date', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             return response()->json([
@@ -686,6 +648,75 @@ class StudentCheckInCheckOutController extends Controller
                 'status' => 'error',
                 'message' => 'Failed to fetch check-in/check-out record'
             ], 500);
+        }
+    }
+
+    /**
+     * Approve checkout request with deduction calculation
+     */
+    public function approveCheckout(Request $request, string $id)
+    {
+        try {
+            $record = StudentCheckInCheckOut::find($id);
+            if (!$record) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Check-in/check-out record not found'
+                ], 404);
+            }
+
+            if ($record->status !== 'pending') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Record is not in pending status'
+                ], 422);
+            }
+
+            // Use the deduction service to calculate and apply deductions
+            // Calculate duration based on estimated checkin date
+            if ($record->estimated_checkin_date) {
+                $checkoutDate = \Carbon\Carbon::parse($record->date);
+                $checkinDate = \Carbon\Carbon::parse($record->estimated_checkin_date);
+                $record->checkout_duration = $checkoutDate->diffInDays($checkinDate);
+                $record->save();
+            }
+            
+            $service = app(\App\Services\StudentCheckoutDeductionService::class);
+            
+            if ($service->applyDeduction($record)) {
+                // Set checkout time if not set
+                if (!$record->checkout_time) {
+                    $record->checkout_time = now();
+                }
+                if (!$record->requested_checkout_time) {
+                    $record->requested_checkout_time = $record->checkout_time;
+                }
+                if (!$record->requested_checkin_time && $record->estimated_checkin_date) {
+                    $record->requested_checkin_time = $record->estimated_checkin_date . ' 00:00:00'; // Assuming time
+                }
+                $record->save();
+                
+                $record->load(['student.room.block', 'block']);
+                
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Checkout request approved with deduction applied',
+                    'data' => $record,
+                    'deduction_amount' => $record->deduction_amount,
+                    'adjusted_fee' => $record->adjusted_fee,
+                    'rule_applied' => $record->rule_applied,
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to apply deduction'
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to approve checkout request: ' . $e->getMessage()
+            ], 422);
         }
     }
 }

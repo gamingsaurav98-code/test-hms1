@@ -3,7 +3,7 @@
 namespace App\Observers;
 
 use App\Models\StudentCheckInCheckOut;
-use App\Mail\CheckInCheckOutApproved;
+use App\Mail\StudentCheckInCheckOutApproved;
 use Illuminate\Support\Facades\Mail;
 
 class StudentCheckInCheckOutObserver
@@ -19,9 +19,21 @@ class StudentCheckInCheckOutObserver
             try {
                 $status = $checkInOut->status;
                 if (in_array($status, ['approved', 'rejected'])) {
-                    Mail::to($checkInOut->student->email)->send(
-                        new CheckInCheckOutApproved($checkInOut, $status)
-                    );
+                    // Load student relationship if not already loaded
+                    if (!$checkInOut->relationLoaded('student')) {
+                        $checkInOut->load('student');
+                    }
+                    
+                    if ($checkInOut->student && $checkInOut->student->email) {
+                        Mail::to($checkInOut->student->email)->send(
+                            new StudentCheckInCheckOutApproved(
+                                $checkInOut,
+                                $checkInOut->student->student_name ?? $checkInOut->student->name ?? 'Student',
+                                $checkInOut->student->email,
+                                $status
+                            )
+                        );
+                    }
                 }
             } catch (\Exception $e) {
                 \Log::error('Failed to send CheckInCheckOut status email: ' . $e->getMessage());

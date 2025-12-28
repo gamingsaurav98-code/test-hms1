@@ -14,10 +14,28 @@ class StudentCheckoutRule extends Model
         'is_active',
         'active_after_days',
         'percentage',
+        'name',
+        'description',
+        'deduction_type',
+        'deduction_value',
+        'min_days',
+        'max_days',
+        'priority'
     ];
+
+    protected $casts = [
+        'deduction_value' => 'decimal:2',
+        'is_active' => 'boolean',
+        'min_days' => 'integer',
+        'max_days' => 'integer',
+        'priority' => 'integer',
+        'percentage' => 'integer',
+        'active_after_days' => 'integer',
+    ];
+
     public function student()
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Student::class)->nullable();
     }
     
     public function checkoutFinancials()

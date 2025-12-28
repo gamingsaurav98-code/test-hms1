@@ -23,7 +23,9 @@ return [
         'http://localhost:3000', 
         'http://frontend:3000',
         'http://host.docker.internal:3000',
-        'http://127.0.0.1:3000'
+        'http://127.0.0.1:3000',
+        'http://localhost:3000/',
+        'http://127.0.0.1:3000/'
     ],
 
     'allowed_origins_patterns' => [],
@@ -34,6 +36,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];

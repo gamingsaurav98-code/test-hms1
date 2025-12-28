@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Student;
 use App\Models\Block;
-use App\Models\StudentCheckoutRule;
+use App\Models\CheckoutRule;
 use App\Models\StudentCheckoutFinancial;
 
 class StudentCheckInCheckOut extends Model
@@ -22,7 +22,16 @@ class StudentCheckInCheckOut extends Model
         'remarks',
         'status',
         'checkout_rule_id',
-        'block_id'
+        'block_id',
+        'deduction_amount',
+        'rule_applied',
+        'adjusted_fee'
+    ];
+
+    protected $casts = [
+        'deduction_amount' => 'decimal:2',
+        'adjusted_fee' => 'decimal:2',
+        'checkout_duration' => 'integer',
     ];
     public function student()
     {
@@ -36,7 +45,7 @@ class StudentCheckInCheckOut extends Model
     
     public function checkoutRule()
     {
-        return $this->belongsTo(StudentCheckoutRule::class);
+        return $this->belongsTo(CheckoutRule::class);
     }
     
     public function checkoutFinancials()

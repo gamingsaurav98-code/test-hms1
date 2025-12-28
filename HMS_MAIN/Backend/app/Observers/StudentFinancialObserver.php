@@ -13,13 +13,9 @@ class StudentFinancialObserver
      */
     public function created(StudentFinancial $studentFinancial): void
     {
-        try {
-            Mail::to($studentFinancial->student->email)->send(
-                new StudentFinancialUpdate($studentFinancial, 'created')
-            );
-        } catch (\Exception $e) {
-            \Log::error('Failed to send StudentFinancial created email: ' . $e->getMessage());
-        }
+        // Skip sending emails for newly created financial records
+        // Only send emails for updates to avoid spam during student creation
+        return;
     }
 
     /**
@@ -28,8 +24,25 @@ class StudentFinancialObserver
     public function updated(StudentFinancial $studentFinancial): void
     {
         try {
-            Mail::to($studentFinancial->student->email)->send(
-                new StudentFinancialUpdate($studentFinancial, 'updated')
+            $student = $studentFinancial->student ?? null;
+            if (!$student || empty($student->email)) {
+                // No valid student or email to send to
+                return;
+            }
+
+            $studentName = $student->student_name ?? $student->name ?? '';
+            $studentEmail = $student->email ?? '';
+
+            $studentName = is_string($studentName) ? $studentName : (string) $studentName;
+            $studentEmail = is_string($studentEmail) ? $studentEmail : (string) $studentEmail;
+
+            Mail::to($studentEmail)->send(
+                new StudentFinancialUpdate(
+                    $studentFinancial,
+                    $studentName,
+                    $studentEmail,
+                    'updated'
+                )
             );
         } catch (\Exception $e) {
             \Log::error('Failed to send StudentFinancial updated email: ' . $e->getMessage());

@@ -3,7 +3,7 @@ set -e
 
 # Wait for database to be ready
 echo "Waiting for database to be ready..."
-until php artisan db:monitor 2>/dev/null; do
+until mysql -h database -u hms_user -phms_password --ssl=0 -e "SELECT 1;" hms_db 2>/dev/null; do
   echo "Database is unavailable - sleeping"
   sleep 1  # Reduced from 2 seconds to 1 second for faster startup
 done

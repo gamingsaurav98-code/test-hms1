@@ -58,6 +58,32 @@ class Complain extends Model
     }
     
     /**
+     * Get the email address for this complaint (from student or staff)
+     */
+    public function getEmailAttribute()
+    {
+        if ($this->student_id) {
+            return $this->student->email;
+        } elseif ($this->staff_id) {
+            return $this->staff->email;
+        }
+        return null;
+    }
+    
+    /**
+     * Get the name for this complaint (from student or staff)
+     */
+    public function getNameAttribute()
+    {
+        if ($this->student_id) {
+            return $this->student->student_name;
+        } elseif ($this->staff_id) {
+            return $this->staff->staff_name;
+        }
+        return 'Unknown';
+    }
+    
+    /**
      * Get unread chat messages for this complaint
      */
     public function unreadChats()

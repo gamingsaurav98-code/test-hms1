@@ -15,7 +15,12 @@ class ComplainObserver
     {
         try {
             Mail::to($complain->email)->send(
-                new ComplaintUpdate($complain, 'created')
+                new ComplaintUpdate(
+                    $complain,
+                    $complain->name,
+                    $complain->email,
+                    'created'
+                )
             );
         } catch (\Exception $e) {
             \Log::error('Failed to send Complaint created email: ' . $e->getMessage());
@@ -41,7 +46,12 @@ class ComplainObserver
             }
 
             Mail::to($complain->email)->send(
-                new ComplaintUpdate($complain, $updateType)
+                new ComplaintUpdate(
+                    $complain,
+                    $complain->name,
+                    $complain->email,
+                    $updateType
+                )
             );
         } catch (\Exception $e) {
             \Log::error('Failed to send Complaint updated email: ' . $e->getMessage());

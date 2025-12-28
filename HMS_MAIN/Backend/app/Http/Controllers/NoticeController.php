@@ -889,4 +889,37 @@ class NoticeController extends Controller
             return response()->json(['message' => 'Failed to fetch notice: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Send notice emails to all students
+     */
+    public function sendNotice(Request $request, string $id)
+    {
+        $notice = Notice::findOrFail($id);
+
+        // Validate request
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            // Dispatch job to send emails in background respecting target_type
+            \App\Jobs\SendNoticeEmails::dispatch($notice);
+
+            return response()->json([
+                'message' => 'Notice emails are being sent to targeted recipients in the background',
+                'notice_id' => $notice->id
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to queue notice emails: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

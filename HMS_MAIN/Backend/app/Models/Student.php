@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Notifications\Notifiable;
 use App\Models\User;
 use App\Models\Room;
 use App\Models\StudentCheckInCheckOut;
@@ -20,6 +22,7 @@ use App\Models\Attachment;
 
 class Student extends Model
 {
+    use HasFactory, Notifiable;
     
     protected $fillable = [   
         'student_name',
@@ -66,6 +69,7 @@ class Student extends Model
         'registration_form_image',
         'is_active',
         'is_existing_student',
+        'monthly_fee',
     ];
     
     // protected $appends = ['monthly_fee']; // Removed to prevent N+1 queries
@@ -198,19 +202,25 @@ class Student extends Model
     }
     
     /**
-     * Get the student's monthly fee from their latest financial record
+     * Get the student's monthly fee from the direct column or latest financial record
      *
      * @return string|null
      */
     public function getMonthlyFeeAttribute()
     {
+        // First check if monthly_fee is set directly on the student record
+        if (!is_null($this->attributes['monthly_fee'] ?? null)) {
+            return $this->attributes['monthly_fee'];
+        }
+
+        // Fallback to financial records if direct column is not set
         // If the financials relationship is already loaded
         if ($this->relationLoaded('financials') && $this->financials->count() > 0) {
             // Get the latest financial record based on created_at
             $latestFinancial = $this->financials->sortByDesc('created_at')->first();
             return $latestFinancial ? $latestFinancial->monthly_fee : null;
         }
-        
+
         // If financials is not loaded, query it
         $latestFinancial = $this->financials()->latest('created_at')->first();
         return $latestFinancial ? $latestFinancial->monthly_fee : null;

@@ -23,7 +23,7 @@ class StudentCheckoutRuleController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = StudentCheckoutRule::with(['student.room.block']);
+            $query = StudentCheckoutRule::query();
 
             // Filter by student
             if ($request->has('student_id')) {
@@ -46,12 +46,37 @@ class StudentCheckoutRuleController extends Controller
             // Get all records without pagination if requested
             if ($request->has('all') && $request->all === 'true') {
                 $rules = $query->orderBy('created_at', 'desc')->get();
+                
+                // Load relationships conditionally for each rule
+                $rules->each(function ($rule) {
+                    if ($rule->student_id) {
+                        $rule->load(['student.room.block']);
+                    }
+                });
+
+                // Return in paginated format for consistency
+                return response()->json([
+                    'data' => $rules,
+                    'current_page' => 1,
+                    'per_page' => $rules->count(),
+                    'total' => $rules->count(),
+                    'last_page' => 1,
+                    'from' => $rules->count() > 0 ? 1 : 0,
+                    'to' => $rules->count()
+                ]);
             } else {
                 $perPage = $request->has('per_page') ? (int)$request->per_page : 15;
                 $rules = $query->orderBy('created_at', 'desc')->paginate($perPage);
-            }
+                
+                // Load relationships conditionally for each rule in the collection
+                $rules->getCollection()->each(function ($rule) {
+                    if ($rule->student_id) {
+                        $rule->load(['student.room.block']);
+                    }
+                });
 
-            return response()->json($rules);
+                return response()->json($rules);
+            }
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -66,10 +91,17 @@ class StudentCheckoutRuleController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'student_id' => 'required|exists:students,id',
+            'student_id' => 'nullable|exists:students,id',
             'is_active' => 'nullable|boolean',
             'active_after_days' => 'nullable|integer|min:0',
             'percentage' => 'nullable|numeric|min:0|max:100',
+            'name' => 'nullable|string',
+            'description' => 'nullable|string',
+            'deduction_type' => 'nullable|in:percentage,fixed',
+            'deduction_value' => 'required|numeric|min:0',
+            'min_days' => 'nullable|integer|min:0',
+            'max_days' => 'nullable|integer|min:0',
+            'priority' => 'nullable|integer|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -81,15 +113,25 @@ class StudentCheckoutRuleController extends Controller
         }
 
         try {
-            // Check if student already has an active rule
-            $existingRule = StudentCheckoutRule::where('student_id', $request->student_id)
-                ->where('is_active', true)
-                ->first();
+            // Check if there's already an active rule for this student (or universal if student_id is null)
+            $query = StudentCheckoutRule::where('is_active', true);
+            
+            if ($request->student_id) {
+                // For specific student rules, check if student has any active rule
+                $query->where('student_id', $request->student_id);
+            } else {
+                // For universal rules, check if there's already a universal active rule
+                $query->whereNull('student_id');
+            }
+            
+            $existingRule = $query->first();
 
             if ($existingRule) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Student already has an active checkout rule. Please deactivate the existing rule first.'
+                    'message' => $request->student_id 
+                        ? 'Student already has an active checkout rule. Please deactivate the existing rule first.'
+                        : 'There is already an active universal checkout rule. Please deactivate it first.'
                 ], 422);
             }
 
@@ -98,12 +140,25 @@ class StudentCheckoutRuleController extends Controller
                 'is_active' => $request->is_active ?? true,
                 'active_after_days' => $request->active_after_days,
                 'percentage' => $request->percentage,
+                'name' => $request->name,
+                'description' => $request->description,
+                'deduction_type' => $request->deduction_type ?? 'percentage',
+                'deduction_value' => $request->deduction_value,
+                'min_days' => $request->min_days,
+                'max_days' => $request->max_days,
+                'priority' => $request->priority ?? 1,
             ]);
+
+            // Load relationships conditionally
+            $relationships = [];
+            if ($rule->student_id) {
+                $relationships = ['student.room.block'];
+            }
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Checkout rule created successfully',
-                'data' => $rule->load(['student.room.block'])
+                'data' => $rule->load($relationships)
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -113,17 +168,10 @@ class StudentCheckoutRuleController extends Controller
         }
     }
 
-    /**
-     * Display the specified checkout rule.
-     */
     public function show(string $id)
     {
         try {
-            $rule = StudentCheckoutRule::with([
-                'student.room.block', 
-                'checkoutFinancials.checkInCheckOut',
-                'checkInCheckOuts'
-            ])->find($id);
+            $rule = StudentCheckoutRule::find($id);
 
             if (!$rule) {
                 return response()->json([
@@ -131,6 +179,18 @@ class StudentCheckoutRuleController extends Controller
                     'message' => 'Checkout rule not found'
                 ], 404);
             }
+
+            // Load relationships conditionally
+            $relationships = [
+                'checkoutFinancials.checkInCheckOut',
+                'checkInCheckOuts'
+            ];
+            
+            if ($rule->student_id) {
+                $relationships[] = 'student.room.block';
+            }
+
+            $rule->load($relationships);
 
             return response()->json([
                 'status' => 'success',
@@ -153,6 +213,13 @@ class StudentCheckoutRuleController extends Controller
             'is_active' => 'nullable|boolean',
             'active_after_days' => 'nullable|integer|min:0',
             'percentage' => 'nullable|numeric|min:0|max:100',
+            'name' => 'nullable|string',
+            'description' => 'nullable|string',
+            'deduction_type' => 'nullable|in:percentage,fixed',
+            'deduction_value' => 'nullable|numeric|min:0',
+            'min_days' => 'nullable|integer|min:0',
+            'max_days' => 'nullable|integer|min:0',
+            'priority' => 'nullable|integer|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -172,17 +239,26 @@ class StudentCheckoutRuleController extends Controller
                 ], 404);
             }
 
-            // If activating this rule, check if student has another active rule
+            // If activating this rule, check if there's another active rule for the same scope
             if ($request->has('is_active') && $request->is_active) {
-                $existingActiveRule = StudentCheckoutRule::where('student_id', $rule->student_id)
-                    ->where('is_active', true)
-                    ->where('id', '!=', $id)
-                    ->first();
+                $query = StudentCheckoutRule::where('is_active', true)->where('id', '!=', $id);
+                
+                if ($rule->student_id) {
+                    // For specific student rules, check if student has another active rule
+                    $query->where('student_id', $rule->student_id);
+                } else {
+                    // For universal rules, check if there's another universal active rule
+                    $query->whereNull('student_id');
+                }
+                
+                $existingActiveRule = $query->first();
 
                 if ($existingActiveRule) {
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'Student already has another active checkout rule. Please deactivate it first.'
+                        'message' => $rule->student_id 
+                            ? 'Student already has another active checkout rule. Please deactivate it first.'
+                            : 'There is already another active universal checkout rule. Please deactivate it first.'
                     ], 422);
                 }
             }
@@ -190,13 +266,26 @@ class StudentCheckoutRuleController extends Controller
             $rule->update($request->only([
                 'is_active',
                 'active_after_days',
-                'percentage'
+                'percentage',
+                'name',
+                'description',
+                'deduction_type',
+                'deduction_value',
+                'min_days',
+                'max_days',
+                'priority'
             ]));
+
+            // Load relationships conditionally
+            $relationships = [];
+            if ($rule->student_id) {
+                $relationships = ['student.room.block'];
+            }
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Checkout rule updated successfully',
-                'data' => $rule->load(['student.room.block'])
+                'data' => $rule->load($relationships)
             ]);
         } catch (\Exception $e) {
             return response()->json([

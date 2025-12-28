@@ -90,12 +90,36 @@
 
             <div class="details">
                 <div class="detail-row">
-                    <span class="label">Request Type:</span>
-                    <span>{{ ucfirst($record->type ?? 'N/A') }}</span>
+                    <span class="label">Check-out Date:</span>
+                    <span>{{ $record->date ?? 'N/A' }}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="label">Requested Date:</span>
-                    <span>{{ optional($record->date)->format('M d, Y') ?? 'N/A' }}</span>
+                    <span class="label">Check-out Time:</span>
+                    <span>{{ $record->checkout_time ?? $record->requested_checkout_time ?? 'N/A' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Check-in Time:</span>
+                    <span>{{ $record->checkin_time ?? $record->estimated_checkin_date ?? 'N/A' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Duration:</span>
+                    <span>{{ $record->checkout_duration ?? 0 }} days</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Rule Applied:</span>
+                    <span>{{ $record->rule_applied ?? 'None' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Monthly Fee:</span>
+                    <span>Rs. {{ number_format($record->student->monthly_fee ?? 0, 2) }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Deduction Amount:</span>
+                    <span>Rs. {{ number_format($record->deduction_amount ?? 0, 2) }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Adjusted Fee:</span>
+                    <span>Rs. {{ number_format($record->adjusted_fee ?? ($record->student->monthly_fee ?? 0), 2) }}</span>
                 </div>
                 <div class="detail-row">
                     <span class="label">Status:</span>
