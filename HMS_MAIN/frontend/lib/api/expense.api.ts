@@ -1,4 +1,4 @@
-import { API_BASE_URL, handleResponse, PaginatedResponse } from './core';
+import { API_BASE_URL, handleResponse, apiFetch, PaginatedResponse } from './core';
 import { getAuthHeaders, getAuthHeadersForFormData } from './auth.api';
 import { Expense, ExpenseFormData, ExpenseCategory, ExpenseCategoryFormData } from './types/expense.types';
 
@@ -6,7 +6,7 @@ import { Expense, ExpenseFormData, ExpenseCategory, ExpenseCategoryFormData } fr
 export const expenseApi = {
   // Get all expenses with pagination
   async getExpenses(page: number = 1): Promise<PaginatedResponse<Expense>> {
-    const response = await fetch(`${API_BASE_URL}/expenses?page=${page}`, {
+    const response = await apiFetch(`${API_BASE_URL}/expenses?page=${page}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -16,7 +16,7 @@ export const expenseApi = {
 
   // Get expenses by category
   async getExpensesByCategory(categoryId: string, page: number = 1): Promise<PaginatedResponse<Expense>> {
-    const response = await fetch(`${API_BASE_URL}/expenses/category/${categoryId}?page=${page}`, {
+    const response = await apiFetch(`${API_BASE_URL}/expenses/category/${categoryId}?page=${page}`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -30,7 +30,7 @@ export const expenseApi = {
 
   // Get expenses by date range
   async getExpensesByDateRange(startDate: string, endDate: string, page: number = 1): Promise<PaginatedResponse<Expense>> {
-    const response = await fetch(`${API_BASE_URL}/expenses/date-range?start_date=${startDate}&end_date=${endDate}&page=${page}`, {
+    const response = await apiFetch(`${API_BASE_URL}/expenses/date-range?start_date=${startDate}&end_date=${endDate}&page=${page}`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -44,7 +44,7 @@ export const expenseApi = {
 
   // Get a single expense by ID
   async getExpense(id: string): Promise<Expense> {
-    const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/expenses/${id}`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -109,7 +109,7 @@ export const expenseApi = {
       formData.append('purchases', JSON.stringify(data.purchases));
     }
 
-    const response = await fetch(`${API_BASE_URL}/expenses`, {
+    const response = await apiFetch(`${API_BASE_URL}/expenses`, {
       method: 'POST',
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -200,7 +200,7 @@ export const expenseApi = {
     console.log('Sending update request to:', `${API_BASE_URL}/expenses/${id}`);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+      const response = await apiFetch(`${API_BASE_URL}/expenses/${id}`, {
         method: 'POST', // Using POST with _method override for file uploads
         headers: getAuthHeadersForFormData(),
         body: formData,
@@ -215,7 +215,7 @@ export const expenseApi = {
 
   // Delete an expense
   async deleteExpense(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/expenses/${id}`, {
       method: 'DELETE',
       headers: {
         ...getAuthHeaders(),
@@ -232,7 +232,7 @@ export const expenseApi = {
 export const expenseCategoryApi = {
   // Get all expense categories
   async getExpenseCategories(): Promise<ExpenseCategory[]> {
-    const response = await fetch(`${API_BASE_URL}/expense-categories`, {
+    const response = await apiFetch(`${API_BASE_URL}/expense-categories`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -246,7 +246,7 @@ export const expenseCategoryApi = {
 
   // Get a single expense category by ID
   async getExpenseCategory(id: string): Promise<ExpenseCategory> {
-    const response = await fetch(`${API_BASE_URL}/expense-categories/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/expense-categories/${id}`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -260,7 +260,7 @@ export const expenseCategoryApi = {
 
   // Create a new expense category
   async createExpenseCategory(data: ExpenseCategoryFormData): Promise<ExpenseCategory> {
-    const response = await fetch(`${API_BASE_URL}/expense-categories`, {
+    const response = await apiFetch(`${API_BASE_URL}/expense-categories`, {
       method: 'POST',
       headers: {
         ...getAuthHeaders(),
@@ -275,7 +275,7 @@ export const expenseCategoryApi = {
 
   // Update an existing expense category
   async updateExpenseCategory(id: string, data: ExpenseCategoryFormData): Promise<ExpenseCategory> {
-    const response = await fetch(`${API_BASE_URL}/expense-categories/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/expense-categories/${id}`, {
       method: 'PUT',
       headers: {
         ...getAuthHeaders(),
@@ -290,7 +290,7 @@ export const expenseCategoryApi = {
 
   // Delete an expense category
   async deleteExpenseCategory(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/expense-categories/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/expense-categories/${id}`, {
       method: 'DELETE',
       headers: {
         ...getAuthHeaders(),

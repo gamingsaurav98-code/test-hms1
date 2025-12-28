@@ -1,4 +1,4 @@
-import { API_BASE_URL, handleResponse } from './core';
+import { API_BASE_URL, handleResponse, apiFetch } from './core';
 import { Supplier, SupplierFormData } from './types';
 import { PaginatedResponse } from './core';
 import { getAuthHeaders } from './auth.api';
@@ -8,7 +8,7 @@ export const supplierApi = {
   // Get all suppliers with pagination
   async getSuppliers(page: number = 1): Promise<PaginatedResponse<Supplier>> {
     const url = `${API_BASE_URL}/suppliers?page=${page}`;
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -26,14 +26,16 @@ export const supplierApi = {
       current_page: 1,
       last_page: 1,
       per_page: apiResponse.data.length,
-      total: apiResponse.data.length
+      total: apiResponse.data.length,
+      from: 1,
+      to: apiResponse.data.length,
     };
   },
 
   // Get a single supplier by ID
   async getSupplier(id: string): Promise<Supplier> {
     const url = `${API_BASE_URL}/suppliers/${id}`;
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -48,7 +50,7 @@ export const supplierApi = {
 
   // Create a new supplier
   async createSupplier(data: SupplierFormData): Promise<Supplier> {
-    const response = await fetch(`${API_BASE_URL}/suppliers`, {
+    const response = await apiFetch(`${API_BASE_URL}/suppliers`, {
       method: 'POST',
       headers: {
         ...getAuthHeaders(),
@@ -64,7 +66,7 @@ export const supplierApi = {
 
   // Update an existing supplier
   async updateSupplier(id: string, data: SupplierFormData): Promise<Supplier> {
-    const response = await fetch(`${API_BASE_URL}/suppliers/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/suppliers/${id}`, {
       method: 'PUT',
       headers: {
         ...getAuthHeaders(),
@@ -80,7 +82,7 @@ export const supplierApi = {
 
   // Delete a supplier
   async deleteSupplier(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/suppliers/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/suppliers/${id}`, {
       method: 'DELETE',
       headers: {
         ...getAuthHeaders(),
@@ -100,7 +102,7 @@ export const supplierApi = {
     formData.append('name', name);
     formData.append('type', type);
     
-    const response = await fetch(`${API_BASE_URL}/suppliers/${id}/attachment`, {
+    const response = await apiFetch(`${API_BASE_URL}/suppliers/${id}/attachment`, {
       method: 'POST',
       headers: {
         ...getAuthHeaders(),
@@ -128,7 +130,7 @@ export const supplierApi = {
       formData.append('type', data.type);
     }
     
-    const response = await fetch(`${API_BASE_URL}/suppliers/${supplierId}/attachment/${attachmentId}`, {
+    const response = await apiFetch(`${API_BASE_URL}/suppliers/${supplierId}/attachment/${attachmentId}`, {
       method: 'POST',
       headers: {
         ...getAuthHeaders(),
@@ -142,7 +144,7 @@ export const supplierApi = {
   
   // Delete an attachment
   async deleteAttachment(supplierId: string, attachmentId: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/suppliers/${supplierId}/attachment/${attachmentId}`, {
+    const response = await apiFetch(`${API_BASE_URL}/suppliers/${supplierId}/attachment/${attachmentId}`, {
       method: 'DELETE',
       headers: {
         ...getAuthHeaders(),

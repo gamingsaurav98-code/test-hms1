@@ -23,7 +23,8 @@ import { formatDate, getImageUrl } from '@/lib/utils';
 
 export default function StudentNoticeDetail() {
   const router = useRouter();
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id;
   const noticeId = Array.isArray(id) ? id[0] : id || '';
   
   const [notice, setNotice] = useState<any | null>(null);

@@ -54,7 +54,6 @@ export default function StaffSalaryPage() {
       setFilteredSalaries(mySalaries);
       calculateStats(mySalaries);
     } catch (err) {
-      console.error('Error fetching salaries:', err);
       setError('Failed to load salary information. Please try again.');
     } finally {
       setLoading(false);

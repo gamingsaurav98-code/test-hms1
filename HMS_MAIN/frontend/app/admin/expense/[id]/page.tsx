@@ -23,7 +23,7 @@ export default function ExpenseDetail() {
         setIsLoading(true);
         setError(null);
         
-        const response = await expenseApi.getExpense(params.id as string);
+        const response = await expenseApi.getExpense(params?.id as string);
         
         // Process expense data to ensure all required fields are present
         const processedExpense = {
@@ -48,10 +48,10 @@ export default function ExpenseDetail() {
       }
     };
 
-    if (params.id) {
+    if (params?.id) {
       fetchExpense();
     }
-  }, [params.id]);
+  }, [params?.id]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

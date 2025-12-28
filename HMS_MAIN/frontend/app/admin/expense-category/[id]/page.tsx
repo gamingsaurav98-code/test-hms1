@@ -10,7 +10,7 @@ import Link from 'next/link';
 export default function ExpenseCategoryDetail() {
   const router = useRouter();
   const params = useParams();
-  const categoryId = params.id as string;
+  const categoryId = params?.id as string;
   
   const [category, setCategory] = useState<ExpenseCategory | null>(null);
   const [isLoading, setIsLoading] = useState(true);

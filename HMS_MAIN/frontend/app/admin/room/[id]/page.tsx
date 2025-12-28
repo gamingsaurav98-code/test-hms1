@@ -9,7 +9,7 @@ import { getImageUrl } from '@/lib/utils';
 export default function RoomDetail() {
   const router = useRouter();
   const params = useParams();
-  const roomId = params.id as string;
+  const roomId = params?.id as string;
   
   const [room, setRoom] = useState<Room | null>(null);
   const [isLoading, setIsLoading] = useState(true);

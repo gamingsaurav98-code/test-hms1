@@ -58,7 +58,7 @@ export default function StudentStructure({ children }: { children: React.ReactNo
   }, [userDropdownOpen]);
 
   // Determine if back button should be shown (3+ segments deep)
-  const pathSegments = pathname.split('/').filter(Boolean);
+  const pathSegments = (pathname || "").split('/').filter(Boolean);
   const showBackButton = pathSegments.length >= 3;
 
   const getPageName = (path: string) => {
@@ -99,7 +99,7 @@ export default function StudentStructure({ children }: { children: React.ReactNo
     return 'Dashboard';
   };
 
-  const currentPageName = getPageName(pathname);
+  const currentPageName = getPageName(pathname || "");
 
   const handleBackClick = () => {
     router.back();
@@ -407,10 +407,10 @@ export default function StudentStructure({ children }: { children: React.ReactNo
         <div className="h-full overflow-y-auto py-3 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent hover:scrollbar-thumb-blue-300">
           <nav className="px-2 space-y-0.5">
             {sidebarItems.map((item, index) => {
-              const isActive = pathname === item.href || (item.href !== "/student" && pathname.startsWith(item.href) && !sidebarItems.some(otherItem => 
+              const isActive = pathname === item.href || (item.href !== "/student" && pathname?.startsWith(item.href) && !sidebarItems.some(otherItem => 
                 otherItem.href !== item.href && 
                 otherItem.href !== "/student" && 
-                pathname.startsWith(otherItem.href) && 
+                pathname?.startsWith(otherItem.href) && 
                 otherItem.href.length > item.href.length
               ));
               

@@ -14,9 +14,9 @@ const nextConfig: NextConfig = {
   // Add transpilePackages to fix lucide-react compatibility with React 19
   transpilePackages: ["lucide-react"],
   // Allow external host connections (needed for Docker)
-  experimental: {
-    esmExternals: false,
-  },
+  // experimental: {
+  //   esmExternals: false,
+  // },
 };
 
 export default nextConfig;

@@ -9,7 +9,7 @@ import { getImageUrl } from '@/lib/utils';
 export default function SupplierDetail() {
   const router = useRouter();
   const params = useParams();
-  const supplierId = params.id as string;
+  const supplierId = params?.id as string;
 
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [isLoading, setIsLoading] = useState(true);

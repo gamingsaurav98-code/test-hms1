@@ -19,7 +19,7 @@ import { getImageUrl } from '@/lib/utils';
 export default function EditStaff() {
   const router = useRouter();
   const params = useParams();
-  const staffId = params.id as string;
+  const staffId = params?.id as string;
   
   // Form state
   const [formData, setFormData] = useState<StaffFormData>({

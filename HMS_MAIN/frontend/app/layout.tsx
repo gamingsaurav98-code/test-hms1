@@ -12,6 +12,9 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "HMS System",
   description: "Hostel Management System",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

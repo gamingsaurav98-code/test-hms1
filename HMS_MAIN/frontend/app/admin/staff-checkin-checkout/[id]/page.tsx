@@ -9,7 +9,7 @@ import { Check, X, ArrowLeft, Edit, Trash, Clock } from 'lucide-react';
 export default function StaffCheckinCheckoutDetail() {
   const router = useRouter();
   const params = useParams();
-  const recordId = params.id as string;
+  const recordId = params?.id as string;
   
   const [record, setRecord] = useState<StaffCheckInCheckOut | null>(null);
   const [loading, setLoading] = useState(true);

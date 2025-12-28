@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('student_check_in_check_outs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id');
-            $table->foreignId('block_id');
-            $table->foreignId('checkout_rule_id')->nullable();
+            $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
+            $table->foreignId('block_id')->constrained('blocks')->onDelete('cascade');
+            $table->unsignedBigInteger('checkout_rule_id')->nullable();
             $table->datetime('requested_checkin_time')->nullable();
             $table->datetime('requested_checkout_time')->nullable();
             $table->date('date');
@@ -24,6 +24,9 @@ return new class extends Migration
             $table->date('estimated_checkin_date')->nullable();
             $table->string('checkout_duration')->nullable();
             $table->enum('status', ['checked_in', 'checked_out', 'pending', 'approved', 'declined'])->default('checked_in');
+            $table->decimal('deduction_amount', 10, 2)->nullable();
+            $table->string('rule_applied')->nullable();
+            $table->decimal('adjusted_fee', 10, 2)->nullable();
             $table->text('remarks')->nullable();
             $table->timestamps();
         });

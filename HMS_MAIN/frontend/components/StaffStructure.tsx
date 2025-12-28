@@ -58,7 +58,7 @@ export default function StaffStructure({ children }: { children: React.ReactNode
   }, [userDropdownOpen]);
 
   // Determine if back button should be shown (3+ segments deep)
-  const pathSegments = pathname.split('/').filter(Boolean);
+  const pathSegments = (pathname || '').split('/').filter(Boolean);
   const showBackButton = pathSegments.length >= 3;
 
   const getPageName = (path: string) => {
@@ -101,7 +101,7 @@ export default function StaffStructure({ children }: { children: React.ReactNode
     return 'Staff Panel';
   };
 
-  const currentPageName = getPageName(pathname);
+  const currentPageName = getPageName(pathname || '');
 
   // Handle back navigation
   const handleBackClick = () => {
@@ -419,10 +419,10 @@ export default function StaffStructure({ children }: { children: React.ReactNode
         <div className="h-full overflow-y-auto py-3 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent hover:scrollbar-thumb-blue-300">
           <nav className="px-2 space-y-0.5">
             {sidebarItems.map((item, index) => {
-              const isActive = pathname === item.href || (item.href !== "/staff" && pathname.startsWith(item.href) && !sidebarItems.some(otherItem => 
+              const isActive = pathname === item.href || (item.href !== "/staff" && pathname?.startsWith(item.href) && !sidebarItems.some(otherItem => 
                 otherItem.href !== item.href && 
                 otherItem.href !== "/staff" && 
-                pathname.startsWith(otherItem.href) && 
+                pathname?.startsWith(otherItem.href) && 
                 otherItem.href.length > item.href.length
               ));
               

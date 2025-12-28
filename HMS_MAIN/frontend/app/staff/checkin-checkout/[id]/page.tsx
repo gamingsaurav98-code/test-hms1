@@ -19,7 +19,7 @@ import {
 export default function StaffCheckinCheckoutDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const recordId = params.id as string;
+  const recordId = params?.id as string;
   
   const [loading, setLoading] = useState(true);
   const [record, setRecord] = useState<StaffCheckInCheckOut | null>(null);

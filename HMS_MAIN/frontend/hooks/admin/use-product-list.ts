@@ -2,9 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { apiClient, type Product } from "@/lib/api"
+// import { apiClient, type Product } from "@/lib/api"
 import { getErrorMessage } from "@/lib/utils"
 import { useToast, useConfirmModal, useImageModal } from "@/hooks/admin"
+
+// Temporary types until API is implemented
+type Product = any;
+const apiClient = {
+  getProducts: async () => ({ data: [] }),
+  deleteProduct: async (id: string) => {}
+};
 
 export function useProductList() {
   const router = useRouter()

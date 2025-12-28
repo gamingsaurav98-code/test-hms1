@@ -17,7 +17,7 @@ import {
 export default function EditBlock() {
   const router = useRouter();
   const params = useParams();
-  const blockId = params.id as string;
+  const blockId = params?.id as string;
 
   const [formData, setFormData] = useState<BlockFormData>({
     block_name: '',

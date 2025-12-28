@@ -1,4 +1,4 @@
-import { API_BASE_URL, handleResponse } from './core';
+import { API_BASE_URL, handleResponse, apiFetch } from './core';
 import { getAuthHeaders, getAuthHeadersForFormData } from './auth.api';
 import { Room, RoomFormData, Block, Student } from './types';
 import { PaginatedResponse } from './core';
@@ -24,7 +24,7 @@ export const roomApi = {
     }
     
     const url = `${API_BASE_URL}/rooms?${queryParams.toString()}`;
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -41,7 +41,7 @@ export const roomApi = {
       url += '?include_students=true';
     }
     
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -55,7 +55,7 @@ export const roomApi = {
   
   // Get rooms by block ID
   async getRoomsByBlock(blockId: string): Promise<{data: Room[]}> {
-    const response = await fetch(`${API_BASE_URL}/rooms?block_id=${blockId}`, {
+    const response = await apiFetch(`${API_BASE_URL}/rooms?block_id=${blockId}`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -69,7 +69,7 @@ export const roomApi = {
   
   // Get all students in a room
   async getRoomStudents(roomId: string): Promise<Student[]> {
-    const response = await fetch(`${API_BASE_URL}/rooms/${roomId}/students`, {
+    const response = await apiFetch(`${API_BASE_URL}/rooms/${roomId}/students`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -102,7 +102,7 @@ export const roomApi = {
       formData.append('room_attachment', data.room_attachment);
     }
 
-    const response = await fetch(`${API_BASE_URL}/rooms`, {
+    const response = await apiFetch(`${API_BASE_URL}/rooms`, {
       method: 'POST',
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -135,7 +135,7 @@ export const roomApi = {
       formData.append('room_attachment', data.room_attachment);
     }
 
-    const response = await fetch(`${API_BASE_URL}/rooms/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/rooms/${id}`, {
       method: 'POST', // Using POST with _method override for file uploads
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -146,7 +146,7 @@ export const roomApi = {
 
   // Delete a room
   async deleteRoom(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/rooms/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/rooms/${id}`, {
       method: 'DELETE',
       headers: {
         ...getAuthHeaders(),
@@ -160,7 +160,7 @@ export const roomApi = {
 
   // Get all blocks for dropdown selection
   async getBlocks(): Promise<Block[]> {
-    const response = await fetch(`${API_BASE_URL}/blocks?all=true`, {
+    const response = await apiFetch(`${API_BASE_URL}/blocks?all=true`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),

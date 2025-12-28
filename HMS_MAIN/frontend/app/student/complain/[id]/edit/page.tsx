@@ -22,7 +22,7 @@ interface ComplainFormData {
 export default function EditComplain() {
   const router = useRouter();
   const params = useParams();
-  const complainId = params.id as string;
+  const complainId = params?.id as string;
 
   const [complain, setComplain] = useState<any | null>(null);
   const [formData, setFormData] = useState<ComplainFormData>({

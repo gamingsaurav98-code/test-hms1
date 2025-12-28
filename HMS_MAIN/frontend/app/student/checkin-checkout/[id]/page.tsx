@@ -20,7 +20,7 @@ import {
 export default function StudentCheckinCheckoutDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const recordId = params.id as string;
+  const recordId = params?.id as string;
   
   const [loading, setLoading] = useState(true);
   const [record, setRecord] = useState<StudentCheckInCheckOut | null>(null);

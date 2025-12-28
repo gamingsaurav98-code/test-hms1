@@ -1,4 +1,4 @@
-import { API_BASE_URL, handleResponse } from './core';
+import { API_BASE_URL, handleResponse, apiFetch } from './core';
 import { getAuthHeaders } from './auth.api';
 
 export interface UserProfile {
@@ -28,7 +28,7 @@ export const profileApi = {
   // Get current user profile
   async getProfile(): Promise<UserProfile> {
     // First, get the current user's role from /auth/me
-    const meResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+    const meResponse = await apiFetch(`${API_BASE_URL}/auth/me`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -50,7 +50,7 @@ export const profileApi = {
 
     // For admin, use the /admin/profile endpoint
     if (role === 'admin') {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const response = await apiFetch(`${API_BASE_URL}${endpoint}`, {
         method: 'GET',
         headers: {
           ...getAuthHeaders(),
@@ -64,7 +64,7 @@ export const profileApi = {
     }
     
     // For staff and student, get their profile which includes more details
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await apiFetch(`${API_BASE_URL}${endpoint}`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -90,7 +90,7 @@ export const profileApi = {
   // Update profile (email)
   async updateProfile(data: UpdateProfileData): Promise<UserProfile> {
     // First, get the current user's role from /auth/me
-    const meResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+    const meResponse = await apiFetch(`${API_BASE_URL}/auth/me`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -109,7 +109,7 @@ export const profileApi = {
       endpoint = '/student/profile';
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await apiFetch(`${API_BASE_URL}${endpoint}`, {
       method: 'PUT',
       headers: {
         ...getAuthHeaders(),
@@ -125,7 +125,7 @@ export const profileApi = {
 
   // Change password
   async changePassword(data: ChangePasswordData): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+    const response = await apiFetch(`${API_BASE_URL}/auth/change-password`, {
       method: 'POST',
       headers: {
         ...getAuthHeaders(),

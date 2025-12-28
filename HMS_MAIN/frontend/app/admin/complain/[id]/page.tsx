@@ -12,7 +12,7 @@ import { getImageUrl } from '@/lib/utils';
 export default function ComplainDetail() {
   const router = useRouter();
   const params = useParams();
-  const complainId = params.id as string;
+  const complainId = params?.id as string;
 
   const [complain, setComplain] = useState<Complain | null>(null);
   const [isLoading, setIsLoading] = useState(true);

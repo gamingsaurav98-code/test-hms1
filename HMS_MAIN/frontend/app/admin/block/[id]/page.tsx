@@ -9,7 +9,7 @@ import { getImageUrl } from '@/lib/utils';
 export default function BlockDetail() {
   const router = useRouter();
   const params = useParams();
-  const blockId = params.id as string;
+  const blockId = params?.id as string;
 
   const [block, setBlock] = useState<Block | null>(null);
   const [isLoading, setIsLoading] = useState(true);

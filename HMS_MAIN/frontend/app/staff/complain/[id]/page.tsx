@@ -21,7 +21,7 @@ export default function StaffComplainDetail() {
   const router = useRouter();
   const params = useParams();
   const { user } = useAuth();
-  const complainId = params.id as string;
+  const complainId = params?.id as string;
 
   const [complain, setComplain] = useState<Complain | null>(null);
   const [isLoading, setIsLoading] = useState(true);

@@ -1,4 +1,4 @@
-import { API_BASE_URL, handleResponse } from './core';
+import { API_BASE_URL, handleResponse, apiFetch } from './core';
 import { getAuthHeaders, getAuthHeadersForFormData } from './auth.api';
 import { Income, IncomeFormData, IncomeType, PaymentType, Student } from './types';
 import { PaginatedResponse } from './core';
@@ -7,7 +7,7 @@ import { PaginatedResponse } from './core';
 export const incomeApi = {
   // Get all incomes with pagination
   async getIncomes(page: number = 1): Promise<PaginatedResponse<Income>> {
-    const response = await fetch(`${API_BASE_URL}/incomes?page=${page}`, {
+    const response = await apiFetch(`${API_BASE_URL}/incomes?page=${page}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -17,7 +17,7 @@ export const incomeApi = {
 
   // Get a single income by ID
   async getIncome(id: string): Promise<Income> {
-    const response = await fetch(`${API_BASE_URL}/incomes/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/incomes/${id}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -61,7 +61,7 @@ export const incomeApi = {
       formData.append('income_attachment', data.income_attachment);
     }
 
-    const response = await fetch(`${API_BASE_URL}/incomes`, {
+    const response = await apiFetch(`${API_BASE_URL}/incomes`, {
       method: 'POST',
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -109,7 +109,7 @@ export const incomeApi = {
       formData.append('income_attachment', data.income_attachment);
     }
 
-    const response = await fetch(`${API_BASE_URL}/incomes/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/incomes/${id}`, {
       method: 'POST', // Using POST with _method override for file uploads
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -120,7 +120,7 @@ export const incomeApi = {
 
   // Delete an income
   async deleteIncome(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/incomes/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/incomes/${id}`, {
       method: 'DELETE',
       headers: {
         ...getAuthHeaders(),
@@ -137,7 +137,7 @@ export const incomeApi = {
     const formData = new FormData();
     formData.append('income_attachment', file);
     
-    const response = await fetch(`${API_BASE_URL}/incomes/${id}/attachment`, {
+    const response = await apiFetch(`${API_BASE_URL}/incomes/${id}/attachment`, {
       method: 'POST',
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -148,7 +148,7 @@ export const incomeApi = {
 
   // Get all income types for dropdown
   async getIncomeTypes(): Promise<IncomeType[]> {
-    const response = await fetch(`${API_BASE_URL}/income-types?all=true`, {
+    const response = await apiFetch(`${API_BASE_URL}/income-types?all=true`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -168,7 +168,7 @@ export const incomeApi = {
 
   // Get all payment types for dropdown
   async getPaymentTypes(): Promise<PaymentType[]> {
-    const response = await fetch(`${API_BASE_URL}/payment-types?all=true`, {
+    const response = await apiFetch(`${API_BASE_URL}/payment-types?all=true`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -188,7 +188,7 @@ export const incomeApi = {
 
   // Get all students for dropdown
   async getStudents(): Promise<Student[]> {
-    const response = await fetch(`${API_BASE_URL}/students?all=true`, {
+    const response = await apiFetch(`${API_BASE_URL}/students?all=true`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });

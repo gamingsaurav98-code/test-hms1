@@ -100,7 +100,7 @@ export default function EditExpense() {
         setError(null);
         
         // Get expense data directly for debugging
-        const expenseResponse = await expenseApi.getExpense(params.id as string);
+        const expenseResponse = await expenseApi.getExpense(params?.id as string);
         console.log('API Response - Raw Expense Data:', JSON.stringify(expenseResponse));
         
         // Continue with other API calls
@@ -244,10 +244,10 @@ export default function EditExpense() {
       }
     };
 
-    if (params.id) {
+    if (params?.id) {
       loadData();
     }
-  }, [params.id]);
+  }, [params?.id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -469,7 +469,7 @@ export default function EditExpense() {
           purchases: dataToSubmit.purchases?.length
         });
         
-        await expenseApi.updateExpense(params.id as string, dataToSubmit);
+        await expenseApi.updateExpense(params?.id as string, dataToSubmit);
         
         setAlert({
           show: true,

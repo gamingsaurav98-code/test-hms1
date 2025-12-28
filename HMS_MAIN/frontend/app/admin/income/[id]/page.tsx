@@ -13,7 +13,7 @@ import { formatCurrency, formatDate, getImageUrl } from '@/lib/utils';
 export default function IncomeDetail() {
   const router = useRouter();
   const params = useParams();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id || '';
+  const id = Array.isArray(params?.id) ? params?.id[0] : params?.id || '';
 
   const [income, setIncome] = useState<Income | null>(null);
   const [isLoading, setIsLoading] = useState(true);

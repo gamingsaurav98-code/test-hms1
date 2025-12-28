@@ -10,7 +10,7 @@ import { formatDate, getImageUrl } from '@/lib/utils';
 export default function StudentDetail() {
   const router = useRouter();
   const params = useParams();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id || '';
+  const id = Array.isArray(params?.id) ? params?.id[0] : params?.id || '';
 
   const [student, setStudent] = useState<StudentWithAmenities | null>(null);
   const [isLoading, setIsLoading] = useState(true);

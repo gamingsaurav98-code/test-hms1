@@ -68,12 +68,12 @@ export default function Structure({ children }: { children: React.ReactNode }) {
   }, [userDropdownOpen]);
 
   // Determine if back button should be shown (3+ segments deep)
-  const pathSegments = pathname.split('/').filter(Boolean);
+  const pathSegments = (pathname || "").split('/').filter(Boolean);
   const showBackButton = pathSegments.length >= 3;
 
   // Get current page name based on pathname
   const getPageName = (pathname: string) => {
-    const segments = pathname.split('/').filter(Boolean);
+    const segments = (pathname || "").split('/').filter(Boolean);
     
     if (pathname === '/admin' || pathname === '/admin/') {
       return 'Dashboard';
@@ -121,11 +121,11 @@ export default function Structure({ children }: { children: React.ReactNode }) {
     return 'Dashboard';
   };
 
-  const currentPageName = getPageName(pathname);
+  const currentPageName = getPageName(pathname || "");
 
   // Auto-open expense menu if on expense or expense-category pages
   useEffect(() => {
-    if (pathname.startsWith('/admin/expense')) {
+    if (pathname?.startsWith('/admin/expense')) {
       setExpenseMenuOpen(true);
     }
   }, [pathname]);
@@ -602,16 +602,16 @@ export default function Structure({ children }: { children: React.ReactNode }) {
             {sidebarItems.map((item, index) => {
               // For items with submenu, don't mark parent as active, only check submenu items
               const isActive = !item.hasSubmenu && (
-                pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href) && !sidebarItems.some(otherItem => 
+                pathname === item.href || (item.href !== "/admin" && pathname?.startsWith(item.href) && !sidebarItems.some(otherItem => 
                   otherItem.href !== item.href && 
                   otherItem.href !== "/admin" && 
-                  pathname.startsWith(otherItem.href) && 
+                  pathname?.startsWith(otherItem.href) && 
                   otherItem.href.length > item.href.length
                 ))
               );
               
               // Check if any submenu item is active
-              const isSubmenuActive = item.submenu?.some(subItem => pathname === subItem.href || pathname.startsWith(subItem.href));
+              const isSubmenuActive = item.submenu?.some(subItem => pathname === subItem.href || pathname?.startsWith(subItem.href));
               const shouldShowSubmenu = item.hasSubmenu && (expenseMenuOpen || isSubmenuActive);
               
               return (
@@ -666,7 +666,7 @@ export default function Structure({ children }: { children: React.ReactNode }) {
                   {item.hasSubmenu && shouldShowSubmenu && (
                     <div className="mt-1 ml-7 space-y-0.5 animate-in slide-in-from-top-2 duration-200">
                       {item.submenu?.map((subItem, subIndex) => {
-                        const isSubItemActive = pathname === subItem.href || pathname.startsWith(subItem.href);
+                        const isSubItemActive = pathname === subItem.href || pathname?.startsWith(subItem.href);
                         return (
                           <Link
                             key={subIndex}

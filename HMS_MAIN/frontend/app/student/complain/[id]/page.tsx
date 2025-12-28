@@ -13,7 +13,7 @@ export default function StudentComplainDetail() {
   const router = useRouter();
   const params = useParams();
   const { user } = useAuth();
-  const complainId = params.id as string;
+  const complainId = params?.id as string;
 
   const [complain, setComplain] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);

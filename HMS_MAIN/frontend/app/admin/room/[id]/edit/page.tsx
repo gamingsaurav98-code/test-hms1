@@ -17,7 +17,7 @@ import { getImageUrl } from '@/lib/utils';
 export default function EditRoom() {
   const router = useRouter();
   const params = useParams();
-  const roomId = params.id as string;
+  const roomId = params?.id as string;
 
   const [formData, setFormData] = useState<RoomFormData>({
     room_name: '',

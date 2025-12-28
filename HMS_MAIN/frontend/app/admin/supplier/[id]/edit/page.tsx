@@ -13,7 +13,7 @@ import {
 export default function EditSupplier() {
   const router = useRouter();
   const params = useParams();
-  const supplierId = params.id as string;
+  const supplierId = params?.id as string;
 
   const [formData, setFormData] = useState<SupplierFormData>({
     name: '',

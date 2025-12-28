@@ -1,4 +1,4 @@
-import { API_BASE_URL, handleResponse } from './core';
+import { API_BASE_URL, handleResponse, apiFetch } from './core';
 import { getAuthHeaders, getAuthHeadersForFormData } from './auth.api';
 import { Student } from './types';
 import { PaginatedResponse } from './core';
@@ -108,7 +108,7 @@ export interface StudentFinancialFormData {
 export const studentApi = {
   // Get available amenities for student creation/edit
   async getAvailableAmenities(): Promise<StudentAmenity[]> {
-    const response = await fetch(`${API_BASE_URL}/student-amenities`, {
+    const response = await apiFetch(`${API_BASE_URL}/student-amenities`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -122,7 +122,7 @@ export const studentApi = {
   
   // Get students by room ID
   async getStudentsByRoom(roomId: string): Promise<StudentWithAmenities[]> {
-    const response = await fetch(`${API_BASE_URL}/rooms/${roomId}/students`, {
+    const response = await apiFetch(`${API_BASE_URL}/rooms/${roomId}/students`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -136,7 +136,7 @@ export const studentApi = {
   
   // Get all active students (no pagination)
   async getAllActiveStudents(): Promise<StudentWithAmenities[]> {
-    const response = await fetch(`${API_BASE_URL}/students?all=true`, {
+    const response = await apiFetch(`${API_BASE_URL}/students?all=true`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -153,7 +153,7 @@ export const studentApi = {
     console.log(`Fetching students from: ${url}`);
     
     try {
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: 'GET',
         headers: getAuthHeaders(),
       });
@@ -168,7 +168,7 @@ export const studentApi = {
 
   // Get a single student by ID
   async getStudent(id: string): Promise<StudentWithAmenities> {
-    const response = await fetch(`${API_BASE_URL}/students/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/students/${id}`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -218,7 +218,7 @@ export const studentApi = {
       }
     }
 
-    const response = await fetch(`${API_BASE_URL}/students`, {
+    const response = await apiFetch(`${API_BASE_URL}/students`, {
       method: 'POST',
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -292,7 +292,7 @@ export const studentApi = {
       }
     }
 
-    const response = await fetch(`${API_BASE_URL}/students/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/students/${id}`, {
       method: 'POST', // Using POST with _method override for file uploads
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -303,7 +303,7 @@ export const studentApi = {
 
   // Delete a student
   async deleteStudent(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/students/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/students/${id}`, {
       method: 'DELETE',
       headers: {
         ...getAuthHeaders(),
@@ -317,7 +317,7 @@ export const studentApi = {
 
   // Toggle student status (activate/deactivate)
   async toggleStudentStatus(id: string): Promise<{message: string, student: StudentWithAmenities, is_active: boolean, room_removed?: boolean}> {
-    const response = await fetch(`${API_BASE_URL}/students/${id}/toggle-status`, {
+    const response = await apiFetch(`${API_BASE_URL}/students/${id}/toggle-status`, {
       method: 'POST',
       headers: {
         ...getAuthHeaders(),
@@ -332,7 +332,7 @@ export const studentApi = {
   // Student-specific methods
   // Get current student's profile
   async getStudentProfile(): Promise<StudentWithAmenities> {
-    const response = await fetch(`${API_BASE_URL}/student/profile`, {
+    const response = await apiFetch(`${API_BASE_URL}/student/profile`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -342,7 +342,7 @@ export const studentApi = {
 
   // Get current student's complaints
   async getStudentComplains(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/student/complains`, {
+    const response = await apiFetch(`${API_BASE_URL}/student/complains`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -352,7 +352,7 @@ export const studentApi = {
 
   // Get current student's payment history
   async getStudentPayments(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/student/payment-history`, {
+    const response = await apiFetch(`${API_BASE_URL}/student/payment-history`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -362,7 +362,7 @@ export const studentApi = {
 
   // Get current student's check-in/out records
   async getStudentCheckInOuts(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/student/checkincheckouts`, {
+    const response = await apiFetch(`${API_BASE_URL}/student/checkincheckouts`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -372,7 +372,7 @@ export const studentApi = {
 
   // Get current student's notices
   async getStudentNotices(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/student/notices`, {
+    const response = await apiFetch(`${API_BASE_URL}/student/notices`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -382,7 +382,7 @@ export const studentApi = {
 
   // Get a specific student notice by ID
   async getStudentNotice(id: string): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/student/notices/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/student/notices/${id}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -398,7 +398,7 @@ export const studentApi = {
     balance_due: number;
     calculation_date: string;
   }> {
-    const response = await fetch(`${API_BASE_URL}/student/outstanding-dues`, {
+    const response = await apiFetch(`${API_BASE_URL}/student/outstanding-dues`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -417,7 +417,7 @@ export const studentApi = {
     const formData = new FormData();
     formData.append('student_image', file);
     
-    const response = await fetch(`${API_BASE_URL}/students/${id}/image`, {
+    const response = await apiFetch(`${API_BASE_URL}/students/${id}/image`, {
       method: 'POST',
       headers: {
         ...getAuthHeaders(),
@@ -443,7 +443,7 @@ export const studentApi = {
       formData.append('complain_attachment', data.complain_attachment);
     }
 
-    const response = await fetch(`${API_BASE_URL}/student/complains`, {
+    const response = await apiFetch(`${API_BASE_URL}/student/complains`, {
       method: 'POST',
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -454,7 +454,7 @@ export const studentApi = {
 
   // Get a specific student complaint
   async getStudentComplaint(id: string): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/student/complains/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/student/complains/${id}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -477,7 +477,7 @@ export const studentApi = {
       formData.append('complain_attachment', data.complain_attachment);
     }
 
-    const response = await fetch(`${API_BASE_URL}/student/complains/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/student/complains/${id}`, {
       method: 'POST', // Using POST with _method override for file uploads
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -488,7 +488,7 @@ export const studentApi = {
 
   // Delete a specific student complaint
   async deleteStudentComplaint(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/student/complains/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/student/complains/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
@@ -527,7 +527,7 @@ export const studentFinancialApi = {
       }
     });
 
-    const response = await fetch(`${API_BASE_URL}/student-financials`, {
+    const response = await apiFetch(`${API_BASE_URL}/student-financials`, {
       method: 'POST',
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -564,7 +564,7 @@ export const studentFinancialApi = {
       }
     });
 
-    const response = await fetch(`${API_BASE_URL}/student-financials/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/student-financials/${id}`, {
       method: 'POST', // Using POST with _method override for file uploads
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -575,7 +575,7 @@ export const studentFinancialApi = {
 
   // Get financial records for a specific student
   async getStudentFinancials(studentId: string): Promise<StudentFinancial[]> {
-    const response = await fetch(`${API_BASE_URL}/students/${studentId}/financials`, {
+    const response = await apiFetch(`${API_BASE_URL}/students/${studentId}/financials`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -589,7 +589,7 @@ export const studentFinancialApi = {
 
   // Get a specific financial record
   async getStudentFinancial(id: string): Promise<StudentFinancial> {
-    const response = await fetch(`${API_BASE_URL}/student-financials/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/student-financials/${id}`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -603,7 +603,7 @@ export const studentFinancialApi = {
 
   // Delete financial record
   async deleteStudentFinancial(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/student-financials/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/student-financials/${id}`, {
       method: 'DELETE',
       headers: {
         ...getAuthHeaders(),

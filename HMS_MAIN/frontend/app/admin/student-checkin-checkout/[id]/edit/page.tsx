@@ -11,7 +11,7 @@ import {
 export default function EditStudentCheckinCheckout() {
   const router = useRouter();
   const params = useParams();
-  const recordId = params.id as string;
+  const recordId = params?.id as string;
   
   const [record, setRecord] = useState<StudentCheckInCheckOut | null>(null);
   const [loading, setLoading] = useState(true);

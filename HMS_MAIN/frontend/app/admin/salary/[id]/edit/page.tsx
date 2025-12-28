@@ -13,7 +13,7 @@ import {
 export default function EditSalary() {
   const router = useRouter();
   const params = useParams();
-  const salaryId = parseInt(params.id as string);
+  const salaryId = parseInt(params?.id as string);
   
   const [staff, setStaff] = useState<Staff[]>([]);
   const [salary, setSalary] = useState<Salary | null>(null);

@@ -9,7 +9,7 @@ import Link from 'next/link';
 
 export default function SalaryDetail() {
   const params = useParams();
-  const salaryId = parseInt(params.id as string);
+  const salaryId = parseInt(params?.id as string);
   
   const [salary, setSalary] = useState<Salary | null>(null);
   const [loading, setLoading] = useState(true);

@@ -1,4 +1,4 @@
-import { API_BASE_URL, handleResponse } from './core';
+import { API_BASE_URL, handleResponse, apiFetch } from './core';
 import { getAuthHeaders, getAuthHeadersForFormData } from './auth.api';
 import { PaginatedResponse } from './core';
 
@@ -171,7 +171,7 @@ export const staffApi = {
     students: { total: number };
   }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/dashboard/stats`, {
+      const response = await apiFetch(`${API_BASE_URL}/dashboard/stats`, {
         headers: getAuthHeaders(),
       });
       
@@ -204,7 +204,7 @@ export const staffApi = {
 
   // Get available amenities for staff creation/edit
   async getAvailableAmenities(): Promise<StaffAmenity[]> {
-    const response = await fetch(`${API_BASE_URL}/staff-amenities`, {
+    const response = await apiFetch(`${API_BASE_URL}/staff-amenities`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -218,7 +218,7 @@ export const staffApi = {
   
   // Get all active staff (no pagination)
   async getAllActiveStaff(): Promise<StaffWithAmenities[]> {
-    const response = await fetch(`${API_BASE_URL}/staff?all=true`, {
+    const response = await apiFetch(`${API_BASE_URL}/staff?all=true`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -252,7 +252,7 @@ export const staffApi = {
       params.append('position', filters.position);
     }
     
-    const response = await fetch(`${API_BASE_URL}/staff?${params.toString()}`, {
+    const response = await apiFetch(`${API_BASE_URL}/staff?${params.toString()}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -262,7 +262,7 @@ export const staffApi = {
   
   // Get single staff member
   async getStaffMember(id: string): Promise<StaffWithAmenities> {
-    const response = await fetch(`${API_BASE_URL}/staff/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/staff/${id}`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -312,7 +312,7 @@ export const staffApi = {
       }
     }
 
-    const response = await fetch(`${API_BASE_URL}/staff`, {
+    const response = await apiFetch(`${API_BASE_URL}/staff`, {
       method: 'POST',
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -386,7 +386,7 @@ export const staffApi = {
       }
     }
 
-    const response = await fetch(`${API_BASE_URL}/staff/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/staff/${id}`, {
       method: 'POST', // Using POST with _method override for file uploads
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -397,7 +397,7 @@ export const staffApi = {
   
   // Delete a staff member
   async deleteStaff(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/staff/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/staff/${id}`, {
       method: 'DELETE',
       headers: {
         ...getAuthHeaders(),
@@ -414,7 +414,7 @@ export const staffApi = {
 
   // Toggle staff status (activate/deactivate)
   async toggleStaffStatus(id: string): Promise<{message: string, staff: StaffWithAmenities, is_active: boolean}> {
-    const response = await fetch(`${API_BASE_URL}/staff/${id}/toggle-status`, {
+    const response = await apiFetch(`${API_BASE_URL}/staff/${id}/toggle-status`, {
       method: 'POST',
       headers: {
         ...getAuthHeaders(),
@@ -428,7 +428,7 @@ export const staffApi = {
   
   // Get staff fields metadata
   async getStaffFields(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/staff/fields`, {
+    const response = await apiFetch(`${API_BASE_URL}/staff/fields`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders(),
@@ -442,7 +442,7 @@ export const staffApi = {
 
   // Get staff payments (staff-specific endpoint)
   async getStaffPayments(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/staff/payments`, {
+    const response = await apiFetch(`${API_BASE_URL}/staff/payments`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -453,7 +453,7 @@ export const staffApi = {
   // Staff-specific methods for authenticated staff portal
   // Get current staff's profile
   async getStaffProfile(): Promise<StaffWithAmenities> {
-    const response = await fetch(`${API_BASE_URL}/my-staff/profile`, {
+    const response = await apiFetch(`${API_BASE_URL}/my-staff/profile`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -463,7 +463,7 @@ export const staffApi = {
 
   // Update current staff's profile
   async updateStaffProfile(data: Partial<StaffFormData>): Promise<StaffWithAmenities> {
-    const response = await fetch(`${API_BASE_URL}/my-staff/profile`, {
+    const response = await apiFetch(`${API_BASE_URL}/my-staff/profile`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -477,7 +477,7 @@ export const staffApi = {
 
   // Get current staff's check-in/out records
   async getStaffCheckInOuts(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/my-staff/my-checkincheckouts`, {
+    const response = await apiFetch(`${API_BASE_URL}/my-staff/my-checkincheckouts`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -487,7 +487,7 @@ export const staffApi = {
 
   // Get current staff's complaints
   async getStaffComplains(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/my-staff/complaints-list`, {
+    const response = await apiFetch(`${API_BASE_URL}/my-staff/complaints-list`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -509,7 +509,7 @@ export const staffApi = {
       formData.append('complain_attachment', data.complain_attachment);
     }
 
-    const response = await fetch(`${API_BASE_URL}/my-staff/complaints-create`, {
+    const response = await apiFetch(`${API_BASE_URL}/my-staff/complaints-create`, {
       method: 'POST',
       headers: getAuthHeadersForFormData(),
       body: formData,
@@ -520,7 +520,7 @@ export const staffApi = {
 
   // Get a specific staff complaint
   async getStaffComplaint(id: string): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/my-staff/complaints-view/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/my-staff/complaints-view/${id}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -530,7 +530,7 @@ export const staffApi = {
 
   // Get current staff's notices
   async getStaffNotices(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/my-staff/notices`, {
+    const response = await apiFetch(`${API_BASE_URL}/my-staff/notices`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -540,7 +540,7 @@ export const staffApi = {
 
   // Get a specific staff notice by ID
   async getStaffNotice(id: string): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/my-staff/notices/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/my-staff/notices/${id}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -550,7 +550,7 @@ export const staffApi = {
 
   // Get current staff's salary history
   async getStaffSalaryHistory(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/my-staff/salary-history`, {
+    const response = await apiFetch(`${API_BASE_URL}/my-staff/salary-history`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });

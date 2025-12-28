@@ -10,7 +10,7 @@ import { formatDate, getImageUrl } from '@/lib/utils';
 export default function StaffDetail() {
   const router = useRouter();
   const params = useParams();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id || '';
+  const id = Array.isArray(params?.id) ? params?.id[0] : params?.id || '';
 
   const [staff, setStaff] = useState<StaffWithAmenities | null>(null);
   const [isLoading, setIsLoading] = useState(true);

@@ -1,4 +1,4 @@
-import { API_BASE_URL, handleResponse } from './core';
+import { API_BASE_URL, handleResponse, apiFetch } from './core';
 
 export interface User {
   id: number;
@@ -149,7 +149,7 @@ export function getAuthHeadersForFormData(): Record<string, string> {
 export const authApi = {
   // Login user
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await apiFetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -206,7 +206,7 @@ export const authApi = {
     console.log('Auth headers:', headers);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+      const response = await apiFetch(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
         headers: headers,
       });
@@ -239,7 +239,7 @@ export const authApi = {
 
   // Logout from all devices
   async logoutAll(): Promise<LogoutResponse> {
-    const response = await fetch(`${API_BASE_URL}/auth/logout-all`, {
+    const response = await apiFetch(`${API_BASE_URL}/auth/logout-all`, {
       method: 'POST',
       headers: getAuthHeaders(),
     });
@@ -257,7 +257,7 @@ export const authApi = {
   // Get current user
   async me(): Promise<UserMeResponse> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      const response = await apiFetch(`${API_BASE_URL}/auth/me`, {
         method: 'GET',
         headers: getAuthHeaders(),
       });
@@ -271,7 +271,7 @@ export const authApi = {
 
   // Change password
   async changePassword(data: ChangePasswordRequest): Promise<LogoutResponse> {
-    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+    const response = await apiFetch(`${API_BASE_URL}/auth/change-password`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -282,7 +282,7 @@ export const authApi = {
 
   // Register user (admin only)
   async register(data: RegisterRequest): Promise<{ status: 'success'; message: string; data: { user: User } }> {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    const response = await apiFetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -293,7 +293,7 @@ export const authApi = {
 
   // Create account for pre-registered staff/student (public)
   async createAccount(data: CreateAccountRequest): Promise<CreateAccountResponse> {
-    const response = await fetch(`${API_BASE_URL}/auth/create-account`, {
+    const response = await apiFetch(`${API_BASE_URL}/auth/create-account`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

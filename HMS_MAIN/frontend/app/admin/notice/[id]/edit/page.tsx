@@ -31,7 +31,8 @@ interface ExistingAttachment {
 
 export default function EditNotice() {
   const router = useRouter();
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id;
   const noticeId = Array.isArray(id) ? id[0] : id || '';
   
   // Initialize states for students, staff, and blocks

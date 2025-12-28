@@ -4,6 +4,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi, tokenStorage } from '@/lib/api';
 import { User } from '@/lib/api/auth.api';
+import { apiFetch, API_BASE_URL } from '@/lib/api/core';
+import { getAuthHeaders } from '@/lib/api/auth.api';
 
 interface AuthContextType {
   user: User | null;
@@ -54,12 +56,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyTokenInBackground = async () => {
     try {
-      const response = await authApi.me();
-      if (response.status === 'success') {
-        setUser(response.data.user);
-        localStorage.setItem('hms_user', JSON.stringify(response.data.user));
+      // Make direct API call to avoid throwing errors on 401
+      const response = await apiFetch(`${API_BASE_URL}/auth/me`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'success') {
+          setUser(data.data.user);
+          localStorage.setItem('hms_user', JSON.stringify(data.data.user));
+        } else {
+          // Invalid token
+          tokenStorage.remove();
+          localStorage.removeItem('hms_user');
+          setUser(null);
+        }
+      } else if (response.status === 401) {
+        // Token is invalid/expired
+        tokenStorage.remove();
+        localStorage.removeItem('hms_user');
+        setUser(null);
       } else {
-        // Invalid token
+        // Other error
+        console.error('Auth check failed with status:', response.status);
         tokenStorage.remove();
         localStorage.removeItem('hms_user');
         setUser(null);
@@ -74,12 +95,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyTokenQuick = async () => {
     try {
-      const response = await authApi.me();
-      if (response.status === 'success') {
-        setUser(response.data.user);
-        localStorage.setItem('hms_user', JSON.stringify(response.data.user));
+      // Make direct API call to avoid throwing errors on 401
+      const response = await apiFetch(`${API_BASE_URL}/auth/me`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'success') {
+          setUser(data.data.user);
+          localStorage.setItem('hms_user', JSON.stringify(data.data.user));
+        } else {
+          // Invalid token
+          tokenStorage.remove();
+          localStorage.removeItem('hms_user');
+        }
+      } else if (response.status === 401) {
+        // Token is invalid/expired
+        tokenStorage.remove();
+        localStorage.removeItem('hms_user');
       } else {
-        // Invalid token
+        // Other error
+        console.error('Auth check failed with status:', response.status);
         tokenStorage.remove();
         localStorage.removeItem('hms_user');
       }

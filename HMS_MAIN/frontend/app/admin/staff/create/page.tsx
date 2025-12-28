@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
 import { staffApi, type StaffFormData, type StaffAmenity } from '@/lib/api/staff.api';
-import { ApiError } from '@/lib/api/core';
+import { ApiError, handleResponse } from '@/lib/api/core';  // Ensure this import is added if not present
 import { 
   Button, 
   FormField, 
@@ -79,6 +79,9 @@ export default function CreateStaff() {
   
   // Amenities state
   const [amenities, setAmenities] = useState<StaffAmenity[]>([]);
+
+  // Add state for general error message (if not using toast)
+  const [generalError, setGeneralError] = useState<string | null>(null);
 
   // Handle form field changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -373,6 +376,18 @@ export default function CreateStaff() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-red-800">{errors.submit}</p>
+            </div>
+          </div>
+        )}
+
+        {/* General Error Message - if not using toast */}
+        {generalError && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex">
+              <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-red-800">{generalError}</p>
             </div>
           </div>
         )}

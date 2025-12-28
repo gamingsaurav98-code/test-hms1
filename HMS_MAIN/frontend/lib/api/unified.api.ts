@@ -3,7 +3,7 @@
  * Ensures data consistency across Admin, Staff, and Student portals
  */
 
-import { API_BASE_URL, handleResponse } from './core';
+import { API_BASE_URL, handleResponse, apiFetch } from './core';
 import { getAuthHeaders } from './auth.api';
 import { studentApi } from './student.api';
 import { staffApi } from './staff.api';
@@ -189,7 +189,7 @@ export class UnifiedApi {
         throw new Error('Invalid user role');
       }
 
-      const response = await fetch(endpoint, { headers: getAuthHeaders() });
+      const response = await apiFetch(endpoint, { headers: getAuthHeaders() });
       const complaint = await handleResponse(response) as any;
 
       return {

@@ -1,4 +1,4 @@
-import { API_BASE_URL, handleResponse, PaginatedResponse } from './core';
+import { API_BASE_URL, handleResponse, apiFetch, PaginatedResponse } from './core';
 import { getAuthHeaders } from './auth.api';
 
 export interface PaymentType {
@@ -17,7 +17,7 @@ export interface PaymentTypeFormData {
 export const paymentTypeApi = {
   // Get all payment types with pagination
   async getPaymentTypes(page: number = 1): Promise<PaginatedResponse<PaymentType>> {
-    const response = await fetch(`${API_BASE_URL}/payment-types?page=${page}`, {
+    const response = await apiFetch(`${API_BASE_URL}/payment-types?page=${page}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -26,7 +26,7 @@ export const paymentTypeApi = {
 
   // Get all payment types without pagination
   async getAllPaymentTypes(): Promise<PaymentType[]> {
-    const response = await fetch(`${API_BASE_URL}/payment-types?all=true`, {
+    const response = await apiFetch(`${API_BASE_URL}/payment-types?all=true`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -44,7 +44,7 @@ export const paymentTypeApi = {
 
   // Get a single payment type by ID
   async getPaymentType(id: string): Promise<PaymentType> {
-    const response = await fetch(`${API_BASE_URL}/payment-types/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/payment-types/${id}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -53,7 +53,7 @@ export const paymentTypeApi = {
 
   // Create a new payment type
   async createPaymentType(data: PaymentTypeFormData): Promise<PaymentType> {
-    const response = await fetch(`${API_BASE_URL}/payment-types`, {
+    const response = await apiFetch(`${API_BASE_URL}/payment-types`, {
       method: 'POST',
       headers: {
         ...getAuthHeaders(),
@@ -66,7 +66,7 @@ export const paymentTypeApi = {
 
   // Update an existing payment type
   async updatePaymentType(id: string, data: PaymentTypeFormData): Promise<PaymentType> {
-    const response = await fetch(`${API_BASE_URL}/payment-types/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/payment-types/${id}`, {
       method: 'PUT',
       headers: {
         ...getAuthHeaders(),
@@ -79,7 +79,7 @@ export const paymentTypeApi = {
 
   // Delete a payment type
   async deletePaymentType(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/payment-types/${id}`, {
+    const response = await apiFetch(`${API_BASE_URL}/payment-types/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
